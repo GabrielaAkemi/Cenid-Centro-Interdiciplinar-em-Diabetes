@@ -1,21 +1,22 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import PacienteForm from "@/components/Forms/paciente-form";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
-const NewPacientPage = () => {
+// importa o formulário de Educação Física
+import FormularioEducacaoFisica from "@/components/Forms/edFisica-forms";
+
+const EduFisicaPage = () => {
   const router = useRouter();
 
-  const handlePacienteSubmit = async (data: any) => {
+  const handleEduFisicaSubmit = async (data) => {
     try {
-      console.log("Dados do paciente enviados:", data);
-      router.push("/pacientes");
+      console.log("Dados Educação Física enviados:", data);
+      router.push("/consultas"); // depois de salvar volta para consultas
     } catch (error) {
-      console.error("Erro ao cadastrar paciente:", error);
+      console.error("Erro ao enviar dados:", error);
     }
   };
 
@@ -24,15 +25,17 @@ const NewPacientPage = () => {
       <div className="container mx-auto py-10 px-4">
         <Card className="max-w-4xl mx-auto border border-blue-200 shadow-md bg-white">
           <CardContent>
-            <PacienteForm onSubmit={handlePacienteSubmit} />
+            {/* O onSubmit agora chama a função que usa o router */}
+            <FormularioEducacaoFisica onSubmit={handleEduFisicaSubmit} />
           </CardContent>
         </Card>
+
             <div class="mt-6 text-center">
                 <button 
-                    onClick={() => router.push("/Funcionarios/dashboard")}
+                    onClick={() => router.push("/Funcionarios/consultas")}
                     variant="default"id="back-button"
                         class="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors">
-                    Voltar para Dashboard
+                    Voltar para Consultas
                 </button>
             </div>
 
@@ -43,8 +46,8 @@ const NewPacientPage = () => {
         <Image
           src="/logoCenid.png"
           alt="Logo Cenid"
-          width={150}
-          height={150}
+          width={200}
+          height={200}
           className="opacity-70"
         />
       </div>
@@ -52,4 +55,4 @@ const NewPacientPage = () => {
   );
 };
 
-export default NewPacientPage;
+export default EduFisicaPage;

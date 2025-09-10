@@ -1,5 +1,6 @@
 "use client";
-
+import React from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -179,6 +180,15 @@ const PatientDetails = () => {
           </div>
         </CardContent>
       </Card>
+      <div className="w-full flex justify-end mt-8">
+        <Image
+          src="/logoCenid.png"
+          alt="LOGOCENID"
+          width={200}
+          height={200}
+          className="opacity-70"
+        />
+      </div>
     </div>
   );
 };

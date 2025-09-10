@@ -104,22 +104,22 @@ const DashboardPage: React.FC = () => {
             <h1 className="text-2xl font-bold tracking-tight text-blue-900">Dashboard</h1>
             <p className="text-blue-900">Gerencie os pacientes cadastrados no sistema</p>
           </div>
+            <div className="flex gap-2">
+                <button 
+                    onClick={() => router.push("/pacientes/newpacient")}
+                    variant="default"id="back-button"
+                        class="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors">
+                    Novo Paciente
+                </button>
 
-          <div className="flex gap-2">
-            <Button
-              onClick={() => router.push("/pacientes/newpacient")}
-              className="bg-red-500 hover:bg-red-600 text-white flex items-center"
-            >
-              <UserPlus className="mr-2 h-4 w-4" /> Novo Paciente
-            </Button>
+                <button 
+                    onClick={() => router.push("/Funcionarios/consultas")}
+                    variant="default"id="back-button"
+                        class="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors">
+                    Paciente
+                </button>
+            </div>
 
-            <Button
-              onClick={() => router.push("/pacientes/page")}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              Paciente
-            </Button>
-          </div>
         </div>
 
         {/* Cards de estatísticas */}
@@ -129,40 +129,40 @@ const DashboardPage: React.FC = () => {
           <StatCard title="DM2" value={diagnosticCounts.DM2} description="Pacientes com DM2" icon={<PieChart className="h-4 w-4 text-blue-900" />} className="border-l-4 border-red-400" />
           <StatCard title="LADA" value={diagnosticCounts.LADA} description="Pacientes com LADA" icon={<PieChart className="h-4 w-4 text-blue-900" />} className="border-l-4 border-blue-400" />
         </div>
-          {/* Botões de ação com fundo branco, borda colorida e texto preto */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-            <Button
+            <button
               onClick={() => router.push("/relatorios/new")}
-              className="flex flex-col items-center justify-center p-4 bg-white border-l-4 border-blue-600 hover:bg-blue-50 text-black font-medium"
+              className="flex flex-col items-center justify-center p-4 bg-white border-l-4 border-blue-600 hover:border-blue-300 hover:bg-blue-200 text-black font-medium transition-colors duration-300"
             >
-              <PieChart className="h-6 w-6 mb-1 text-blue-600" />
-              <span className="text-black">Novo Relatório</span>
-            </Button>
+              <PieChart className="h-6 w-6 mb-1 text-blue-600 hover:text-blue-300 transition-colors duration-300" />
+              <span className="text-black hover:text-blue-300 transition-colors duration-300">Novo Relatório</span>
+            </button>
 
-            <Button
+            <button
               onClick={() => router.push("/agendamentos")}
-              className="flex flex-col items-center justify-center p-4 bg-white border-l-4 border-red-500 hover:bg-red-50 text-black font-medium"
+              className="flex flex-col items-center justify-center p-4 bg-white border-l-4 border-red-500 hover:border-blue-300 hover:bg-blue-200 text-black font-medium transition-colors duration-300"
             >
-              <PieChart className="h-6 w-6 mb-1 text-red-500" />
-              <span className="text-black">Agendamentos</span>
-            </Button>
+              <PieChart className="h-6 w-6 mb-1 text-red-500 hover:text-blue-300 transition-colors duration-300" />
+              <span className="text-black hover:text-blue-300 transition-colors duration-300">Agendamentos</span>
+            </button>
 
-            <Button
+            <button
               onClick={() => router.push("/monitoramento")}
-              className="flex flex-col items-center justify-center p-4 bg-white border-l-4 border-blue-400 hover:bg-blue-50 text-black font-medium"
+              className="flex flex-col items-center justify-center p-4 bg-white border-l-4 border-teal-400 hover:border-blue-300 hover:bg-blue-200 text-black font-medium transition-colors duration-300"
             >
-              <PieChart className="h-6 w-6 mb-1 text-blue-400" />
-              <span className="text-black">Monitoramento</span>
-            </Button>
+              <PieChart className="h-6 w-6 mb-1 text-teal-400 hover:text-blue-300 transition-colors duration-300" />
+              <span className="text-black hover:text-blue-300 transition-colors duration-300">Monitoramento</span>
+            </button>
 
-            <Button
+            <button
               onClick={() => router.push("/estatisticas")}
-              className="flex flex-col items-center justify-center p-4 bg-white border-l-4 border-red-400 hover:bg-red-50 text-black font-medium"
+              className="flex flex-col items-center justify-center p-4 bg-white border-l-4 border-red-400 hover:border-blue-300 hover:bg-blue-200 text-black font-medium transition-colors duration-300"
             >
-              <PieChart className="h-6 w-6 mb-1 text-red-400" />
-              <span className="text-black">Estatísticas</span>
-            </Button>
+              <PieChart className="h-6 w-6 mb-1 text-red-400 hover:text-blue-300 transition-colors duration-300" />
+              <span className="text-black hover:text-blue-300 transition-colors duration-300">Estatísticas</span>
+            </button>
           </div>
+
 
         {/* Lista de pacientes */}
         <Card className="bg-blue-50 border-blue-200 mt-6">
@@ -245,18 +245,19 @@ const DashboardPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Logo como footer visual */}
-        <div className="absolute bottom-4 right-4 z-20">
-          <Image
-            src="/logoCenid.png"
-            alt="LOGOCENID"
-            width={200}
-            height={200}
-            className="opacity-70"
-          />
-        </div>
+      </div>
+              {/* Logo como footer visual */}
+      <div className="w-full flex justify-end mt-8">
+        <Image
+          src="/logoCenid.png"
+          alt="LOGOCENID"
+          width={200}
+          height={200}
+          className="opacity-70"
+        />
       </div>
     </DashboardContent>
+    
   );
 };
 
