@@ -4,19 +4,50 @@ import React, { useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { Heart } from "lucide-react";
+import axios from "axios";
+
+const API_URL = "http://127.0.0.1:8000/"; // sua API Django
 
 const LoginPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleToggle = () => setIsLogin(!isLogin);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isLogin) {
+    setLoading(true);
+
+    const form = e.currentTarget;
+    const name = !isLogin ? (form[0] as HTMLInputElement).value : "";
+    const email = (form[isLogin ? 0 : 1] as HTMLInputElement).value;
+    const password = (form[isLogin ? 1 : 2] as HTMLInputElement).value;
+
+    try {
+      let response;
+      if (isLogin) {
+        response = await axios.post(`${API_URL}api/login/`, {
+          username: name,
+          password,
+          email,
+        });
+      } else {
+        response = await axios.post(`${API_URL}api/register/`, {
+          username: name,
+          password,
+          email,
+        });
+        setIsLogin(true); // volta para login depois do cadastro
+      }
+      console.log(response);
+      localStorage.setItem("token", response.data.token);
+      alert(isLogin ? "Logado com sucesso!" : "Cadastrado com sucesso!");
       router.push("/Funcionarios/dashboard");
-    } else {
-      setIsLogin(true);
+    } catch (err: any) {
+      alert(err.response?.data?.error || "Erro desconhecido");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,9 +94,14 @@ const LoginPage: React.FC = () => {
 
             <button
               type="submit"
-              className="bg-red-500 text-white py-3 rounded-xl shadow-lg hover:bg-red-600 transition-all font-semibold text-lg"
+              disabled={loading}
+              className="bg-red-500 text-white py-3 rounded-xl shadow-lg hover:bg-red-600 transition-all font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLogin ? "Entrar" : "Cadastrar"}
+              {loading
+                ? "Aguarde..."
+                : isLogin
+                ? "Entrar"
+                : "Cadastrar"}
             </button>
           </form>
 
@@ -94,7 +130,9 @@ const LoginPage: React.FC = () => {
                 Centro Interdisciplinar de Diabetes
               </span>
             </div>
-            <p className="text-blue-200 text-sm sm:text-base">CENID - Todos os direitos reservados</p>
+            <p className="text-blue-200 text-sm sm:text-base">
+              CENID - Todos os direitos reservados
+            </p>
           </div>
         </div>
       </footer>
