@@ -149,7 +149,7 @@ const PatientDetails = () => {
             Histórico
           </Button>
           <Button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/Funcionarios/dashboard")}
             className="bg-gray-300 hover:bg-gray-400 text-black"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
