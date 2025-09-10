@@ -1,928 +1,492 @@
+import React, { useState, useCallback } from 'react';
+
+// Estilos base para reutilização. Em um projeto real, isso poderia estar em um arquivo CSS.
+// Como a solicitação é um arquivo único, definimos classes utilitárias aqui para referência.
+// Nota: Essas classes dependem do Tailwind CSS estar configurado no seu projeto Vite.
+const inputClasses = "mt-1 block w-full rounded-md border-gray-300 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm";
+const tableInputClasses = "w-full p-1 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900";
+const sectionTitleClasses = "text-2xl font-semibold text-blue-800 mb-6";
+const cardClasses = "bg-gray-50 p-6 rounded-2xl border border-gray-200 mb-6 shadow-sm";
+const subTitleClasses = "text-xl font-semibold text-gray-800";
 
 
-"use client"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
+// --- Componente: Cartão de Medicamento (Reutilizável) ---
+const MedicationCard = ({ medicationData, onDataChange, onRemove, showRemoveButton }) => {
 
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Card, CardContent } from "@/components/ui/card"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+  const handleFieldChange = (field, value) => {
+    onDataChange({ ...medicationData, [field]: value });
+  };
 
-const AvaliacaoFarmaciaSchema = z.object({
-  // Dados básicos
-  data: z.date().optional(),
-  nomeCompleto: z.string().min(1, "Nome completo é obrigatório"),
-  idade: z.string().optional(),
+  const handlePosologiaChange = (posIndex, field, value) => {
+    const newPosologias = [...medicationData.posologias];
+    newPosologias[posIndex] = { ...newPosologias[posIndex], [field]: value };
+    onDataChange({ ...medicationData, posologias: newPosologias });
+  };
 
-  // Método de administração de insulina
-  metodoAdministracao: z.string().optional(),
-  insulinaBasal: z.string().optional(),
-  insulinaBolus: z.string().optional(),
+  const addPosologiaRow = () => {
+    const newPosologias = [...medicationData.posologias, { posologia: '', frequencia: '', dose: '', horario: '', emJejum: '' }];
+    onDataChange({ ...medicationData, posologias: newPosologias });
+  };
 
-  // Adesão ao tratamento com insulina
-  adesaoInsulina1: z.string().default("0"),
-  adesaoInsulina2: z.string().default("0"),
-  adesaoInsulina3: z.string().default("0"),
-  adesaoInsulina4: z.string().default("0"),
+  const removePosologiaRow = (posIndex) => {
+    if (medicationData.posologias.length <= 1) return; // Não remover a última linha
+    const newPosologias = medicationData.posologias.filter((_, index) => index !== posIndex);
+    onDataChange({ ...medicationData, posologias: newPosologias });
+  };
 
-  // Medicamentos (array de 5 medicamentos)
-  medicamentos: z
-    .array(
-      z.object({
-        nomeComercial: z.string().optional(),
-        principioAtivo: z.string().optional(),
-        comPrescricao: z.string().optional(),
-        tempoUso: z.string().optional(),
-        dataInicio: z.date().optional(),
-        dataTermino: z.date().optional(),
-        finalidadeUso: z.string().optional(),
-        posologias: z
-          .array(
-            z.object({
-              dose: z.string().optional(),
-              horario: z.string().optional(),
-              jejum: z.string().optional(),
-            }),
-          )
-          .length(4),
-        adesao1: z.string().default("0"),
-        adesao2: z.string().default("0"),
-        adesao3: z.string().default("0"),
-        adesao4: z.string().default("0"),
-      }),
-    )
-    .length(5),
-})
+  const calculateTempoDeUso = useCallback(() => {
+    if (medicationData.dataInicio && medicationData.dataTermino) {
+      const start = new Date(medicationData.dataInicio);
+      const end = new Date(medicationData.dataTermino);
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end >= start) {
+        const diffTime = Math.abs(end - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return `${diffDays} dias`;
+      }
+    }
+    return '';
+  }, [medicationData.dataInicio, medicationData.dataTermino]);
 
-type AvaliacaoFarmaciaFormValues = z.infer<typeof AvaliacaoFarmaciaSchema>
-
-export default function FormularioAvaliacaoFarmacia() {
-  const form = useForm<AvaliacaoFarmaciaFormValues>({
-    resolver: zodResolver(AvaliacaoFarmaciaSchema),
-    defaultValues: {
-      adesaoInsulina1: "0",
-      adesaoInsulina2: "0",
-      adesaoInsulina3: "0",
-      adesaoInsulina4: "0",
-      medicamentos: Array(5).fill({
-        nomeComercial: "",
-        principioAtivo: "",
-        comPrescricao: "",
-        tempoUso: "",
-        finalidadeUso: "",
-        posologias: Array(4).fill({
-          dose: "",
-          horario: "",
-          jejum: "",
-        }),
-        adesao1: "0",
-        adesao2: "0",
-        adesao3: "0",
-        adesao4: "0",
-      }),
-    },
-  })
-
-  const onSubmit = (data: AvaliacaoFarmaciaFormValues) => {
-    console.log(data)
-  }
-
-  // Função para calcular o escore de adesão à insulina
-  const calcularEscoreInsulinaAdesao = () => {
-    const adesao1 = form.watch("adesaoInsulina1") === "0" ? 1 : 0
-    const adesao2 = form.watch("adesaoInsulina2") === "0" ? 1 : 0
-    const adesao3 = form.watch("adesaoInsulina3") === "0" ? 1 : 0
-    const adesao4 = form.watch("adesaoInsulina4") === "0" ? 1 : 0
-
-    return adesao1 + adesao2 + adesao3 + adesao4
-  }
-
-  // Função para determinar o nível de adesão com base no escore
-  const determinarNivelAdesao = (escore: number) => {
-    if (escore === 4) return "Máxima"
-    if (escore === 3) return "Alta"
-    if (escore === 2) return "Média"
-    if (escore === 1) return "Baixa"
-    return "Mínima"
-  }
-
-  // Função para calcular o escore de adesão ao medicamento
-  const calcularEscoreMedicamentoAdesao = (index: number) => {
-    const adesao1 = form.watch(`medicamentos.${index}.adesao1`) === "0" ? 1 : 0
-    const adesao2 = form.watch(`medicamentos.${index}.adesao2`) === "0" ? 1 : 0
-    const adesao3 = form.watch(`medicamentos.${index}.adesao3`) === "0" ? 1 : 0
-    const adesao4 = form.watch(`medicamentos.${index}.adesao4`) === "0" ? 1 : 0
-
-    return adesao1 + adesao2 + adesao3 + adesao4
-  }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <Card className="bg-white">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-teal-700">AVALIAÇÃO FARMÁCIA</h1>
-              <FormField
-                control={form.control}
-                name="data"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-teal-800">Data</FormLabel>
-                    <div className="flex space-x-2">
-                      <FormControl>
-                        <Input
-                          type="date"
-                          className="border-teal-300 focus:ring-teal-500"
-                          value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                          onChange={(e) => {
-                            const date = e.target.value ? new Date(e.target.value) : undefined
-                            field.onChange(date)
-                          }}
-                        />
-                      </FormControl>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" size="icon" className="border-teal-300 focus:ring-teal-500">
-                            <CalendarIcon className="h-4 w-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                            initialFocus
-                            locale={ptBR}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+    <div className="space-y-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Fields */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Medicamento (nome comercial):</label>
+          <input type="text" value={medicationData.medicamento} onChange={(e) => handleFieldChange('medicamento', e.target.value)} className={inputClasses} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Princípio ativo:</label>
+          <input type="text" value={medicationData.principioAtivo} onChange={(e) => handleFieldChange('principioAtivo', e.target.value)} className={inputClasses} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Com prescrição médica?</label>
+          <select value={medicationData.comPrescricaoMedica} onChange={(e) => handleFieldChange('comPrescricaoMedica', e.target.value)} className={inputClasses}>
+            <option value="">Selecione</option>
+            <option value="Sim">Sim</option>
+            <option value="Não">Não</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Data início:</label>
+          <input type="date" value={medicationData.dataInicio} onChange={(e) => handleFieldChange('dataInicio', e.target.value)} className={inputClasses} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Data término ou atual:</label>
+          <input type="date" value={medicationData.dataTermino} onChange={(e) => handleFieldChange('dataTermino', e.target.value)} className={inputClasses} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Tempo de uso:</label>
+          <input type="text" value={calculateTempoDeUso()} readOnly className={`${inputClasses} bg-gray-100`} />
+        </div>
+        <div className="md:col-span-2 lg:col-span-3">
+          <label className="block text-sm font-medium text-gray-700">Finalidade do uso:</label>
+          <input type="text" value={medicationData.finalidade} onChange={(e) => handleFieldChange('finalidade', e.target.value)} className={inputClasses} />
+        </div>
+      </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <FormField
-                control={form.control}
-                name="nomeCompleto"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-teal-800">Nome completo</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Digite o nome completo"
-                        className="border-teal-300 focus:ring-teal-500"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="idade"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-teal-800">Idade (anos)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Digite a idade"
-                        className="border-teal-300 focus:ring-teal-500"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Método de administração de insulina */}
-            <div className="mb-6">
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="metodoAdministracao"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-teal-800">Método de administração de insulina</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="border-teal-300 focus:ring-teal-500">
-                              <SelectValue placeholder="Selecione o método" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="caneta">Caneta</SelectItem>
-                            <SelectItem value="seringa">Seringa</SelectItem>
-                            <SelectItem value="bomba">Bomba de insulina</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
+      {/* Tabela de Posologia */}
+      <div className="bg-gray-100 p-4 rounded-xl mt-4 border">
+        <h5 className="font-semibold text-gray-700 mb-2">Posologia</h5>
+        <div className="overflow-x-auto">
+          <table className="w-full table-auto text-sm">
+            <thead className="bg-gray-200">
+              <tr className="text-left text-gray-800 uppercase">
+                <th className="py-2 px-3">Posologia</th>
+                <th className="py-2 px-3">Frequência</th>
+                <th className="py-2 px-3">Dose</th>
+                <th className="py-2 px-3">Horário</th>
+                <th className="py-2 px-3">Em jejum?</th>
+                <th className="py-2 px-3 w-12"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {medicationData.posologias.map((pos, i) => (
+                <tr key={i} className="border-b border-gray-200 hover:bg-gray-50">
+                  <td className="p-1"><input type="text" value={pos.posologia} onChange={(e) => handlePosologiaChange(i, 'posologia', e.target.value)} className={tableInputClasses} /></td>
+                  <td className="p-1"><input type="text" value={pos.frequencia} onChange={(e) => handlePosologiaChange(i, 'frequencia', e.target.value)} className={tableInputClasses} /></td>
+                  <td className="p-1"><input type="text" value={pos.dose} onChange={(e) => handlePosologiaChange(i, 'dose', e.target.value)} className={tableInputClasses} /></td>
+                  <td className="p-1"><input type="text" value={pos.horario} onChange={(e) => handlePosologiaChange(i, 'horario', e.target.value)} className={tableInputClasses} /></td>
+                  <td className="p-1">
+                    <select value={pos.emJejum} onChange={(e) => handlePosologiaChange(i, 'emJejum', e.target.value)} className={tableInputClasses}>
+                      <option value="">Selecione</option>
+                      <option value="Sim">Sim</option>
+                      <option value="Não">Não</option>
+                    </select>
+                  </td>
+                  <td className="p-1 text-center">
+                    {medicationData.posologias.length > 1 && (
+                      <button type="button" onClick={() => removePosologiaRow(i)} className="text-red-500 hover:text-red-700">&times;</button>
                     )}
-                  />
-                </div>
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="insulinaBasal"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-teal-800">Insulina Basal</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Digite a insulina basal"
-                            className="border-teal-300 focus:ring-teal-500"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="insulinaBolus"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-teal-800">Insulina Bolus</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Digite a insulina bolus"
-                            className="border-teal-300 focus:ring-teal-500"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Adesão ao tratamento da terapia com insulina */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-teal-700 mb-4">
-                Adesão ao tratamento da terapia com insulina.
-              </h3>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-4/5">Perguntas</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>1. Você já se esqueceu de tomar alguma dose de insulina?</TableCell>
-                    <TableCell>
-                      <FormField
-                        control={form.control}
-                        name="adesaoInsulina1"
-                        render={({ field }) => (
-                          <FormItem className="flex justify-center">
-                            <FormControl>
-                              <RadioGroup
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                                className="flex space-x-4"
-                              >
-                                <div className="flex items-center space-x-1">
-                                  <RadioGroupItem value="1" id="adesaoInsulina1-sim" />
-                                  <FormLabel htmlFor="adesaoInsulina1-sim" className="font-normal">
-                                    Sim
-                                  </FormLabel>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <RadioGroupItem value="0" id="adesaoInsulina1-nao" />
-                                  <FormLabel htmlFor="adesaoInsulina1-nao" className="font-normal">
-                                    Não
-                                  </FormLabel>
-                                </div>
-                              </RadioGroup>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>
-                      2. Você é negligente com o horário de aplicação das injeções de insulina conforme prescrito pelo
-                      seu médico?
-                    </TableCell>
-                    <TableCell>
-                      <FormField
-                        control={form.control}
-                        name="adesaoInsulina2"
-                        render={({ field }) => (
-                          <FormItem className="flex justify-center">
-                            <FormControl>
-                              <RadioGroup
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                                className="flex space-x-4"
-                              >
-                                <div className="flex items-center space-x-1">
-                                  <RadioGroupItem value="1" id="adesaoInsulina2-sim" />
-                                  <FormLabel htmlFor="adesaoInsulina2-sim" className="font-normal">
-                                    Sim
-                                  </FormLabel>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <RadioGroupItem value="0" id="adesaoInsulina2-nao" />
-                                  <FormLabel htmlFor="adesaoInsulina2-nao" className="font-normal">
-                                    Não
-                                  </FormLabel>
-                                </div>
-                              </RadioGroup>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>3. Você às vezes para de tomar insulina quando se sente melhor?</TableCell>
-                    <TableCell>
-                      <FormField
-                        control={form.control}
-                        name="adesaoInsulina3"
-                        render={({ field }) => (
-                          <FormItem className="flex justify-center">
-                            <FormControl>
-                              <RadioGroup
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                                className="flex space-x-4"
-                              >
-                                <div className="flex items-center space-x-1">
-                                  <RadioGroupItem value="1" id="adesaoInsulina3-sim" />
-                                  <FormLabel htmlFor="adesaoInsulina3-sim" className="font-normal">
-                                    Sim
-                                  </FormLabel>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <RadioGroupItem value="0" id="adesaoInsulina3-nao" />
-                                  <FormLabel htmlFor="adesaoInsulina3-nao" className="font-normal">
-                                    Não
-                                  </FormLabel>
-                                </div>
-                              </RadioGroup>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>
-                      4. Você às vezes aumenta ou diminui a dose de insulina quando não se sente bem sem o
-                      aconselhamento do seu médico?
-                    </TableCell>
-                    <TableCell>
-                      <FormField
-                        control={form.control}
-                        name="adesaoInsulina4"
-                        render={({ field }) => (
-                          <FormItem className="flex justify-center">
-                            <FormControl>
-                              <RadioGroup
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                                className="flex space-x-4"
-                              >
-                                <div className="flex items-center space-x-1">
-                                  <RadioGroupItem value="1" id="adesaoInsulina4-sim" />
-                                  <FormLabel htmlFor="adesaoInsulina4-sim" className="font-normal">
-                                    Sim
-                                  </FormLabel>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <RadioGroupItem value="0" id="adesaoInsulina4-nao" />
-                                  <FormLabel htmlFor="adesaoInsulina4-nao" className="font-normal">
-                                    Não
-                                  </FormLabel>
-                                </div>
-                              </RadioGroup>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow className="bg-yellow-50">
-                    <TableCell className="font-medium">Avaliação da adesão para insulina</TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-around">
-                        <div>
-                          <span className="font-semibold">Escore</span>
-                          <div className="bg-yellow-200 px-3 py-1 rounded-md font-bold">
-                            {calcularEscoreInsulinaAdesao()}
-                          </div>
-                        </div>
-                        <div>
-                          <span className="font-semibold">Adesão</span>
-                          <div className="bg-yellow-200 px-3 py-1 rounded-md font-bold">
-                            {determinarNivelAdesao(calcularEscoreInsulinaAdesao())}
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Informação sobre medicamentos a investigar */}
-            <div className="mb-6 bg-yellow-50 p-4 rounded-md text-sm">
-              <p className="text-gray-700">
-                <strong>Importante, fazer a investigação sobre os seguintes medicamento:</strong> Inibidores da
-                dipeptidil peptidase-4 (DPP4- gliplitinas); Inibidores do Cotransportador de Sódio-Glicose-1/2
-                (SGLT-1/2i - dapaglofozina - Forxiga); Inibidores do Cotransportador de Sódio-Glicose-2 (SGLT-2i-
-                empaglifozina - Jardiance); GLYXAMBI (empaglifozina e linaglipitina); GLYXAMBI (empaglifozina e
-                linaglipitina); Qterm (saxaglipitina e dapaglifozina); e; agonistas do receptor de GLP-1 (liraglutida
-                (Saxenda®), dulaglutida (Trulicity®), exenatida, lixisenatida e tirzepatida (Mounjaro®)).
-              </p>
-            </div>
-
-            {/* Perfil de medicamentos em uso */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-teal-700 mb-4">Perfil de medicamentos em uso</h3>
-
-              {/* Repetir para cada medicamento (5 vezes) */}
-              {[0, 1, 2, 3, 4].map((index) => (
-                <div key={index} className="mb-10 border border-teal-200 rounded-md p-4">
-                  <h4 className="text-md font-semibold text-teal-700 mb-4 bg-yellow-200 p-2 rounded">
-                    {index + 1}. Medicamento (nome comercial)
-                  </h4>
-
-                  <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
-                    <FormField
-                      control={form.control}
-                      name={`medicamentos.${index}.nomeComercial`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-teal-800">Nome comercial</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Digite o nome comercial"
-                              className="border-teal-300 focus:ring-teal-500"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                      
-                      <div className="grid grid-cols-3 gap-2">
-                      <div className="col-span-2">
-                        <FormField
-                          control={form.control}
-                          name={`medicamentos.${index}.principioAtivo`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-teal-800">Princípio ativo</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Digite o princípio ativo"
-                                  className="border-teal-300 focus:ring-teal-500"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div>
-                        <FormField
-                          control={form.control}
-                          name={`medicamentos.${index}.comPrescricao`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-teal-800">Com prescrição médica</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger className="border-teal-300 focus:ring-teal-500">
-                                    <SelectValue placeholder="Selecione" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="sim">Sim</SelectItem>
-                                  <SelectItem value="nao">Não</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <FormField
-                      control={form.control}
-                      name={`medicamentos.${index}.tempoUso`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-teal-800">Tempo de uso</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Ex: 6 meses, 2 anos"
-                              className="border-teal-300 focus:ring-teal-500"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`medicamentos.${index}.dataInicio`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-teal-800">Data início</FormLabel>
-                          <div className="flex space-x-2">
-                            <FormControl>
-                              <Input
-                                type="date"
-                                className="border-teal-300 focus:ring-teal-500"
-                                value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                                onChange={(e) => {
-                                  const date = e.target.value ? new Date(e.target.value) : undefined
-                                  field.onChange(date)
-                                }}
-                              />
-                            </FormControl>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button variant="outline" size="icon" className="border-teal-300 focus:ring-teal-500">
-                                  <CalendarIcon className="h-4 w-4" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                                  initialFocus
-                                  locale={ptBR}
-                                />
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`medicamentos.${index}.dataTermino`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-teal-800">Data término</FormLabel>
-                          <div className="flex space-x-2">
-                            <FormControl>
-                              <Input
-                                type="date"
-                                className="border-teal-300 focus:ring-teal-500"
-                                value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                                onChange={(e) => {
-                                  const date = e.target.value ? new Date(e.target.value) : undefined
-                                  field.onChange(date)
-                                }}
-                              />
-                            </FormControl>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button variant="outline" size="icon" className="border-teal-300 focus:ring-teal-500">
-                                  <CalendarIcon className="h-4 w-4" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  disabled={(date) => date < new Date("1900-01-01")}
-                                  initialFocus
-                                  locale={ptBR}
-                                />
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name={`medicamentos.${index}.finalidadeUso`}
-                    render={({ field }) => (
-                      <FormItem className="mb-4">
-                        <FormLabel className="text-teal-800">Finalidade do uso (origem da prescrição ou não)</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Descreva a finalidade do uso"
-                            className="border-teal-300 focus:ring-teal-500"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Posologia */}
-                  <div className="mb-4">
-                    <h5 className="text-md font-semibold text-teal-700 mb-2">Posologia</h5>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-teal-800">Posologia</TableHead>
-                          <TableHead className="text-teal-800">Dose</TableHead>
-                          <TableHead className="text-teal-800">Horário</TableHead>
-                          <TableHead className="text-teal-800">Jejum</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {[0, 1, 2, 3].map((posIndex) => (
-                          <TableRow key={posIndex}>
-                            <TableCell>Posologia {posIndex + 1}</TableCell>
-                            <TableCell>
-                              <FormField
-                                control={form.control}
-                                name={`medicamentos.${index}.posologias.${posIndex}.dose`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormControl>
-                                      <Input
-                                        placeholder="Dose"
-                                        className="border-teal-300 focus:ring-teal-500"
-                                        {...field}
-                                      />
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <FormField
-                                control={form.control}
-                                name={`medicamentos.${index}.posologias.${posIndex}.horario`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormControl>
-                                      <Input
-                                        placeholder="Horário"
-                                        className="border-teal-300 focus:ring-teal-500"
-                                        {...field}
-                                      />
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <FormField
-                                control={form.control}
-                                name={`medicamentos.${index}.posologias.${posIndex}.jejum`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                      <FormControl>
-                                        <SelectTrigger className="border-teal-300 focus:ring-teal-500">
-                                          <SelectValue placeholder="Selecione" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        <SelectItem value="sim">Sim</SelectItem>
-                                        <SelectItem value="nao">Não</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </FormItem>
-                                )}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {/* Adesão ao tratamento medicamento */}
-                  <div>
-                    <h5 className="text-md font-semibold text-teal-700 mb-2">
-                      Adesão ao tratamento medicamento adaptado de Morisky
-                    </h5>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-4/5">Perguntas</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell>1. Você já se esqueceu de tomar alguma dose do medicamento?</TableCell>
-                          <TableCell>
-                            <FormField
-                              control={form.control}
-                              name={`medicamentos.${index}.adesao1`}
-                              render={({ field }) => (
-                                <FormItem className="flex justify-center">
-                                  <FormControl>
-                                    <RadioGroup
-                                      onValueChange={field.onChange}
-                                      defaultValue={field.value}
-                                      className="flex space-x-4"
-                                    >
-                                      <div className="flex items-center space-x-1">
-                                        <RadioGroupItem value="1" id={`med${index}adesao1-sim`} />
-                                        <FormLabel htmlFor={`med${index}adesao1-sim`} className="font-normal">
-                                          Sim
-                                        </FormLabel>
-                                      </div>
-                                      <div className="flex items-center space-x-1">
-                                        <RadioGroupItem value="0" id={`med${index}adesao1-nao`} />
-                                        <FormLabel htmlFor={`med${index}adesao1-nao`} className="font-normal">
-                                          Não
-                                        </FormLabel>
-                                      </div>
-                                    </RadioGroup>
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            2. Você é negligente com o horário de tomar a medicação conforme prescrito pelo seu médico?
-                          </TableCell>
-                          <TableCell>
-                            <FormField
-                              control={form.control}
-                              name={`medicamentos.${index}.adesao2`}
-                              render={({ field }) => (
-                                <FormItem className="flex justify-center">
-                                  <FormControl>
-                                    <RadioGroup
-                                      onValueChange={field.onChange}
-                                      defaultValue={field.value}
-                                      className="flex space-x-4"
-                                    >
-                                      <div className="flex items-center space-x-1">
-                                        <RadioGroupItem value="1" id={`med${index}adesao2-sim`} />
-                                        <FormLabel htmlFor={`med${index}adesao2-sim`} className="font-normal">
-                                          Sim
-                                        </FormLabel>
-                                      </div>
-                                      <div className="flex items-center space-x-1">
-                                        <RadioGroupItem value="0" id={`med${index}adesao2-nao`} />
-                                        <FormLabel htmlFor={`med${index}adesao2-nao`} className="font-normal">
-                                          Não
-                                        </FormLabel>
-                                      </div>
-                                    </RadioGroup>
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>3. Você às vezes para de tomar a medicação quando se sente melhor?</TableCell>
-                          <TableCell>
-                            <FormField
-                              control={form.control}
-                              name={`medicamentos.${index}.adesao3`}
-                              render={({ field }) => (
-                                <FormItem className="flex justify-center">
-                                  <FormControl>
-                                    <RadioGroup
-                                      onValueChange={field.onChange}
-                                      defaultValue={field.value}
-                                      className="flex space-x-4"
-                                    >
-                                      <div className="flex items-center space-x-1">
-                                        <RadioGroupItem value="1" id={`med${index}adesao3-sim`} />
-                                        <FormLabel htmlFor={`med${index}adesao3-sim`} className="font-normal">
-                                          Sim
-                                        </FormLabel>
-                                      </div>
-                                      <div className="flex items-center space-x-1">
-                                        <RadioGroupItem value="0" id={`med${index}adesao3-nao`} />
-                                        <FormLabel htmlFor={`med${index}adesao3-nao`} className="font-normal">
-                                          Não
-                                        </FormLabel>
-                                      </div>
-                                    </RadioGroup>
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            4. Você às vezes aumenta ou diminui a dose da medicação quando não se sente bem sem o
-                            aconselhamento do seu médico?
-                          </TableCell>
-                          <TableCell>
-                            <FormField
-                              control={form.control}
-                              name={`medicamentos.${index}.adesao4`}
-                              render={({ field }) => (
-                                <FormItem className="flex justify-center">
-                                  <FormControl>
-                                    <RadioGroup
-                                      onValueChange={field.onChange}
-                                      defaultValue={field.value}
-                                      className="flex space-x-4"
-                                    >
-                                      <div className="flex items-center space-x-1">
-                                        <RadioGroupItem value="1" id={`med${index}adesao4-sim`} />
-                                        <FormLabel htmlFor={`med${index}adesao4-sim`} className="font-normal">
-                                          Sim
-                                        </FormLabel>
-                                      </div>
-                                      <div className="flex items-center space-x-1">
-                                        <RadioGroupItem value="0" id={`med${index}adesao4-nao`} />
-                                        <FormLabel htmlFor={`med${index}adesao4-nao`} className="font-normal">
-                                          Não
-                                        </FormLabel>
-                                      </div>
-                                    </RadioGroup>
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </TableCell>
-                        </TableRow>
-                        <TableRow className="bg-yellow-50">
-                          <TableCell className="font-medium">Avaliação da adesão ao tratamento medicamentoso</TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex justify-around">
-                              <div>
-                                <span className="font-semibold">Escore</span>
-                                <div className="bg-yellow-200 px-3 py-1 rounded-md font-bold">
-                                  {calcularEscoreMedicamentoAdesao(index)}
-                                </div>
-                              </div>
-                              <div>
-                                <span className="font-semibold">Adesão</span>
-                                <div className="bg-yellow-200 px-3 py-1 rounded-md font-bold">
-                                  {determinarNivelAdesao(calcularEscoreMedicamentoAdesao(index))}
-                                </div>
-                              </div>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
+                  </td>
+                </tr>
               ))}
-            </div>
+            </tbody>
+          </table>
+        </div>
+        <button type="button" onClick={addPosologiaRow} className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2">
+          + Adicionar Linha
+        </button>
+      </div>
+      {showRemoveButton && (
+        <div className="flex justify-end mt-4">
+          <button type="button" onClick={onRemove} className="bg-red-500 text-white text-sm font-semibold py-1 px-3 rounded-md hover:bg-red-600 transition-colors">
+            Remover Medicamento
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
-            <div className="flex justify-end">
-              <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white">
-                Salvar Avaliação
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </form>
-    </Form>
-  )
-}
+
+// --- Seção: Dados do Paciente ---
+const PatientInfo = ({ onChange }) => {
+  const [data, setData] = useState({});
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const newData = { ...data, [name]: value };
+    setData(newData);
+    onChange(newData);
+  };
+
+  return (
+    <div>
+      <h3 className={sectionTitleClasses}>Dados do Paciente</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[
+          { name: 'nome', label: 'Nome completo:', type: 'text' },
+          { name: 'dataAvaliacao', label: 'Data da avaliação:', type: 'date' },
+          { name: 'sexo', label: 'Sexo:', type: 'select', options: ['Masculino', 'Feminino'] },
+          { name: 'idade', label: 'Idade (anos):', type: 'number' },
+          { name: 'peso', label: 'Peso (kg):', type: 'number', step: '0.1' },
+          { name: 'estatura', label: 'Estatura (metros):', type: 'number', step: '0.01' },
+        ].map((field) => (
+          <div key={field.name}>
+            <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">{field.label}</label>
+            {field.type === 'select' ? (
+              <select name={field.name} id={field.name} onChange={handleChange} className={inputClasses}>
+                <option value="">Selecione</option>
+                {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            ) : (
+              <input
+                type={field.type}
+                name={field.name}
+                id={field.name}
+                step={field.step}
+                onChange={handleChange}
+                className={inputClasses}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// --- Seção: Adesão à Insulina ---
+const BAASIS = ({ onChange }) => {
+  const [data, setData] = useState({ p1: '', p2: '', p3: '', p4: '' });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const newData = { ...data, [name]: value };
+    setData(newData);
+    onChange(newData);
+  };
+
+  return (
+    <div className="questionnaire-section bg-blue-50 p-6 rounded-2xl border border-blue-200 mt-6">
+      <h4 className="text-xl font-semibold text-blue-800 mb-2">BAASIS para pacientes com MDI</h4>
+      <p className="text-sm text-gray-600 mb-4">Objetivo: Avaliar especificamente a adesão à insulina em pacientes com DM1 e uso de MDI.</p>
+      {[
+          {key: 'p1', label: 'P1. Esqueceu insulina na última semana?', options: ['Nunca', '1-2x', '3-4x', '5+']},
+          {key: 'p2', label: 'P2. Reduziu/pulou doses sem orientação?', options: ['Sim', 'Não']},
+          {key: 'p3', label: 'P3. Aplicou fora do horário?', options: ['Sim', 'Não']},
+          {key: 'p4', label: 'P4. Dias sem insulina no último mês?', options: ['0', '1-2', '3-5', '>5']}
+      ].map(q => (
+         <div key={q.key} className="form-field mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">{q.label}</label>
+            <select name={q.key} value={data[q.key]} onChange={handleChange} className={inputClasses}>
+                <option value="">Selecione</option>
+                {q.options.map(v => <option key={v} value={v}>{v}</option>)}
+            </select>
+         </div>
+      ))}
+      <p className="mt-4 text-sm text-blue-800 font-medium">CLASSIFICAÇÃO: Não aderente se: ≥1 falha (P1), "Sim" (P2/P3), ou ≥3 dias sem (P4).</p>
+      <p className="mt-2 text-xs text-gray-500">Referência: Schmittdiel JA, et al. Diabetes. 2008;57(Suppl 1):A1-A2.</p>
+    </div>
+  );
+};
+
+const BAASIS_CSII = ({ onChange }) => {
+  const [data, setData] = useState({ p1: '', p2: '', p3: '', p4: '', p5: '', p6: '' });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const newData = { ...data, [name]: value };
+    setData(newData);
+    onChange(newData);
+  };
+  const questions = [
+    { key: 'p1', label: 'P1. Omissão de bolus na última semana:', options: ['Nunca', '1-2x', '3-4x', '5+'] },
+    { key: 'p2', label: 'P2. Redução não autorizada de bolus:', options: ['Sim', 'Não'] },
+    { key: 'p3', label: 'P3. Dias sem basal por falha na bomba:', options: ['0', '1-2', '3-5', '>5'] },
+    { key: 'p4', label: 'P4. Bomba desconectada >1h:', options: ['Nenhuma', '1-2x', '3-4x', '5+'] },
+    { key: 'p5', label: 'P5. Troca de cateter atrasada:', options: ['Nenhuma', '1-2x', '3-4x', '5+'] },
+    { key: 'p6', label: 'P6. Ignorar alarmes:', options: ['Frequentemente', 'Às vezes', 'Raramente', 'Nunca'] },
+  ];
+
+  return (
+    <div className="questionnaire-section bg-green-50 p-6 rounded-2xl border border-green-200 mt-6">
+      <h4 className="text-xl font-semibold text-green-800 mb-2">BAASIS-CSII para usuários de bomba de insulina (SICI)</h4>
+      <p className="text-sm text-gray-600 mb-4">Objetivo: Avaliar comportamentos de não adesão específicos de usuários de CSII.</p>
+      {questions.map(q => (
+        <div key={q.key} className="form-field mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">{q.label}</label>
+          <select name={q.key} value={data[q.key]} onChange={handleChange} className={inputClasses}>
+            <option value="">Selecione</option>
+            {q.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          </select>
+        </div>
+      ))}
+      <p className="mt-4 text-sm text-green-800 font-medium">CLASSIFICAÇÃO: Não aderente se: ≥1 falha (P1,4,5), "Sim" (P2), ≥3 dias (P3), ou "Frequentemente/Às vezes" (P6).</p>
+      <p className="mt-2 text-xs text-gray-500">Referência: Hood et al., 2014; Barnard et al., 2015.</p>
+    </div>
+  );
+};
+
+const InsulinAdherence = ({ onChange }) => {
+  const [method, setMethod] = useState('');
+  const [questionnaireData, setQuestionnaireData] = useState({});
+
+  const handleMethodChange = (e) => {
+    const newMethod = e.target.value;
+    setMethod(newMethod);
+    setQuestionnaireData({});
+    onChange({ method: newMethod });
+  };
+
+  const handleQuestionnaireChange = (data) => {
+    setQuestionnaireData(data);
+    onChange({ method, questionnaire: data });
+  };
+
+  return (
+    <div>
+      <h3 className={sectionTitleClasses}>Adesão ao tratamento com insulina</h3>
+      <div className="form-field mb-6 max-w-sm">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Método de administração de insulina:</label>
+        <select value={method} onChange={handleMethodChange} className={inputClasses}>
+          <option value="">Selecione</option>
+          <option value="SICI">SICI</option>
+          <option value="MDI">MDI</option>
+        </select>
+      </div>
+      {method === 'MDI' && <BAASIS onChange={handleQuestionnaireChange} />}
+      {method === 'SICI' && <BAASIS_CSII onChange={handleQuestionnaireChange} />}
+    </div>
+  );
+};
+
+
+// --- Seção: Medicamentos Complementares ---
+const medicationCategories = [
+    { title: "Hipoglicemiante Oral", key: "hipoglicemianteOral" },
+    { title: "Inibidores da Dipeptidil Peptidase-4 (DPP-4i - Gliptinas)", key: "dpp4i" },
+    { title: "Inibidores do SGLT-2 (SGLT-2i)", key: "sglt2i" },
+    { title: "Combinações Fixas (SGLT-2i + DPP-4i)", key: "combinacoesFixas" },
+    { title: "Agonistas do Receptor de GLP-1 (GLP-1 RA)", key: "glp1ra" },
+    { title: "Imunobiológicos", key: "imunobiologicos" },
+    { title: "Anti-hipertensivos", key: "antihipertensivos" },
+    { title: "Estatinas", key: "estatinas" },
+    { title: "Antiagregante plaquetário", key: "antiagregantePlaquetario" },
+    { title: "Tratamento para tireoide", key: "tratamentoTireoide" },
+    { title: "Antidepressivos", key: "antidepressivos" },
+    { title: "Vitaminas", key: "vitaminas", isParent: true },
+    { title: "Vitamina D (1)", key: "vitaminaD1", parent: "vitaminas" },
+    { title: "Vitamina D (2)", key: "vitaminaD2", parent: "vitaminas" }
+];
+
+const createInitialMedState = () => ({
+  medicamento: '',
+  principioAtivo: '',
+  comPrescricaoMedica: '',
+  dataInicio: '',
+  dataTermino: '',
+  finalidade: '',
+  posologias: [{ posologia: '', frequencia: '', dose: '', horario: '', emJejum: '' }]
+});
+
+const ComplementaryMedications = ({ onChange }) => {
+    const [meds, setMeds] = useState({});
+
+    const handleToggle = (key) => {
+        const newMeds = { ...meds };
+        if (newMeds[key]) {
+            delete newMeds[key];
+        } else {
+            newMeds[key] = createInitialMedState();
+        }
+        setMeds(newMeds);
+        onChange(newMeds);
+    };
+
+    const handleDataChange = (key, data) => {
+        const newMeds = { ...meds, [key]: data };
+        setMeds(newMeds);
+        onChange(newMeds);
+    };
+
+    return (
+        <div>
+            <h3 className={sectionTitleClasses}>Tratamento Medicamentoso Complementar</h3>
+            {medicationCategories.filter(cat => !cat.parent).map(cat => (
+                <div key={cat.key} className={cat.key === 'vitaminas' ? 'bg-white p-6 rounded-2xl border border-gray-200 mb-6 shadow-sm' : cardClasses}>
+                    <div className="flex justify-between items-center mb-4">
+                        <h4 className={subTitleClasses}>{cat.title}</h4>
+                        {!cat.isParent && (
+                           <label className="flex items-center cursor-pointer">
+                                <span className="mr-3 text-sm font-medium text-gray-900">Em uso?</span>
+                                <div className="relative">
+                                    <input type="checkbox" checked={!!meds[cat.key]} onChange={() => handleToggle(cat.key)} className="sr-only peer" />
+                                    <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </div>
+                            </label>
+                        )}
+                    </div>
+                    {meds[cat.key] && !cat.isParent && (
+                        <MedicationCard
+                            medicationData={meds[cat.key]}
+                            onDataChange={(data) => handleDataChange(cat.key, data)}
+                        />
+                    )}
+                    {cat.isParent && (
+                        <div className="pl-4 mt-4 space-y-4">
+                            {medicationCategories.filter(subCat => subCat.parent === cat.key).map(subCat => (
+                                <div key={subCat.key} className="bg-gray-100 p-4 rounded-xl border">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h5 className="font-semibold text-gray-900">{subCat.title}</h5>
+                                         <label className="flex items-center cursor-pointer">
+                                            <span className="mr-3 text-sm font-medium text-gray-900">Em uso?</span>
+                                            <div className="relative">
+                                                <input type="checkbox" checked={!!meds[subCat.key]} onChange={() => handleToggle(subCat.key)} className="sr-only peer" />
+                                                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    {meds[subCat.key] && (
+                                        <MedicationCard
+                                            medicationData={meds[subCat.key]}
+                                            onDataChange={(data) => handleDataChange(subCat.key, data)}
+                                        />
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+};
+
+// --- Seção: Outros Medicamentos ---
+const OtherMedications = ({ onChange }) => {
+  const [meds, setMeds] = useState([]);
+
+  const addMedication = () => {
+    const newMeds = [...meds, createInitialMedState()];
+    setMeds(newMeds);
+    onChange(newMeds);
+  };
+
+  const removeMedication = (index) => {
+    const newMeds = meds.filter((_, i) => i !== index);
+    setMeds(newMeds);
+    onChange(newMeds);
+  };
+  
+  const handleMedicationChange = (index, data) => {
+    const newMeds = [...meds];
+    newMeds[index] = data;
+    setMeds(newMeds);
+    onChange(newMeds);
+  };
+
+  return (
+    <div>
+      <h3 className={sectionTitleClasses}>Outros Medicamentos</h3>
+      {meds.map((med, idx) => (
+        <div key={idx} className={cardClasses}>
+          <MedicationCard 
+            medicationData={med}
+            onDataChange={(data) => handleMedicationChange(idx, data)}
+            onRemove={() => removeMedication(idx)}
+            showRemoveButton={true}
+          />
+        </div>
+      ))}
+      <button type="button" onClick={addMedication} className="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition-colors">
+        + Adicionar Outro Medicamento
+      </button>
+    </div>
+  );
+};
+
+
+// --- Componente Principal: App ---
+const App = () => {
+  const [formData, setFormData] = useState({
+    patientInfo: {},
+    insulinAdherence: {},
+    complementaryMedications: {},
+    otherMedications: [],
+  });
+
+  const handleChange = (section, data) => {
+    setFormData(prevData => ({
+      ...prevData,
+      [section]: data,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Form data submitted:', formData);
+    // Substituindo o alert por uma mensagem no console, que é uma prática melhor em apps modernos.
+    console.log('Formulário enviado com sucesso! Verifique o console para os dados.');
+  };
+
+  return (
+    <div className="bg-gray-100 min-h-screen p-4 sm:p-8 flex items-center justify-center font-sans">
+      <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-10 w-full max-w-6xl">
+        <h2 className="text-3xl font-bold text-center text-blue-900 mb-2">Farmácia - Avaliação do Paciente</h2>
+        <p className="text-center text-gray-600 mb-10">
+          A avaliação da Farmácia deve ser feita sempre que o paciente realizar uma nova consulta médica com mudança na prescrição de medicamentos.
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-10">
+          <PatientInfo onChange={data => handleChange('patientInfo', data)} />
+          <hr className="border-t-2 border-gray-200" />
+          <InsulinAdherence onChange={data => handleChange('insulinAdherence', data)} />
+          <hr className="border-t-2 border-gray-200" />
+          <ComplementaryMedications onChange={data => handleChange('complementaryMedications', data)} />
+          <hr className="border-t-2 border-gray-200" />
+          <OtherMedications onChange={data => handleChange('otherMedications', data)} />
+          <div className="flex justify-center pt-6">
+            <button
+              type="submit"
+              className="bg-blue-700 text-white font-bold py-3 px-10 rounded-full shadow-lg hover:bg-blue-800 transition-transform transform hover:scale-105 duration-300"
+            >
+              Enviar Avaliação
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default App;

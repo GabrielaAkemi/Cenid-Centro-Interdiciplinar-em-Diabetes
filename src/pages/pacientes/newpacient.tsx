@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PacienteForm from "@/components/Forms/paciente-form";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -22,26 +21,27 @@ const NewPacientPage = () => {
   return (
     <div className="relative min-h-screen bg-blue-50">
       <div className="container mx-auto py-10 px-4">
-        <Card className="max-w-4xl mx-auto border border-blue-200 shadow-md bg-white">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-blue-900">
-              Cadastrar Novo Paciente
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PacienteForm onSubmit={handlePacienteSubmit} />
-          </CardContent>
-        </Card>
-
-        <div className="mt-6 text-center">
-        <Button
-            onClick={() => router.push("/Funcionarios/dashboard")}
-            className="border border-blue-900 text-blue-900 hover:bg-blue-100"
-        >
-            Voltar para Dashboard
-        </Button>
+        <div className="flex justify-center mb-8">
+          <Card className="w-full max-w-4xl shadow-lg border border-blue-200">
+            <CardHeader className="bg-blue-100">
+              <CardTitle className="text-2xl text-blue-900 text-center">
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              {/* Formulário */}
+              <PacienteForm onSubmit={handlePacienteSubmit} />
+            </CardContent>
+          </Card>
         </div>
 
+        <div className="mt-6 text-center">
+          <Button
+            onClick={() => router.push("/Funcionarios/dashboard")}
+            className="border border-blue-900 text-blue-900 hover:bg-blue-100"
+          >
+            Voltar para Dashboard
+          </Button>
+        </div>
       </div>
 
       {/* Logo no canto inferior direito */}
@@ -49,7 +49,7 @@ const NewPacientPage = () => {
         <Image
           src="/logoCenid.png"
           alt="Logo Cenid"
-          width={150}
+          width={250}
           height={150}
           className="opacity-70"
         />

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import Image from "next/image";
 
 interface Client {
   id: string;
@@ -50,7 +50,9 @@ const ClientesPage: React.FC = () => {
   return (
     <DashboardContent>
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-blue-900">Clientes</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-blue-900">Clientes</h1>
+        </div>
         <Button className="bg-red-500 hover:bg-red-600 text-white">Novo Cliente</Button>
       </div>
 
@@ -99,6 +101,17 @@ const ClientesPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Logo fixa no canto inferior direito da tela */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <Image
+          src="/logoCenid.png"
+          alt="LOGOCENID"
+          width={200}
+          height={200}
+          className="opacity-70"
+        />
+      </div>
     </DashboardContent>
   );
 };
