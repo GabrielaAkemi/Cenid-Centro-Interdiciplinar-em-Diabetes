@@ -111,12 +111,11 @@ const DashboardPage: React.FC = () => {
                         class="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors">
                     Novo Paciente
                 </button>
-
                 <button 
-                    onClick={() => router.push("/Funcionarios/consultas")}
-                    variant="default"id="back-button"
-                        class="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors">
-                    Paciente
+                  onClick={() => router.push("/pacientes")}
+                  className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors"
+                >
+                  Pacientes
                 </button>
             </div>
 
