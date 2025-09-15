@@ -75,7 +75,7 @@ export default function Consultas() {
 
             {/* Antropometria */}
             <button
-              onClick={() => router.push("/consultas/antropometria")}
+              onClick={() => router.push("/consultas/calculadora")}
               className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all"
             >
               <Calculator className="h-8 w-8 mb-2 text-red-600" />

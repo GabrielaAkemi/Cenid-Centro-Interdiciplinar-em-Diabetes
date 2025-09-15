@@ -137,25 +137,25 @@ const PatientDetails = () => {
           Detalhes do Paciente
         </h1>
         <div className="flex gap-2">
-            <Button
+          <button
             onClick={() => router.push("/Funcionarios/consultas")}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
+            className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors"
+          >
             Iniciar Consulta
-            </Button>
-            <Button
+          </button>
+          <button
             onClick={() => router.push("/consultas/historico")}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors"
           >
             Histórico
-          </Button>
-          <Button
+          </button>
+          <button
             onClick={() => router.push("/Funcionarios/dashboard")}
-            className="bg-gray-300 hover:bg-gray-400 text-black"
+            className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
-          </Button>
+          </button>
         </div>
       </div>
 

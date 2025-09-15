@@ -40,13 +40,13 @@ const Historico = () => {
         <h1 className="text-3xl font-bold tracking-tight text-blue-900">
           Histórico de Consultas
         </h1>
-        <Button
+        <button
           onClick={() => router.back()}
-          className="bg-gray-300 hover:bg-gray-400 text-black flex items-center"
+          className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors flex items-center"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
-        </Button>
+        </button>
       </div>
 
       {/* Lista de consultas */}
