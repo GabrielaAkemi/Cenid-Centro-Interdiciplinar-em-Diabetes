@@ -10,7 +10,6 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="relative min-h-screen bg-blue-50 text-blue-900 flex flex-col">
-{/* Logo no canto superior esquerdo */}
       <div className="absolute top-4 left-4">
         <Image
           src="/logoCenid.png"
@@ -20,7 +19,6 @@ const HomePage: React.FC = () => {
         />
       </div>
 
-      {/* Conteúdo centralizado */}
       <div className="flex flex-1 flex-col items-center justify-center py-16 px-4">
         <h1 className="text-4xl sm:text-5xl font-extrabold text-blue-800 text-center">
           Bem-vindo ao <span className="text-red-600">CENID</span>
@@ -29,7 +27,6 @@ const HomePage: React.FC = () => {
           Centro Interdisciplinar de Diabetes
         </h2>
 
-        {/* Login / Cadastro Button */}
         <div className="flex flex-col gap-4 mt-8 w-full max-w-xs">
           <button
             className="bg-red-500 text-white px-10 py-5 rounded-xl shadow-lg hover:bg-red-600 transition-all font-semibold text-lg"
@@ -40,7 +37,6 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="bg-blue-700 text-white py-8 mt-auto">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">

@@ -106,7 +106,7 @@ const DashboardPage: React.FC = () => {
           </div>
             <div className="flex gap-2">
                 <button 
-                    onClick={() => router.push("/pacientes/newpacient")}
+                    onClick={() => router.push("/Funcionarios/cadastrarPacientes")}
                     variant="default"id="back-button"
                         class="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors">
                     Novo Paciente
@@ -245,13 +245,12 @@ const DashboardPage: React.FC = () => {
         </Card>
 
       </div>
-              {/* Logo como footer visual */}
-      <div className="w-full flex justify-end mt-8">
+      <div className="fixed bottom-4 right-4 z-50">
         <Image
           src="/logoCenid.png"
           alt="LOGOCENID"
-          width={200}
-          height={200}
+          width={150}  
+          height={200} 
           className="opacity-70"
         />
       </div>

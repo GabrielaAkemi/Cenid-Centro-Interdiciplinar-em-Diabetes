@@ -23,7 +23,7 @@ const formatDateSafely = (dateString?: string | null) => {
   catch { return "Data inválida"; }
 };
 
-const ClientesPage: React.FC = () => {
+const PacientesCadastradosPage: React.FC = () => {
   const router = useRouter();
 
   const [clients] = useState<Client[]>([
@@ -50,10 +50,10 @@ const ClientesPage: React.FC = () => {
     <DashboardContent>
       {/* Cabeçalho com título e botão */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-blue-900">Clientes</h1>
+        <h1 className="text-2xl font-bold text-blue-900">Pacientes</h1>
 
         <button
-          onClick={() => router.push("/pacientes/newpacient")}
+          onClick={() => router.push("/Funcionarios/cadastrarPacientes")}
           id="back-button"
           className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors"
         >
@@ -72,7 +72,7 @@ const ClientesPage: React.FC = () => {
       {/* Card com tabela */}
       <Card className="bg-blue-50 border-blue-200">
         <CardHeader>
-          <CardTitle className="text-black">Clientes Cadastrados</CardTitle>
+          <CardTitle className="text-black">Pacientes Cadastrados</CardTitle>
           <CardDescription>Lista geral de clientes cadastrados</CardDescription>
         </CardHeader>
         <CardContent>
@@ -109,12 +109,11 @@ const ClientesPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Logo fixa no canto inferior direito */}
-      <div className="w-full flex justify-end mt-8">
+      <div className="fixed bottom-4 right-4 z-50">
         <Image
           src="/logoCenid.png"
           alt="LOGOCENID"
-          width={200}
+          width={150} // ajuste o tamanho se quiser
           height={200}
           className="opacity-70"
         />
@@ -123,4 +122,4 @@ const ClientesPage: React.FC = () => {
   );
 };
 
-export default ClientesPage;
+export default PacientesCadastradosPage;

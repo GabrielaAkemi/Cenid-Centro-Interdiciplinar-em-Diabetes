@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { PieChart, UserPlus } from "lucide-react";
+import { PieChart, UserPlus, ClipboardPlus } from "lucide-react"; // Troquei o ícone
 
 const Sidebar: React.FC = () => {
   const router = useRouter();
@@ -24,13 +24,25 @@ const Sidebar: React.FC = () => {
           <PieChart className="w-4 h-4" /> Dashboard
         </button>
 
+        {/* Botão para cadastro de pacientes com novo ícone */}
         <button
           className={`flex items-center gap-2 px-6 py-3 w-full text-left hover:bg-blue-700 ${
-            pathname === "/Funcionarios/clientes" ? "bg-blue-900 font-semibold" : ""
+            pathname === "/Funcionarios/cadastroPaciente" ? "bg-blue-900 font-semibold" : ""
           }`}
-          onClick={() => router.push("/Funcionarios/clientes")}
+          onClick={() => router.push("/Funcionarios/cadastrarPacientes")}
         >
-          <UserPlus className="w-4 h-4" /> Clientes
+          <ClipboardPlus className="w-4 h-4" /> Cadastrar Paciente
+        </button>
+
+
+
+        <button
+          className={`flex items-center gap-2 px-6 py-3 w-full text-left hover:bg-blue-700 ${
+            pathname === "/Funcionarios/pacientesCadastrados" ? "bg-blue-900 font-semibold" : ""
+          }`}
+          onClick={() => router.push("/Funcionarios/pacientesCadastrados")}
+        >
+          <UserPlus className="w-4 h-4" /> Pacientes
         </button>
       </nav>
     </div>

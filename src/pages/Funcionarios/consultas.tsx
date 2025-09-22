@@ -1,99 +1,138 @@
 "use client";
 
-import { Activity, Brain, Dumbbell, Apple, Pill, FlaskConical, Calculator } from "lucide-react";
+import {
+  Activity,
+  Brain,
+  Dumbbell,
+  Apple,
+  Pill,
+  FlaskConical,
+  Calculator,
+  ArrowLeft,
+} from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import Image from "next/image";
+import Sidebar from "@/components/LayoutSidebar";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+// Importa todos os formulários
+import FarmaciaForm from "../../components/forms/farmacia-forms";
+import EdFisicaForm from "../../components/forms/edFisica-forms";
+import AntropometriaForm from "../../components/forms/antropometria-forms";
+
 export default function Consultas() {
+  const [selectedForm, setSelectedForm] = useState<string | null>(null);
   const router = useRouter();
 
+  // Função para renderizar o formulário correto
+  const renderForm = () => {
+    switch (selectedForm) {
+      case "farmacia":
+        return <FarmaciaForm />;
+      case "edFisica":
+        return <EdFisicaForm />;
+      case "calculadora":
+        return <AntropometriaForm />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="max-w-5xl mx-auto p-4 relative">
-      <Card className="shadow-lg rounded-lg border border-blue-200 mb-6">
-        <CardHeader className="bg-blue-50">
-          <CardTitle className="text-2xl font-bold text-blue-900">Iniciar Consulta</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <h2 className="text-lg font-semibold text-blue-700 mb-4">
-            Selecione a Especialidade*
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {/* Medicina */}
-            <button
-              onClick={() => router.push("/consultas/medicina")}
-              className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all"
-            >
-              <Activity className="h-8 w-8 mb-2 text-red-600" />
-              <span className="text-blue-900">Medicina</span>
-            </button>
+    <div className="flex min-h-screen">
+      <Sidebar />
 
-            {/* Psicologia */}
+      <main className="flex-1 p-6">
+        <div className="max-w-5xl mx-auto relative">
+          {/* Botão no canto superior direito */}
+          <div className="flex justify-end mb-4">
             <button
-              onClick={() => router.push("/consultas/psicologia")}
-              className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all"
+              onClick={() => router.back()}
+              className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors flex items-center"
             >
-              <Brain className="h-8 w-8 mb-2 text-red-600" />
-              <span className="text-blue-900">Psicologia</span>
-            </button>
-
-            {/* Educação Física */}
-            <button
-              onClick={() => router.push("/consultas/eduFisica")}
-              className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all"
-            >
-              <Dumbbell className="h-8 w-8 mb-2 text-red-600" />
-              <span className="text-blue-900">Educação Física</span>
-            </button>
-
-            {/* Nutrição */}
-            <button
-              onClick={() => router.push("/consultas/nutricao")}
-              className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all"
-            >
-              <Apple className="h-8 w-8 mb-2 text-red-600" />
-              <span className="text-blue-900">Nutrição</span>
-            </button>
-
-            {/* Farmácia */}
-            <button
-              onClick={() => router.push("/consultas/farmacia")}
-              className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all"
-            >
-              <Pill className="h-8 w-8 mb-2 text-red-600" />
-              <span className="text-blue-900">Farmácia</span>
-            </button>
-
-            {/* Bioquímica */}
-            <button
-              onClick={() => router.push("/consultas/bioquimica")}
-              className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all"
-            >
-              <FlaskConical className="h-8 w-8 mb-2 text-red-600" />
-              <span className="text-blue-900">Bioquímica</span>
-            </button>
-
-            {/* Antropometria */}
-            <button
-              onClick={() => router.push("/consultas/calculadora")}
-              className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all"
-            >
-              <Calculator className="h-8 w-8 mb-2 text-red-600" />
-              <span className="text-blue-900">Calculadora</span>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar para Paciente
             </button>
           </div>
-        </CardContent>
-      </Card>
-            <div className="w-full flex justify-end mt-8">
-              <Image
-                src="/logoCenid.png"
-                alt="LOGOCENID"
-                width={200}
-                height={200}
-                className="opacity-70"
-              />
-            </div>
+
+          {/* Card de Selecionar Especialidade */}
+          <Card className="shadow-lg rounded-lg border border-blue-200 mb-6">
+            <CardHeader className="bg-blue-50">
+              <CardTitle className="text-2xl font-bold text-blue-900">
+                Iniciar Consulta
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <h2 className="text-lg font-semibold text-blue-700 mb-4">
+                Selecione a Especialidade*
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <button className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all">
+                  <Activity className="h-8 w-8 mb-2 text-red-600" />
+                  <span className="text-blue-900">Medicina</span>
+                </button>
+
+                <button className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all">
+                  <Brain className="h-8 w-8 mb-2 text-red-600" />
+                  <span className="text-blue-900">Psicologia</span>
+                </button>
+
+                {/* Educação Física */}
+                <button
+                  onClick={() => setSelectedForm("edFisica")}
+                  className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all"
+                >
+                  <Dumbbell className="h-8 w-8 mb-2 text-red-600" />
+                  <span className="text-blue-900">Educação Física</span>
+                </button>
+
+                <button className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all">
+                  <Apple className="h-8 w-8 mb-2 text-red-600" />
+                  <span className="text-blue-900">Nutrição</span>
+                </button>
+
+                {/* Farmácia */}
+                <button
+                  onClick={() => setSelectedForm("farmacia")}
+                  className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all"
+                >
+                  <Pill className="h-8 w-8 mb-2 text-red-600" />
+                  <span className="text-blue-900">Farmácia</span>
+                </button>
+
+                <button className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all">
+                  <FlaskConical className="h-8 w-8 mb-2 text-red-600" />
+                  <span className="text-blue-900">Bioquímica</span>
+                </button>
+
+                {/* Calculadora */}
+                <button
+                  onClick={() => setSelectedForm("calculadora")}
+                  className="flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 border-blue-200 hover:border-red-500 hover:border-2 transition-all"
+                >
+                  <Calculator className="h-8 w-8 mb-2 text-red-600" />
+                  <span className="text-blue-900">Calculadora</span>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Formulário exibido abaixo do Card */}
+          {selectedForm && <div className="mt-6">{renderForm()}</div>}
+
+          {/* Logo fixa no canto inferior direito */}
+          <div className="fixed bottom-4 right-4 z-50">
+            <Image
+              src="/logoCenid.png"
+              alt="LOGOCENID"
+              width={150}
+              height={200}
+              className="opacity-70"
+            />
+          </div>
+        </div>
+      </main>
     </div>
-    
   );
 }

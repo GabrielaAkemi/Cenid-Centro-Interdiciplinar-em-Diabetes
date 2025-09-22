@@ -1,14 +1,13 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation"; // <- corrigi aqui, estava "next/router"
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   User,
@@ -24,6 +23,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { format } from "date-fns";
+import DashboardContent from "@/components/DashboardContent"; // <- adicionado para sidebar/layout
 
 interface Patient {
   nome: string;
@@ -131,65 +131,70 @@ const PatientDetails = () => {
   ];
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-blue-900">
-          Detalhes do Paciente
-        </h1>
-        <div className="flex gap-2">
-          <button
-            onClick={() => router.push("/Funcionarios/consultas")}
-            className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors"
-          >
-            Iniciar Consulta
-          </button>
-          <button
-            onClick={() => router.push("/consultas/historico")}
-            className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors"
-          >
-            Histórico
-          </button>
-          <button
-            onClick={() => router.push("/Funcionarios/dashboard")}
-            className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
-          </button>
+    <DashboardContent>
+      <div className="container mx-auto py-6">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold tracking-tight text-blue-900">
+            Detalhes do Paciente
+          </h1>
+          <div className="flex gap-2">
+            <button
+              onClick={() => router.push("/Funcionarios/consultas")}
+              className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors"
+            >
+              Iniciar Consulta
+            </button>
+            <button
+              onClick={() => router.push("/consultas/historico")}
+              className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors"
+            >
+              Histórico
+            </button>
+            <button
+              onClick={() => router.push("/Funcionarios/dashboard")}
+              className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors flex items-center"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar
+            </button>
+          </div>
+        </div>
+
+        {/* Card com informações */}
+        <Card className="bg-white border border-blue-300 shadow-lg">
+          <CardHeader className="bg-blue-50">
+            <CardTitle className="text-blue-900">{patient.nome}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {infoItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <div key={index} className="flex items-center bg-blue-50 p-3 rounded shadow-sm">
+                    <Icon className="h-5 w-5 text-blue-700 mr-2" />
+                    <div>
+                      <p className="text-sm text-red-600">{item.label}</p>
+                      <p className="font-medium text-blue-900">{item.value || "N/A"}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="fixed bottom-4 right-4 z-50">
+          <Image
+            src="/logoCenid.png"
+            alt="LOGOCENID"
+            width={150} 
+            height={200}
+            className="opacity-70"
+          />
         </div>
       </div>
-
-      <Card className="bg-white border border-blue-300 shadow-lg">
-        <CardHeader className="bg-blue-50">
-          <CardTitle className="text-blue-900">{patient.nome}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {infoItems.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <div key={index} className="flex items-center bg-blue-50 p-3 rounded shadow-sm">
-                  <Icon className="h-5 w-5 text-blue-700 mr-2" />
-                  <div>
-                    <p className="text-sm text-red-600">{item.label}</p>
-                    <p className="font-medium text-blue-900">{item.value || "N/A"}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-      <div className="w-full flex justify-end mt-8">
-        <Image
-          src="/logoCenid.png"
-          alt="LOGOCENID"
-          width={200}
-          height={200}
-          className="opacity-70"
-        />
-      </div>
-    </div>
+    </DashboardContent>
   );
 };
 

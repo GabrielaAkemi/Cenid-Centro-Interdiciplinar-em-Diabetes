@@ -1,16 +1,11 @@
 import React, { useState, useCallback } from 'react';
 
-// Estilos base para reutilização. Em um projeto real, isso poderia estar em um arquivo CSS.
-// Como a solicitação é um arquivo único, definimos classes utilitárias aqui para referência.
-// Nota: Essas classes dependem do Tailwind CSS estar configurado no seu projeto Vite.
 const inputClasses = "mt-1 block w-full rounded-md border-gray-300 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm";
 const tableInputClasses = "w-full p-1 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900";
 const sectionTitleClasses = "text-2xl font-semibold text-blue-800 mb-6";
 const cardClasses = "bg-gray-50 p-6 rounded-2xl border border-gray-200 mb-6 shadow-sm";
 const subTitleClasses = "text-xl font-semibold text-gray-800";
 
-
-// --- Componente: Cartão de Medicamento (Reutilizável) ---
 const MedicationCard = ({ medicationData, onDataChange, onRemove, showRemoveButton }) => {
 
   const handleFieldChange = (field, value) => {
@@ -29,7 +24,7 @@ const MedicationCard = ({ medicationData, onDataChange, onRemove, showRemoveButt
   };
 
   const removePosologiaRow = (posIndex) => {
-    if (medicationData.posologias.length <= 1) return; // Não remover a última linha
+    if (medicationData.posologias.length <= 1) return;
     const newPosologias = medicationData.posologias.filter((_, index) => index !== posIndex);
     onDataChange({ ...medicationData, posologias: newPosologias });
   };
@@ -463,7 +458,7 @@ const App = () => {
   return (
     <div className="bg-gray-100 min-h-screen p-4 sm:p-8 flex items-center justify-center font-sans">
       <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-10 w-full max-w-6xl">
-        <h2 className="text-3xl font-bold text-center text-blue-900 mb-2">Farmácia - Avaliação do Paciente</h2>
+        <h2 className="text-3xl font-bold text-center text-blue-900 mb-2">Avaliação Farmácia</h2>
         <p className="text-center text-gray-600 mb-10">
           A avaliação da Farmácia deve ser feita sempre que o paciente realizar uma nova consulta médica com mudança na prescrição de medicamentos.
         </p>
