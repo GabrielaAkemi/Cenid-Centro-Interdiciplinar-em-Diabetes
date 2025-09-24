@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, PieChart, Search } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api"
 
 interface Patient {
   id: string;
@@ -19,7 +20,7 @@ interface Patient {
   diagnostico: string;
   telefone: string;
   email: string;
-  dateCadastro: string;
+  data_cadastro: string;
 }
 
 interface StatCardProps {
@@ -58,9 +59,8 @@ const DashboardPage: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
 
   const fetchPatients = async () => {
-    const res = await fetch("/api/patients");
-    const data = await res.json();
-    setPatients(data);
+    const res = await apiFetch<any[]>("/api/pacientes/", true);
+    setPatients(res);
   };
 
   useEffect(() => { fetchPatients(); }, []);
@@ -107,8 +107,7 @@ const DashboardPage: React.FC = () => {
             <div className="flex gap-2">
                 <button 
                     onClick={() => router.push("/Funcionarios/cadastrarPacientes")}
-                    variant="default"id="back-button"
-                        class="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors">
+                    className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors">
                     Novo Paciente
                 </button>
                 <button 
@@ -228,7 +227,7 @@ const DashboardPage: React.FC = () => {
                           <div>{patient.telefone}</div>
                           <div className="text-sm text-blue-900">{patient.email}</div>
                         </TableCell>
-                        <TableCell>{formatDateSafely(patient.dateCadastro)}</TableCell>
+                        <TableCell>{formatDateSafely(patient.data_cadastro)}</TableCell>
                       </TableRow>
                     ))
                   ) : (

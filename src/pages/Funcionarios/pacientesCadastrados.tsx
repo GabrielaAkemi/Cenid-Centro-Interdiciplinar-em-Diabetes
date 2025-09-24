@@ -1,12 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardContent from "@/components/DashboardContent";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
+import { apiFetch } from "@/lib/api"
+
 
 interface Client {
   id: string;
@@ -14,7 +16,7 @@ interface Client {
   cpf: string;
   email: string;
   telefone: string;
-  dataCadastro: string;
+  data_cadastro: string;
 }
 
 const formatDateSafely = (dateString?: string | null) => {
@@ -26,11 +28,16 @@ const formatDateSafely = (dateString?: string | null) => {
 const PacientesCadastradosPage: React.FC = () => {
   const router = useRouter();
 
-  const [clients] = useState<Client[]>([
-    { id: "1", nome: "Gabriela Akemi", cpf: "123.456.789-00", email: "gabriela@email.com", telefone: "11999999999", dataCadastro: "2025-09-10" },
-    { id: "2", nome: "Maria Silva", cpf: "987.654.321-00", email: "maria@email.com", telefone: "11988888888", dataCadastro: "2025-09-09" },
-    { id: "3", nome: "João Santos", cpf: "111.222.333-44", email: "joao@email.com", telefone: "11977777777", dataCadastro: "2025-09-08" },
-  ]);
+  const [clients, setPatients] = useState<Client[]>([]);
+  
+
+  const fetchPatients = async () => {
+    const res = await apiFetch<any[]>("/api/pacientes/", true);
+    setPatients(res);
+  };
+
+  useEffect(() => { fetchPatients(); }, []);
+  
 
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -95,7 +102,7 @@ const PacientesCadastradosPage: React.FC = () => {
                       <TableCell className="text-black">{client.cpf}</TableCell>
                       <TableCell className="text-black">{client.email}</TableCell>
                       <TableCell className="text-black">{client.telefone}</TableCell>
-                      <TableCell className="text-black">{formatDateSafely(client.dataCadastro)}</TableCell>
+                      <TableCell className="text-black">{formatDateSafely(client.data_cadastro)}</TableCell>
                     </TableRow>
                   ))
                 ) : (

@@ -40,9 +40,7 @@ const LoginPage: React.FC = () => {
         });
         setIsLogin(true); // volta para login depois do cadastro
       }
-      console.log(response);
-      localStorage.setItem("token", response.data.token);
-      alert(isLogin ? "Logado com sucesso!" : "Cadastrado com sucesso!");
+      localStorage.setItem("token", response.data.access);
       router.push("/Funcionarios/dashboard");
     } catch (err: any) {
       alert(err.response?.data?.error || "Erro desconhecido");
