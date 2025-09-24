@@ -97,7 +97,11 @@ const PacientesCadastradosPage: React.FC = () => {
               <TableBody>
                 {currentItems.length > 0 ? (
                   currentItems.map(client => (
-                    <TableRow key={client.id} className="hover:bg-blue-200 cursor-pointer">
+                    <TableRow 
+                      key={client.id} 
+                      className="hover:bg-blue-200 cursor-pointer"
+                      onClick={() => router.push(`/pacientes/${client.id}`)}
+                    >
                       <TableCell className="text-black font-medium">{client.nome}</TableCell>
                       <TableCell className="text-black">{client.cpf}</TableCell>
                       <TableCell className="text-black">{client.email}</TableCell>

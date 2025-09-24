@@ -1,7 +1,7 @@
 "use client";
-import React from "react";
+import {useState, useEffect} from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation"; // <- corrigi aqui, estava "next/router"
+import { useRouter, useParams  } from "next/navigation"; // <- corrigi aqui, estava "next/router"
 import {
   Card,
   CardContent,
@@ -24,14 +24,15 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import DashboardContent from "@/components/DashboardContent"; // <- adicionado para sidebar/layout
+import { apiFetch } from "@/lib/api"
 
 interface Patient {
   nome: string;
   cpf: string;
-  cartaoSus?: string;
+  cartao_sus?: string;
   rg?: string;
   telefone?: string;
-  dataNascimento: string;
+  data_nascimento: string;
   email: string;
   ocupacao?: string;
   sexo?: string;
@@ -44,54 +45,18 @@ interface Patient {
   amamentando?: string;
   tempoPosParto?: string;
   deficiencia?: string;
-  tipoDeficiencia?: string;
-  metodoInsulina?: string;
-  marcaModeloBomba?: string;
-  metodoMonitoramentoGlicemia?: string;
-  marcaModeloGlicometroSensor?: string;
-  usoAppGlicemia?: string;
-  outrosApps?: string;
-  nomeResponsavel?: string;
-  cpfResponsavel?: string;
-  telefoneResponsavel?: string;
-  dataNascimentoResponsavel?: string;
-  possuiCelularComAcessoInternet?: string;
-  dataCadastro: string;
+  metodo_insulina?: string;
+  metodo_monitoramento?: string;
+  marca_sensor?: string;
+  app_glicemia?: string;
+  nome_responsavel?: string;
+  cpf_responsavel?: string;
+  telefone_responsavel?: string;
+  data_nascimento_responsavel?: string;
+  celular_com_internet?: string;
+  data_cadastro: string;
 }
 
-const patient: Patient = {
-  nome: "Gabss Akemi",
-  cpf: "123.456.789-00",
-  cartaoSus: "987654321",
-  rg: "12.345.678-9",
-  telefone: "(14) 99999-9999",
-  dataNascimento: "2006-03-12",
-  email: "gabss@example.com",
-  ocupacao: "Estudante",
-  sexo: "Feminino",
-  endereco: "Rua das Flores",
-  numero: "123",
-  municipio: "Garça",
-  diagnostico: "Diabetes Tipo 1",
-  gestante: "Não",
-  semanasGestacao: 0,
-  amamentando: "Não",
-  tempoPosParto: "",
-  deficiencia: "Não",
-  tipoDeficiencia: "",
-  metodoInsulina: "Caneta",
-  marcaModeloBomba: "",
-  metodoMonitoramentoGlicemia: "Glicometro",
-  marcaModeloGlicometroSensor: "Accu-Chek",
-  usoAppGlicemia: "Sim",
-  outrosApps: "MySugr",
-  nomeResponsavel: "Maria Akemi",
-  cpfResponsavel: "111.222.333-44",
-  telefoneResponsavel: "(14) 98888-8888",
-  dataNascimentoResponsavel: "1980-05-10",
-  possuiCelularComAcessoInternet: "Sim",
-  dataCadastro: "2025-08-01",
-};
 
 const formatDateSafely = (dateString?: string) => {
   if (!dateString) return "N/A";
@@ -104,31 +69,57 @@ const formatDateSafely = (dateString?: string) => {
 
 const PatientDetails = () => {
   const router = useRouter();
+    const params = useParams();
+    const id = params?.id;
 
-  const infoItems = [
-    { icon: User, label: "Nome", value: patient.nome },
-    { icon: FileText, label: "CPF", value: patient.cpf },
-    { icon: FileText, label: "Cartão SUS", value: patient.cartaoSus },
-    { icon: FileText, label: "RG", value: patient.rg },
-    { icon: Calendar, label: "Data de Nascimento", value: formatDateSafely(patient.dataNascimento) },
-    { icon: Mail, label: "Email", value: patient.email },
-    { icon: Phone, label: "Telefone", value: patient.telefone },
-    { icon: User, label: "Sexo", value: patient.sexo },
-    { icon: Home, label: "Endereço", value: `${patient.endereco}, ${patient.numero}, ${patient.municipio}` },
-    { icon: User, label: "Ocupação", value: patient.ocupacao },
-    { icon: Stethoscope, label: "Diagnóstico", value: patient.diagnostico },
-    { icon: Baby, label: "Gestante", value: patient.gestante },
-    { icon: Baby, label: "Amamentando", value: patient.amamentando },
-    { icon: Accessibility, label: "Deficiência", value: patient.deficiencia },
-    { icon: Syringe, label: "Método de Insulina", value: patient.metodoInsulina },
-    { icon: Smartphone, label: "Monitoramento Glicemia", value: patient.metodoMonitoramentoGlicemia },
-    { icon: Smartphone, label: "Uso de App", value: patient.usoAppGlicemia },
-    { icon: User, label: "Responsável", value: patient.nomeResponsavel },
-    { icon: FileText, label: "CPF do Responsável", value: patient.cpfResponsavel },
-    { icon: Phone, label: "Telefone do Responsável", value: patient.telefoneResponsavel },
-    { icon: Calendar, label: "Data de Cadastro", value: formatDateSafely(patient.dataCadastro) },
-    { icon: Smartphone, label: "Acesso à Internet", value: patient.possuiCelularComAcessoInternet },
-  ];
+  const [paciente, setPaciente] = useState<any>(null);
+
+  const fetchPaciente = async () => {
+    const data = await apiFetch(`/api/pacientes/${id}/`, true)
+    setPaciente(data)
+  }
+
+  useEffect(() => {
+    if (!id) return;
+    
+    fetchPaciente();
+  }, [id])
+
+
+  const infoItems = paciente ? [
+    { icon: User, label: "Nome", value: paciente.nome },
+    { icon: FileText, label: "CPF", value: paciente.cpf },
+    { icon: FileText, label: "Cartão SUS", value: paciente.cartao_sus },
+    { icon: FileText, label: "RG", value: paciente.rg },
+    { icon: Calendar, label: "Data de Nascimento", value: formatDateSafely(paciente.data_nascimento) },
+    { icon: Mail, label: "Email", value: paciente.email },
+    { icon: Phone, label: "Telefone", value: paciente.telefone },
+    { icon: User, label: "Sexo", value: paciente.sexo },
+    { icon: Home, label: "Endereço", value: `${paciente.endereco}, ${paciente.numero}, ${paciente.municipio}` },
+    { icon: User, label: "Ocupação", value: paciente.ocupacao },
+    { icon: Stethoscope, label: "Diagnóstico", value: paciente.diagnostico },
+    { icon: Baby, label: "Gestante", value: paciente.gestante },
+    { icon: Baby, label: "Amamentando", value: paciente.amamentando },
+    { icon: Accessibility, label: "Deficiência", value: paciente.deficiencia },
+    { icon: Syringe, label: "Método de Insulina", value: paciente.metodo_insulina },
+    { icon: Smartphone, label: "Monitoramento Glicemia", value: paciente.metodo_monitoramento },
+    { icon: Smartphone, label: "Uso de App", value: paciente.app_glicemia },
+    { icon: User, label: "Responsável", value: paciente.nome_responsavel },
+    { icon: FileText, label: "CPF do Responsável", value: paciente.cpf_responsavel },
+    { icon: Phone, label: "Telefone do Responsável", value: paciente.telefone_responsavel },
+    { icon: Calendar, label: "Data de Cadastro", value: formatDateSafely(paciente.data_cadastro) },
+    { icon: Smartphone, label: "Acesso à Internet", value: paciente.celular_com_internet },
+  ] : [];
+
+  if (!paciente) {
+    return (
+      <DashboardContent>
+        <div className="container mx-auto py-6">
+          <p>Carregando paciente...</p>
+        </div>
+      </DashboardContent>
+    );
+  }
 
   return (
     <DashboardContent>
@@ -161,10 +152,12 @@ const PatientDetails = () => {
           </div>
         </div>
 
+        
+
         {/* Card com informações */}
         <Card className="bg-white border border-blue-300 shadow-lg">
           <CardHeader className="bg-blue-50">
-            <CardTitle className="text-blue-900">{patient.nome}</CardTitle>
+            <CardTitle className="text-blue-900">{paciente.nome}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
