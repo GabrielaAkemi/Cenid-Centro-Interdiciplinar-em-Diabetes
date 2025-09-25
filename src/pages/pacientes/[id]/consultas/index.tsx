@@ -13,23 +13,39 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import Sidebar from "@/components/LayoutSidebar";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { apiFetch } from "@/lib/api";
 
 // Importa todos os formulários
-import FarmaciaForm from "../../components/forms/farmacia-forms";
-import EdFisicaForm from "../../components/forms/edFisica-forms";
-import AntropometriaForm from "../../components/forms/antropometria-forms";
+import FarmaciaForm from "@/components/Forms/farmacia-forms";
+import EdFisicaForm from "@/components/Forms/edFisica-forms";
+import AntropometriaForm from "@/components/Forms/antropometria-forms";
 
 export default function Consultas() {
   const [selectedForm, setSelectedForm] = useState<string | null>(null);
   const router = useRouter();
+    const params = useParams();
+    const id = params?.id;
+  
+    const [paciente, setPaciente] = useState<any>(null);
+  
+    const fetchPaciente = async () => {
+      const data = await apiFetch(`/api/pacientes/${id}/`, true)
+      setPaciente(data)
+    }
+  
+    useEffect(() => {
+      if (!id) return;
+      
+      fetchPaciente();
+    }, [id])
 
   // Função para renderizar o formulário correto
   const renderForm = () => {
     switch (selectedForm) {
       case "farmacia":
-        return <FarmaciaForm />;
+        return <FarmaciaForm patientData={paciente} />;
       case "edFisica":
         return <EdFisicaForm />;
       case "calculadora":

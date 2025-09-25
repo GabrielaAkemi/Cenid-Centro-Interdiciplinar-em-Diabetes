@@ -87,15 +87,10 @@ const classificarZPeso = (zScore: number, idade: number) => {
   return zScore < -2 ? "Abaixo do peso" : "Peso normal";
 };
 
-// **CORREÇÃO:** Agora a interface de props aceita uma função assíncrona,
-// que é o tipo retornado pela sua `handleAntropometriaSubmit`.
-interface AntropometriaFormProps {
-  onSubmit: (data: any) => Promise<void>; // Ajuste a tipagem para aceitar a Promise
-}
 
 
 // **CORREÇÃO:** O componente agora recebe a prop 'onSubmit'
-export default function AntropometriaForm({ onSubmit }: AntropometriaFormProps) {
+export default function AntropometriaForm() {
   const [formData, setFormData] = useState({
     pacienteId: "",
     nomePaciente: "",
@@ -199,13 +194,24 @@ export default function AntropometriaForm({ onSubmit }: AntropometriaFormProps) 
   // **CORREÇÃO:** O `handleSubmit` agora chama a prop `onSubmit`
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Você pode remover o `console.log` e o `setShowSuccessDialog`
-    // aqui se quiser que a lógica de sucesso seja controlada pelo componente pai
-    console.log("Formulário enviado com os dados:", formData);
-    await onSubmit(formData);
-    // As informações abaixo não serão mais necessárias
-    // pois o componente pai já faz o redirecionamento
-    // e o form será resetado quando a página for recarregada
+
+    try {
+      // Aqui você envia os dados para o seu backend
+      const response = await fetch("/api/antropometria", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) throw new Error("Erro ao salvar dados");
+
+      setShowSuccessDialog(true);
+      // Resetar form se desejar
+      // setFormData({...formData, peso_corporal: "", estatura_metros: ""});
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao salvar avaliação.");
+    }
   };
 
   useEffect(() => {

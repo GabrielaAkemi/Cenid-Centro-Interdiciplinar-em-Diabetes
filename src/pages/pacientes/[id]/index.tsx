@@ -69,8 +69,8 @@ const formatDateSafely = (dateString?: string) => {
 
 const PatientDetails = () => {
   const router = useRouter();
-    const params = useParams();
-    const id = params?.id;
+  const params = useParams();
+  const id = params?.id;
 
   const [paciente, setPaciente] = useState<any>(null);
 
@@ -131,7 +131,7 @@ const PatientDetails = () => {
           </h1>
           <div className="flex gap-2">
             <button
-              onClick={() => router.push("/Funcionarios/consultas")}
+              onClick={() => router.push(`/pacientes/${id}/consultas`)}
               className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors"
             >
               Iniciar Consulta
