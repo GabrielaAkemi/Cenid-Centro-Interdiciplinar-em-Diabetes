@@ -98,7 +98,7 @@ const DashboardPage: React.FC = () => {
   return (
     <DashboardContent>
       <div className="container mx-auto space-y-6">
-        {/* Header */}
+
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-blue-900">Dashboard</h1>
@@ -110,17 +110,10 @@ const DashboardPage: React.FC = () => {
                     className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors">
                     Novo Paciente
                 </button>
-                <button 
-                  onClick={() => router.push("/pacientes")}
-                  className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors"
-                >
-                  Pacientes
-                </button>
             </div>
 
         </div>
 
-        {/* Cards de estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard title="Total de Pacientes" value={patients.length} description="Pacientes cadastrados" icon={<UserPlus className="h-4 w-4 text-blue-900" />} />
           <StatCard title="DM1" value={diagnosticCounts.DM1} description="Pacientes com DM1" icon={<PieChart className="h-4 w-4 text-blue-900" />} className="border-l-4 border-red-600" />
@@ -162,7 +155,6 @@ const DashboardPage: React.FC = () => {
           </div>
 
 
-        {/* Lista de pacientes */}
         <Card className="bg-blue-50 border-blue-200 mt-6">
           <CardHeader>
             <CardTitle className="text-blue-900 font-bold">Pacientes Cadastrados</CardTitle>

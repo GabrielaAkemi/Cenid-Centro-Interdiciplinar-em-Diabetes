@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Heart } from "lucide-react";
 import axios from "axios";
 
-const API_URL = "http://127.0.0.1:8000/"; 
+const API_URL = "http://localhost:8000/"; 
 
 const LoginPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);

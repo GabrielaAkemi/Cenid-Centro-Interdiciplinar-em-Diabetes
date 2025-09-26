@@ -176,15 +176,14 @@ const PatientDetails = () => {
             </div>
           </CardContent>
         </Card>
-
-        <div className="fixed bottom-4 right-4 z-50">
-          <Image
-            src="/logoCenid.png"
-            alt="LOGOCENID"
-            width={150} 
-            height={200}
-            className="opacity-70"
-          />
+        <div className="flex justify-end mt-8">
+            <img
+                src="/logoCenid.png"
+                alt="LOGOCENID"
+                width={150} 
+                height={200}
+                className="opacity-70"
+            />
         </div>
       </div>
     </DashboardContent>
