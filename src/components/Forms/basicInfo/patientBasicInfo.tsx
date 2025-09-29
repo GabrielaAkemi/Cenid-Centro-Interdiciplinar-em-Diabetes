@@ -16,6 +16,7 @@ interface FormField {
 }
 
 export interface PatientInfoData {
+  id?: number
   nome?: string
   dataAvaliacao?: string
   sexo?: string

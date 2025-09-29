@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import PatientBasicInfo, { PatientInfoData } from "./basicInfo/patientBasicInfo";
+import { apiFetch } from "@/lib/api";
 
 // Constantes para o formulário
 const diasSemana = [
@@ -155,33 +156,104 @@ const App: React.FC<AppProps> = ({ patientData }) => {
     return { media, forcaRelativa };
   };
 
+  const normalizeStrength = (measures: StrengthMeasures) => ({
+    medida1: measures.medida1 ? parseFloat(measures.medida1).toFixed(2) : "0.00",
+    medida2: measures.medida2 ? parseFloat(measures.medida2).toFixed(2) : "0.00",
+    medida3: measures.medida3 ? parseFloat(measures.medida3).toFixed(2) : "0.00",
+  });
+
   const { media: mediaDominante, forcaRelativa: forcaRelativaDominante } = calculateStrength(formData.forcaMaoDominante, formData.peso);
   const { media: mediaNaoDominante, forcaRelativa: forcaRelativaNaoDominante } = calculateStrength(formData.forcaMaoNaoDominante, formData.peso);
   const { media: mediaLombar, forcaRelativa: forcaRelativaLombar } = calculateStrength(formData.forcaLombar, formData.peso);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.dataConsulta) {
-      setMessage('A Data da Consulta é obrigatória.');
+
+    if (!formData.patientInfo?.dataAvaliacao) {
+      setMessage('A Data da Avaliação é obrigatória.');
       setShowModal(true);
       return;
     }
-    console.log("Dados do formulário:", formData);
-    setMessage('Formulário enviado com sucesso!');
-    setShowModal(true);
-    setCurrentPage('consultas');
-    // Limpar o formulário após o envio
-    setFormData({
-      dataConsulta: "", nomeCompleto: "", dataAvaliacao: "", sexo: "", idade: "", peso: "", estatura: "", metodoInsulina: "",
-      atividadeLeve: "", atividadeModerada: "", atividadeVigorosa: "", tempoSentado: "", tempoDormindo: "",
-      mesesPraticando: "", relatorioInterrupcoes: "", prescricaoExercicio: "",
-      forcaMaoDominante: { medida1: "", medida2: "", medida3: "" }, forcaMaoNaoDominante: { medida1: "", medida2: "", medida3: "" },
-      forcaLombar: { medida1: "", medida2: "", medida3: "" }, patientInfo: {},
-      cronograma: diasSemana.reduce((acc, dia) => {
-        acc[dia.key] = { horario: "", tipo: "" };
-        return acc;
-      }, {} as Cronograma),
-    });
+
+    try {
+      // Montar payload apenas com campos que existem na API
+      const payload: any = {
+        patient: formData.patientInfo?.id,
+        dataConsulta: formData.patientInfo?.dataAvaliacao,
+        peso: formData.patientInfo?.peso || null,
+        estatura: formData.patientInfo?.estatura || null,
+        metodo_insulina: formData.metodoInsulina || null,
+        prescricao_exercicio: formData.prescricaoExercicio || null,
+        naf: {
+          atividade_leve_minutos: formData.atividadeLeve || null,
+          atividade_moderada_minutos: formData.atividadeModerada || null,
+          atividade_vigorosa_minutos: formData.atividadeVigorosa || null,
+          tempo_sentado: formData.tempoSentado || null,
+          tempo_dormindo: formData.tempoDormindo || null,
+        },
+        condicionamento: {
+          ...normalizeStrength(formData.forcaMaoDominante),
+          ...Object.fromEntries(
+            Object.entries(normalizeStrength(formData.forcaMaoNaoDominante)).map(
+              ([k, v]) => [`mao_nao_dominante_${k.slice(-1)}`, v]
+            )
+          ),
+          ...Object.fromEntries(
+            Object.entries(normalizeStrength(formData.forcaLombar)).map(
+              ([k, v]) => [`lombar_${k.slice(-1)}`, v]
+            )
+          ),
+        },
+        relato_fisico: diasSemana.map((dia, index) => ({
+          dia_semana: index + 1,
+          horario_atividade: formData.cronograma[dia.key].horario,
+          descricao_atividade: formData.cronograma[dia.key].tipo,
+        })),
+      };
+
+      await apiFetch("/api/consulta-ed-fisica/", true, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      console.log(payload);
+
+      setMessage("Formulário enviado com sucesso!");
+      setShowModal(true);
+      setCurrentPage("consultas");
+
+      // Resetar formulário
+      setFormData({
+        dataConsulta: "",
+        nomeCompleto: "",
+        dataAvaliacao: "",
+        sexo: "",
+        idade: "",
+        peso: "",
+        estatura: "",
+        metodoInsulina: "",
+        atividadeLeve: "",
+        atividadeModerada: "",
+        atividadeVigorosa: "",
+        tempoSentado: "",
+        tempoDormindo: "",
+        mesesPraticando: "",
+        relatorioInterrupcoes: "",
+        prescricaoExercicio: "",
+        forcaMaoDominante: { medida1: "", medida2: "", medida3: "" },
+        forcaMaoNaoDominante: { medida1: "", medida2: "", medida3: "" },
+        forcaLombar: { medida1: "", medida2: "", medida3: "" },
+        patientInfo: {},
+        cronograma: diasSemana.reduce((acc, dia) => {
+          acc[dia.key] = { horario: "", tipo: "" };
+          return acc;
+        }, {} as Cronograma),
+      });
+    } catch (err: any) {
+      console.error(err);
+      setMessage(`Erro ao enviar formulário: ${err.message}`);
+      setShowModal(true);
+    }
   };
 
   // Classes comuns para inputs
@@ -210,37 +282,6 @@ const App: React.FC<AppProps> = ({ patientData }) => {
         {currentPage === 'formulario' && (
           <form onSubmit={handleSubmit} className="space-y-10 text-blue-900">
             <PatientBasicInfo patientData={patientData} onChange={(data) => handleChange("patientInfo", data)} />
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="col-span-1 sm:col-span-2 lg:col-span-3">
-                <label className={labelClass}>Método de administração de insulina:</label>
-                <div className="flex flex-wrap gap-6 mt-2">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="metodoInsulina"
-                      value="SICI"
-                      checked={formData.metodoInsulina === 'SICI'}
-                      onChange={(e) => handleChange("metodoInsulina", e.target.value)}
-                      className="form-radio h-5 w-5 text-blue-600 transition-colors"
-                    />
-                    <span className="ml-2 text-gray-700">SICI</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="metodoInsulina"
-                      value="MDI"
-                      checked={formData.metodoInsulina === 'MDI'}
-                      onChange={(e) => handleChange("metodoInsulina", e.target.value)}
-                      className="form-radio h-5 w-5 text-blue-600 transition-colors"
-                    />
-                    <span className="ml-2 text-gray-700">MDI</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-2xl font-bold text-blue-900">Questionário de Nível de Atividade Física (NAF)</h2>
               <div className="mt-6 space-y-6">
@@ -277,6 +318,7 @@ const App: React.FC<AppProps> = ({ patientData }) => {
                 <div className="p-4 bg-blue-50 rounded-md">
                   <span className="text-sm font-medium text-gray-700 block">Análise do NAF:</span>
                   <span className="text-xl font-bold text-blue-900">{calculateNAF()}</span>
+                  <br />
                   <span className="text-sm text-gray-500">Total de Exercício Físico: {(Number(formData.atividadeLeve) || 0) + (Number(formData.atividadeModerada) || 0) + (Number(formData.atividadeVigorosa) || 0)} min/semana</span>
                 </div>
                 
