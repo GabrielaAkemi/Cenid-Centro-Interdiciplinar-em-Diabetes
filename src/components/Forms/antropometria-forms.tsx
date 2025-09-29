@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import PatientBasicInfo, {PatientInfoData} from "./basicInfo/patientBasicInfo";
 
 // Mock de componentes
 const Card = ({ className, children }: any) => <div className={`max-w-4xl mx-auto w-full bg-white p-8 space-y-8 rounded-lg shadow-lg ${className}`}>{children}</div>;
@@ -88,9 +89,12 @@ const classificarZPeso = (zScore: number, idade: number) => {
 };
 
 
+interface AntropometriaProps {
+  patientData?: PatientInfoData;
+}
 
 // **CORREÇÃO:** O componente agora recebe a prop 'onSubmit'
-export default function AntropometriaForm() {
+export default function AntropometriaForm({patientData} : AntropometriaProps) {
   const [formData, setFormData] = useState({
     pacienteId: "",
     nomePaciente: "",
@@ -150,6 +154,17 @@ export default function AntropometriaForm() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePatientInfoChange = (data: PatientInfoData) => {
+    setFormData(prev => ({
+      ...prev,
+      patientInfo: data,
+      nomePaciente: data.nome || "",
+      dataNascimento: data.data_nascimento || "",
+      sexo: data.sexo || "",
+      idade: data.idade || "",
+    }));
   };
 
   const handleCalculate = () => {
@@ -272,18 +287,6 @@ export default function AntropometriaForm() {
     return () => clearTimeout(timeout);
   }, [buscaNome]);
 
-  const preencherDadosPaciente = (p: any) => {
-    setFormData(prev => ({
-      ...prev,
-      pacienteId: p.id.toString(),
-      nomePaciente: p.nome,
-      sexo: p.sexo,
-      dataNascimento: p.dataNascimento,
-      idade: pegaIdade(p.dataNascimento, formData.dataAvaliacao).toString(),
-    }));
-    setBuscaNome(p.nome);
-    setPacientes([]);
-  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 font-sans p-6 text-gray-800">
@@ -291,73 +294,7 @@ export default function AntropometriaForm() {
         <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">Avaliação Antropométrica</h1>
         <CardContent className="p-0">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Dados do Paciente */}
-            <section className="p-4 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-blue-900">Dados do Paciente</h2>
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Nome do Paciente</label>
-                  <div style={{ position: "relative" }} ref={nomeContainerRef}>
-                  <Input
-                    placeholder="Digite o nome do paciente"
-                    name="nomePaciente"
-                    value={formData.nomePaciente}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      handleChange(e);
-                      setBuscaNome(e.target.value);
-                    }}
-                  />
-                    {pacientes.length > 0 && (
-                      <ul
-                        className="absolute z-10 w-full bg-white border border-gray-600 rounded-md shadow-md max-h-52 overflow-y-auto p-0 mt-0.5"
-                        style={{ borderTop: "2px solid transparent" }}
-                      >
-                        {pacientes.map((p) => (
-                          <li
-                            key={p.id}
-                            className="px-4 py-2 cursor-pointer border-b border-gray-200 hover:bg-gray-100 transition"
-                            onClick={() => preencherDadosPaciente(p)}
-                          >
-                            {p.nome}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700">ID do Paciente</label>
-                  <Input
-                    placeholder="Digite o ID do paciente"
-                    name="pacienteId"
-                    value={formData.pacienteId}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Data da Avaliação</label>
-                  <Input type="date" name="dataAvaliacao" value={formData.dataAvaliacao} onChange={handleChange} />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Data de Nascimento</label>
-                  <Input type="date" name="dataNascimento" readOnly value={formData.dataNascimento} onChange={handleChange} />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Idade</label>
-                  <Input type="number" placeholder="Idade" name="idade" readOnly value={formData.idade} onChange={handleChange} />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Sexo</label>
-                  <Input placeholder="Sexo" name="sexo" readOnly value={formData.sexo} onChange={handleChange} />
-                </div>
-              </div>
-            </section>
-
+            <PatientBasicInfo patientData={patientData} onChange={handlePatientInfoChange} />
             {/* Medidas Antropométricas */}
             <section className="p-4 space-y-4 border-b border-gray-200">
               <h2 className="text-2xl font-bold text-blue-900">Medidas Antropométricas</h2>

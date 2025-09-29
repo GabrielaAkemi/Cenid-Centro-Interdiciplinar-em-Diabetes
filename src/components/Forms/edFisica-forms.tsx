@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import PatientBasicInfo, { PatientInfoData } from "./basicInfo/patientBasicInfo";
 
 // Constantes para o formulário
 const diasSemana = [
@@ -11,13 +12,50 @@ const diasSemana = [
   { key: "domingo", label: "Domingo" },
 ];
 
-const App = () => {
+// ---- Tipos auxiliares ----
+type StrengthMeasures = {
+  medida1: string;
+  medida2: string;
+  medida3: string;
+};
+
+type Cronograma = Record<string, { horario: string; tipo: string }>;
+
+interface FormData {
+  dataConsulta: string;
+  nomeCompleto: string;
+  dataAvaliacao: string;
+  sexo: string;
+  idade: string;
+  peso: string;
+  estatura: string;
+  metodoInsulina: string;
+  atividadeLeve: string;
+  atividadeModerada: string;
+  atividadeVigorosa: string;
+  tempoSentado: string;
+  tempoDormindo: string;
+  mesesPraticando: string;
+  relatorioInterrupcoes: string;
+  prescricaoExercicio: string;
+  forcaMaoDominante: StrengthMeasures;
+  forcaMaoNaoDominante: StrengthMeasures;
+  forcaLombar: StrengthMeasures;
+  cronograma: Cronograma;
+  patientInfo: PatientInfoData;
+}
+
+interface AppProps {
+  patientData?: PatientInfoData;
+}
+
+const App: React.FC<AppProps> = ({ patientData }) => {
   const [message, setMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState('formulario');
 
   // Estados do formulário
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     dataConsulta: "",
     nomeCompleto: "",
     dataAvaliacao: "",
@@ -37,17 +75,25 @@ const App = () => {
     forcaMaoDominante: { medida1: "", medida2: "", medida3: "" },
     forcaMaoNaoDominante: { medida1: "", medida2: "", medida3: "" },
     forcaLombar: { medida1: "", medida2: "", medida3: "" },
+    patientInfo: {},
     cronograma: diasSemana.reduce((acc, dia) => {
       acc[dia.key] = { horario: "", tipo: "" };
       return acc;
-    }, {}),
+    }, {} as Cronograma),
   });
 
-  const handleChange = (key, value) => {
+  const handleChange = (key: keyof FormData, value: any) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleStrengthChange = (measureName, field, value) => {
+  const handleStrengthChange = (
+    measureName: keyof Pick<
+      FormData,
+      "forcaMaoDominante" | "forcaMaoNaoDominante" | "forcaLombar"
+    >,
+    field: keyof StrengthMeasures,
+    value: string
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [measureName]: {
@@ -57,7 +103,11 @@ const App = () => {
     }));
   };
 
-  const handleCronogramaChange = (dayKey, field, value) => {
+  const handleCronogramaChange = (
+    dayKey: string,
+    field: keyof (typeof formData.cronograma)[string],
+    value: string
+  ) => {
     setFormData((prev) => ({
       ...prev,
       cronograma: {
@@ -70,19 +120,38 @@ const App = () => {
     }));
   };
 
-  const calculateNAF = () => {
-    const total = Number(formData.atividadeLeve || 0) + Number(formData.atividadeModerada || 0) + Number(formData.atividadeVigorosa || 0);
-    if (total <= 0) return 'Sedentário';
-    if (total > 0 && total < 150) return 'Pouco ativo';
-    if (total >= 150 && total <= 300) return 'Ativo';
-    return 'Muito ativo';
+  const calculateNAF = (): string => {
+    const total =
+      Number(formData.atividadeLeve || 0) +
+      Number(formData.atividadeModerada || 0) +
+      Number(formData.atividadeVigorosa || 0);
+    if (total <= 0) return "Sedentário";
+    if (total > 0 && total < 150) return "Pouco ativo";
+    if (total >= 150 && total <= 300) return "Ativo";
+    return "Muito ativo";
   };
 
-  const calculateStrength = (measures, peso) => {
-    const validMeasures = [measures.medida1, measures.medida2, measures.medida3].map(m => parseFloat(m)).filter(m => !isNaN(m));
-    const media = validMeasures.length > 0 ? (validMeasures.reduce((a, b) => a + b, 0) / validMeasures.length).toFixed(2) : '0.00';
-    const maiorValor = validMeasures.length > 0 ? Math.max(...validMeasures).toFixed(2) : '0.00';
-    const forcaRelativa = peso > 0 ? (parseFloat(maiorValor) / peso).toFixed(2) : '0.00';
+  const calculateStrength = (
+    measures: StrengthMeasures,
+    peso: string
+  ): { media: string; forcaRelativa: string } => {
+    const validMeasures = [measures.medida1, measures.medida2, measures.medida3]
+      .map((m) => parseFloat(m))
+      .filter((m) => !isNaN(m));
+    const media =
+      validMeasures.length > 0
+        ? (
+            validMeasures.reduce((a, b) => a + b, 0) / validMeasures.length
+          ).toFixed(2)
+        : "0.00";
+    const maiorValor =
+      validMeasures.length > 0
+        ? Math.max(...validMeasures).toFixed(2)
+        : "0.00";
+    const forcaRelativa =
+      parseFloat(peso) > 0
+        ? (parseFloat(maiorValor) / parseFloat(peso)).toFixed(2)
+        : "0.00";
     return { media, forcaRelativa };
   };
 
@@ -90,7 +159,7 @@ const App = () => {
   const { media: mediaNaoDominante, forcaRelativa: forcaRelativaNaoDominante } = calculateStrength(formData.forcaMaoNaoDominante, formData.peso);
   const { media: mediaLombar, forcaRelativa: forcaRelativaLombar } = calculateStrength(formData.forcaLombar, formData.peso);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.dataConsulta) {
       setMessage('A Data da Consulta é obrigatória.');
@@ -107,11 +176,11 @@ const App = () => {
       atividadeLeve: "", atividadeModerada: "", atividadeVigorosa: "", tempoSentado: "", tempoDormindo: "",
       mesesPraticando: "", relatorioInterrupcoes: "", prescricaoExercicio: "",
       forcaMaoDominante: { medida1: "", medida2: "", medida3: "" }, forcaMaoNaoDominante: { medida1: "", medida2: "", medida3: "" },
-      forcaLombar: { medida1: "", medida2: "", medida3: "" },
+      forcaLombar: { medida1: "", medida2: "", medida3: "" }, patientInfo: {},
       cronograma: diasSemana.reduce((acc, dia) => {
         acc[dia.key] = { horario: "", tipo: "" };
         return acc;
-      }, {}),
+      }, {} as Cronograma),
     });
   };
 
@@ -140,107 +209,37 @@ const App = () => {
 
         {currentPage === 'formulario' && (
           <form onSubmit={handleSubmit} className="space-y-10 text-blue-900">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-blue-900">Dados do Paciente</h2>
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
-                  <label className={labelClass}>Data da Consulta <span className="text-red-500">*</span>:</label>
-                  <input
-                    type="date"
-                    value={formData.dataConsulta}
-                    onChange={(e) => handleChange("dataConsulta", e.target.value)}
-                    className={inputClass}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Nome completo:</label>
-                  <input
-                    type="text"
-                    value={formData.nomeCompleto}
-                    onChange={(e) => handleChange("nomeCompleto", e.target.value)}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Data da Avaliação:</label>
-                  <input
-                    type="date"
-                    value={formData.dataAvaliacao}
-                    onChange={(e) => handleChange("dataAvaliacao", e.target.value)}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Sexo:</label>
-                  <select
-                    value={formData.sexo}
-                    onChange={(e) => handleChange("sexo", e.target.value)}
-                    className={inputClass}
-                  >
-                    <option value="">Selecione...</option>
-                    <option value="Masculino">Masculino</option>
-                    <option value="Feminino">Feminino</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>Idade (anos):</label>
-                  <input
-                    type="number"
-                    value={formData.idade}
-                    onChange={(e) => handleChange("idade", e.target.value)}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Peso (kg):</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={formData.peso}
-                    onChange={(e) => handleChange("peso", e.target.value)}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Estatura (metros):</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.estatura}
-                    onChange={(e) => handleChange("estatura", e.target.value)}
-                    className={inputClass}
-                  />
-                </div>
-                <div className="col-span-1 sm:col-span-2 lg:col-span-3">
-                  <label className={labelClass}>Método de administração de insulina:</label>
-                  <div className="flex flex-wrap gap-6 mt-2">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="metodoInsulina"
-                        value="SICI"
-                        checked={formData.metodoInsulina === 'SICI'}
-                        onChange={(e) => handleChange("metodoInsulina", e.target.value)}
-                        className="form-radio h-5 w-5 text-blue-600 transition-colors"
-                      />
-                      <span className="ml-2 text-gray-700">SICI</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="metodoInsulina"
-                        value="MDI"
-                        checked={formData.metodoInsulina === 'MDI'}
-                        onChange={(e) => handleChange("metodoInsulina", e.target.value)}
-                        className="form-radio h-5 w-5 text-blue-600 transition-colors"
-                      />
-                      <span className="ml-2 text-gray-700">MDI</span>
-                    </label>
-                  </div>
+            <PatientBasicInfo patientData={patientData} onChange={(data) => handleChange("patientInfo", data)} />
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="col-span-1 sm:col-span-2 lg:col-span-3">
+                <label className={labelClass}>Método de administração de insulina:</label>
+                <div className="flex flex-wrap gap-6 mt-2">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="metodoInsulina"
+                      value="SICI"
+                      checked={formData.metodoInsulina === 'SICI'}
+                      onChange={(e) => handleChange("metodoInsulina", e.target.value)}
+                      className="form-radio h-5 w-5 text-blue-600 transition-colors"
+                    />
+                    <span className="ml-2 text-gray-700">SICI</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="metodoInsulina"
+                      value="MDI"
+                      checked={formData.metodoInsulina === 'MDI'}
+                      onChange={(e) => handleChange("metodoInsulina", e.target.value)}
+                      className="form-radio h-5 w-5 text-blue-600 transition-colors"
+                    />
+                    <span className="ml-2 text-gray-700">MDI</span>
+                  </label>
                 </div>
               </div>
             </div>
+
 
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-2xl font-bold text-blue-900">Questionário de Nível de Atividade Física (NAF)</h2>

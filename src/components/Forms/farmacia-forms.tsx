@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState, useCallback } from "react"
+import PatientBasicInfo from "./basicInfo/patientBasicInfo";
 
 const inputClass = "p-3.5 border border-gray-600 rounded-md shadow-sm focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-colors duration-200 w-full bg-white text-gray-800";
 const labelClass = "text-sm font-medium text-gray-700 mb-1 block";
@@ -43,11 +44,6 @@ interface PatientInfoData {
   peso?: string
   estatura?: string
   data_nascimento?: string
-}
-
-interface PatientInfoProps {
-  onChange: (data: PatientInfoData) => void
-  patientData?: PatientInfoData
 }
 
 interface BaasisData {
@@ -99,15 +95,6 @@ interface MedicationCategory {
   key: string
   isParent?: boolean
   parent?: string
-}
-
-interface FormField {
-  name: string
-  label: string
-  type: string
-  options?: string[]
-  step?: string
-  readOnly?: boolean
 }
 
 interface Question {
@@ -275,79 +262,8 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
   )
 }
 
-const calculateAge = (birthDateStr: string) => {
-  const birthDate = new Date(birthDateStr);
-  if (isNaN(birthDate.getTime())) return "";
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const m = today.getMonth() - birthDate.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age.toString();
-};
 
-const PatientInfo: React.FC<PatientInfoProps> = ({ onChange, patientData }) => {
-  const [data, setData] = useState<PatientInfoData>({
-    ...patientData,
-    idade: patientData?.data_nascimento ? calculateAge(patientData.data_nascimento) : "",
-    sexo: patientData?.sexo === "M" ? "Masculino" : patientData?.sexo === "F" ? "Feminino" : "",
-  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    let newData = { ...data, [name]: value };
-    setData(newData);
-    onChange(newData);
-  };
-
-  const fields: FormField[] = [
-    { name: "nome", label: "Nome completo:", type: "text", readOnly: true },
-    { name: "dataAvaliacao", label: "Data da avaliação:", type: "date" },
-    { name: "sexo", label: "Sexo:", type: "select", options: ["Masculino", "Feminino"], readOnly: true },
-    { name: "idade", label: "Idade (anos):", type: "number", readOnly: true },
-    { name: "peso", label: "Peso (kg):", type: "number", step: "0.1" },
-    { name: "estatura", label: "Estatura (metros):", type: "number", step: "0.01" },
-    { name: "data_nascimento", label: "Data de Nascimento:", type: "date", readOnly: true },
-  ];
-
-  return (
-    <div className={sectionContainerClass}>
-      <h2 className={sectionTitleClass}>Dados do Paciente</h2>
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {fields.map((field) => (
-          <div key={field.name}>
-            <label htmlFor={field.name} className={labelClass}>{field.label}</label>
-            {field.type === "select" ? (
-              <select
-                name={field.name}
-                id={field.name}
-                onChange={handleChange}
-                className={`${inputClass} ${field.readOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                disabled={field.readOnly || false}
-                value={data[field.name as keyof PatientInfoData] || ""}
-              >
-                <option value="">Selecione</option>
-                {field.options?.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
-            ) : (
-              <input
-                type={field.type}
-                name={field.name}
-                id={field.name}
-                step={field.step}
-                value={data[field.name as keyof PatientInfoData] || ""}
-                onChange={handleChange}
-                className={`${inputClass} ${field.readOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                readOnly={field.readOnly}
-              />
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 const BAASIS: React.FC<BaasisProps> = ({ onChange }) => {
   const [data, setData] = useState<BaasisData>({ p1: "", p2: "", p3: "", p4: "" })
@@ -600,7 +516,7 @@ const App: React.FC<AppProps> = ({ patientData }) => {
         <div className="max-w-4xl mx-auto w-full bg-white p-8 rounded-lg shadow-lg space-y-8">
             <h1 className="text-3xl font-bold text-center text-blue-900 mb-2">Avaliação Farmácia</h1>
             <form onSubmit={handleSubmit} className="space-y-0">
-                <PatientInfo patientData={patientData} onChange={(data) => handleChange("patientInfo", data)} />
+                <PatientBasicInfo patientData={patientData} onChange={(data) => handleChange("patientInfo", data)} />
                 <InsulinAdherence onChange={(data) => handleChange("insulinAdherence", data)} />
                 <ComplementaryMedications onChange={(data) => handleChange("complementaryMedications", data)} />
                 <OtherMedications onChange={(data) => handleChange("otherMedications", data)} />

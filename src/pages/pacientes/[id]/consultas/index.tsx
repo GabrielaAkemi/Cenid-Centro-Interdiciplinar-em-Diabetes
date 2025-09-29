@@ -47,9 +47,9 @@ export default function Consultas() {
       case "farmacia":
         return <FarmaciaForm patientData={paciente} />;
       case "edFisica":
-        return <EdFisicaForm />;
+        return <EdFisicaForm patientData={paciente} />;
       case "calculadora":
-        return <AntropometriaForm />;
+        return <AntropometriaForm patientData={paciente} />;
       default:
         return null;
     }
