@@ -155,6 +155,9 @@ interface FormDataType {
 }
 
 export default function AntropometriaForm({patientData} : AntropometriaProps) {
+  const [message, setMessage] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState('formulario');
   const [formData, setFormData] = useState<FormDataType>({
     patientInfo: {
       id: "",
@@ -300,27 +303,121 @@ export default function AntropometriaForm({patientData} : AntropometriaProps) {
     }
   };
 
-  // **CORREÇÃO:** O `handleSubmit` agora chama a prop `onSubmit`
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!formData.patientInfo?.dataAvaliacao) {
+      alert('A Data da Avaliação é obrigatória.');
+      return;
+    }
+
+
+    if (!formData.imc || !formData.imc_escore_z) {
+      await handleCalculate();
+    }
+
+    const payload = {
+      patient: formData.patientInfo.id,
+      peso: parseFloat(formData.patientInfo.peso) || 0,
+      estatura: parseFloat(formData.patientInfo.estatura) || 0,
+      medidas: {
+        peso: parseFloat(formData.patientInfo.peso) || 0,
+        estatura: parseFloat(formData.patientInfo.estatura) || 0,
+        circunferencia_braco: parseFloat(formData.circunferencia_braco) || 0,
+        circunferencia_cintura: parseFloat(formData.circunferencia_cintura) || 0,
+        dobra_tricipital: parseFloat(formData.dobra_tricipal) || 0,
+      },
+      bio_impedancia: {
+        gordura_porcentagem: parseFloat(formData.gordura_corporal_bioimpedância_porcentagem_valor) || 0,
+        gordura_kg: parseFloat(formData.gordura_corporal_bioimpedância_kg_valor) || 0,
+        massa_porcentagem: parseFloat(formData.massa_magra_bioimpedância_porcentagem_valor) || 0,
+        massa_kg: parseFloat(formData.massa_magra_bioimpedância_kg_valor) || 0,
+        agua_corporal_litros: parseFloat(formData.agua_corporal_bioimpedância_litros_valor) || 0,
+        agua_corporal_porcentagem: parseFloat(formData.agua_corporal_bioimpedância_porcentagem_valor) || 0,
+        agua_massa_porcentagem: parseFloat(formData.agua_na_massa_magra_porcentagem_valor) || 0,
+        resistencia: parseFloat(formData.resistencia_r_ohms_valor) || 0,
+        reatancia: parseFloat(formData.reatancia_xc_ohms_valor) || 0,
+      },
+      data_consulta: formData.patientInfo.dataAvaliacao,
+      observacoes: formData.observacoes || "",
+    };
+
     try {
-      // Aqui você envia os dados para o seu backend
-      const response = await fetch("/api/antropometria", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+      await apiFetch("/api/consulta-calculadora/", true, {
+              method: "POST",
+              body: JSON.stringify(payload),
+            });
+      setMessage("Formulário enviado com sucesso!");
+      setShowModal(true);
+      setCurrentPage("consultas");
+
+      setFormData({
+        patientInfo: {
+          id: "",
+          nome: "",
+          dataNascimento: "",
+          dataAvaliacao: new Date().toISOString().split("T")[0],
+          idade: "",
+          sexo: "",
+          peso: "",
+          estatura: "",
+        },
+        pacienteId: "",
+        nomePaciente: "",
+        dataAvaliacao: new Date().toISOString().split("T")[0],
+        dataNascimento: "",
+        idade: "",
+        sexo: "",
+        peso_corporal: "",
+        estatura_metros: "",
+        circunferencia_braco: "",
+        circunferencia_cintura: "",
+        dobra_tricipal: "",
+        imc: "",
+        imc_escore_z: "",
+        classificacao_imc: "",
+        peso_tabela: "",
+        peso_escore_z: "",
+        classificacao_peso: "",
+        estatura_tabela: "",
+        estatura_escore_z: "",
+        classificacao_estatura: "",
+        circunferencia_braco_tabela: "",
+        circunferencia_braco_escore_z: "",
+        circunferencia_braco_classificacao: "",
+        circunferencia_cintura_tabela: "",
+        circunferencia_cintura_escore_z: "",
+        circunferencia_cintura_classificacao: "",
+        dobra_tricipal_tabela: "",
+        dobra_tricipal_escore_z: "",
+        dobra_tricipal_classificacao: "",
+        gordura_corporal_bioimpedância_porcentagem_valor: "",
+        gordura_corporal_bioimpedância_porcentagem_diagnostico: "",
+        gordura_corporal_bioimpedância_kg_valor: "",
+        gordura_corporal_bioimpedância_kg_diagnostico: "",
+        massa_magra_bioimpedância_kg_valor: "",
+        massa_magra_bioimpedância_kg_diagnostico: "",
+        massa_magra_bioimpedância_porcentagem_valor: "",
+        massa_magra_bioimpedância_porcentagem_diagnostico: "",
+        agua_corporal_bioimpedância_litros_valor: "",
+        agua_corporal_bioimpedância_litros_diagnostico: "",
+        agua_corporal_bioimpedância_porcentagem_valor: "",
+        agua_corporal_bioimpedância_porcentagem_diagnostico: "",
+        agua_na_massa_magra_porcentagem_valor: "",
+        agua_na_massa_magra_porcentagem_diagnostico: "",
+        resistencia_r_ohms_valor: "",
+        resistencia_r_ohms_diagnostico: "",
+        reatancia_xc_ohms_valor: "",
+        reatancia_xc_ohms_diagnostico: "",
+        observacoes: "",
       });
 
-      if (!response.ok) throw new Error("Erro ao salvar dados");
-
-      setShowSuccessDialog(true);
-      // Resetar form se desejar
-      // setFormData({...formData, peso_corporal: "", estatura_metros: ""});
     } catch (error) {
       console.error(error);
       alert("Erro ao salvar avaliação.");
     }
+
+    
   };
 
   useEffect(() => {
@@ -386,6 +483,20 @@ export default function AntropometriaForm({patientData} : AntropometriaProps) {
     <div className="flex flex-col min-h-screen bg-gray-100 font-sans p-6 text-gray-800">
       <Card>
         <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">Avaliação Antropométrica</h1>
+        {showModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-8 rounded-lg text-center shadow-2xl">
+              <p className="text-xl font-bold text-blue-900">{message}</p>
+              <button
+                onClick={() => setShowModal(false)}
+                className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        )}
+
         <CardContent className="p-0">
           <form onSubmit={handleSubmit} className="space-y-6">
             <PatientBasicInfo patientData={patientData} onChange={handlePatientInfoChange} />
