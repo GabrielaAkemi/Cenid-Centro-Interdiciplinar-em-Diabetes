@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import PatientBasicInfo, {PatientInfoData} from "./basicInfo/patientBasicInfo";
-
+import { apiFetch } from "@/lib/api";
 // Mock de componentes
 const Card = ({ className, children }: any) => <div className={`max-w-4xl mx-auto w-full bg-white p-8 space-y-8 rounded-lg shadow-lg ${className}`}>{children}</div>;
 const CardContent = ({ className, children }: any) => <div className={`p-0 ${className}`}>{children}</div>;
@@ -93,9 +93,79 @@ interface AntropometriaProps {
   patientData?: PatientInfoData;
 }
 
-// **CORREÇÃO:** O componente agora recebe a prop 'onSubmit'
+interface FormDataType {
+  patientInfo: {
+    id: number | string;
+    nome: string;
+    dataAvaliacao: string;
+    dataNascimento: string;
+    idade: string;
+    sexo: string;
+    peso: string;
+    estatura: string;
+  };
+  pacienteId: string;
+  nomePaciente: string;
+  dataAvaliacao: string;
+  dataNascimento: string;
+  idade: string;
+  sexo: string;
+  peso_corporal: string;
+  estatura_metros: string;
+  circunferencia_braco: string;
+  circunferencia_cintura: string;
+  dobra_tricipal: string;
+  imc: string;
+  imc_escore_z: string;
+  classificacao_imc: string;
+  peso_tabela: string;
+  peso_escore_z: string;
+  classificacao_peso: string;
+  estatura_tabela: string;
+  estatura_escore_z: string;
+  classificacao_estatura: string;
+  circunferencia_braco_tabela: string;
+  circunferencia_braco_escore_z: string;
+  circunferencia_braco_classificacao: string;
+  circunferencia_cintura_tabela: string;
+  circunferencia_cintura_escore_z: string;
+  circunferencia_cintura_classificacao: string;
+  dobra_tricipal_tabela: string;
+  dobra_tricipal_escore_z: string;
+  dobra_tricipal_classificacao: string;
+  gordura_corporal_bioimpedância_porcentagem_valor: string;
+  gordura_corporal_bioimpedância_porcentagem_diagnostico: string;
+  gordura_corporal_bioimpedância_kg_valor: string;
+  gordura_corporal_bioimpedância_kg_diagnostico: string;
+  massa_magra_bioimpedância_kg_valor: string;
+  massa_magra_bioimpedância_kg_diagnostico: string;
+  massa_magra_bioimpedância_porcentagem_valor: string;
+  massa_magra_bioimpedância_porcentagem_diagnostico: string;
+  agua_corporal_bioimpedância_litros_valor: string;
+  agua_corporal_bioimpedância_litros_diagnostico: string;
+  agua_corporal_bioimpedância_porcentagem_valor: string;
+  agua_corporal_bioimpedância_porcentagem_diagnostico: string;
+  agua_na_massa_magra_porcentagem_valor: string;
+  agua_na_massa_magra_porcentagem_diagnostico: string;
+  resistencia_r_ohms_valor: string;
+  resistencia_r_ohms_diagnostico: string;
+  reatancia_xc_ohms_valor: string;
+  reatancia_xc_ohms_diagnostico: string;
+  observacoes: string;
+}
+
 export default function AntropometriaForm({patientData} : AntropometriaProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataType>({
+    patientInfo: {
+      id: "",
+      nome: "",
+      dataNascimento: "",
+      dataAvaliacao: new Date().toISOString().split("T")[0],
+      idade: "",
+      sexo: "",
+      peso: "",
+      estatura: "",
+    },
     pacienteId: "",
     nomePaciente: "",
     dataAvaliacao: new Date().toISOString().split("T")[0],
@@ -156,54 +226,78 @@ export default function AntropometriaForm({patientData} : AntropometriaProps) {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handlePatientInfoChange = (data: PatientInfoData) => {
-    setFormData(prev => ({
-      ...prev,
-      patientInfo: data,
-      nomePaciente: data.nome || "",
-      dataNascimento: data.data_nascimento || "",
-      sexo: data.sexo || "",
-      idade: data.idade || "",
-    }));
-  };
+    const handlePatientInfoChange = (data: PatientInfoData) => {
+      setFormData(prev => ({
+        ...prev,
+        patientInfo: {
+          id: data.id || "",
+          nome: data.nome || "",
+          dataAvaliacao: data.dataAvaliacao || "",
+          dataNascimento: data.data_nascimento || "",
+          idade: data.idade || "",
+          sexo: data.sexo || "",
+          peso: data.peso || "",
+          estatura: data.estatura || "",
+        },
+        nomePaciente: data.nome || "",
+        dataNascimento: data.data_nascimento || "",
+        sexo: data.sexo || "",
+        idade: data.idade || "",
+      }));
+    };
 
-  const handleCalculate = () => {
-    const peso = parseFloat(formData.peso_corporal);
-    const estatura = parseFloat(formData.estatura_metros);
-    const idade = pegaIdade(formData.dataNascimento, formData.dataAvaliacao);
-    const homem = formData.sexo === "Masculino";
+  const handleCalculate = async () => {
+    const peso = parseFloat(formData.patientInfo.peso);
+    const estatura = parseFloat(formData.patientInfo.estatura);
 
     if (!peso || !estatura) {
       alert("Peso e Estatura são campos obrigatórios para o cálculo.");
       return;
     }
 
-    const imc = peso / (estatura * estatura);
-    const imcValue = parseFloat(imc.toFixed(1));
-    const zImc = calculaZ(idade, imcValue, "imc", homem);
-    const classificacaoImc = classificarZImc(imcValue, idade);
+    try {
+      const resultado = await apiFetch<{
+        imc: number;
+        imcZ: number;
+        imcDiagnostico: string;
+        pesoZ: number;
+        pesoDiagnostico: string | null;
+        alturaZ: number;
+        alturaDiagnostico: string;
+      }>(
+        "/api/escore-z/",
+        true,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            dataNascimento: formData.dataNascimento,
+            dataAvaliacao: formData.dataAvaliacao,
+            altura: estatura * 100,
+            peso: peso,
+            sexo: formData.sexo[0],
+          }),
+        }
+      );
 
-    const zPeso = calculaZ(idade, peso, "peso", homem);
-    const classificacaoPeso = classificarZPeso(parseFloat(zPeso as string), idade);
-    
-    const zEstatura = calculaZ(idade, estatura * 100, "altura", homem);
-    const classificacaoEstatura = classificarZAltura(parseFloat(zEstatura as string), idade);
-
-    setFormData(prev => ({
-      ...prev,
-      imc: imcValue.toFixed(2),
-      imc_escore_z: zImc as string,
-      classificacao_imc: classificacaoImc,
-      peso_tabela: peso.toFixed(2),
-      peso_escore_z: zPeso as string,
-      classificacao_peso: classificacaoPeso,
-      estatura_tabela: estatura.toFixed(2),
-      estatura_escore_z: zEstatura as string,
-      classificacao_estatura: classificacaoEstatura,
-      circunferencia_braco_tabela: formData.circunferencia_braco,
-      circunferencia_cintura_tabela: formData.circunferencia_cintura,
-      dobra_tricipal_tabela: formData.dobra_tricipal,
-    }));
+      setFormData(prev => ({
+        ...prev,
+        imc: resultado.imc?.toFixed(2) || "",
+        imc_escore_z: resultado.imcZ != null ? resultado.imcZ.toString() : "",
+        classificacao_imc: resultado.imcDiagnostico || "",
+        peso_tabela: peso.toFixed(2),
+        peso_escore_z: resultado.pesoZ != null ? resultado.pesoZ.toString() : "",
+        classificacao_peso: resultado.pesoDiagnostico || "",
+        estatura_tabela: estatura.toFixed(2),
+        estatura_escore_z: resultado.alturaZ != null ? resultado.alturaZ.toString() : "",
+        classificacao_estatura: resultado.alturaDiagnostico || "",
+        circunferencia_braco_tabela: formData.circunferencia_braco,
+        circunferencia_cintura_tabela: formData.circunferencia_cintura,
+        dobra_tricipal_tabela: formData.dobra_tricipal,
+      }));
+    } catch (err) {
+      console.error("Erro ao calcular escore Z:", err);
+      alert("Erro ao calcular escore Z. Tente novamente.");
+    }
   };
 
   // **CORREÇÃO:** O `handleSubmit` agora chama a prop `onSubmit`
@@ -299,28 +393,6 @@ export default function AntropometriaForm({patientData} : AntropometriaProps) {
             <section className="p-4 space-y-4 border-b border-gray-200">
               <h2 className="text-2xl font-bold text-blue-900">Medidas Antropométricas</h2>
               <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Peso Corporal (kg)</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="Digite o peso"
-                    name="peso_corporal"
-                    value={formData.peso_corporal}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Estatura (metros)</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="Digite a estatura"
-                    name="estatura_metros"
-                    value={formData.estatura_metros}
-                    onChange={handleChange}
-                  />
-                </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">Circunferência do Braço (cm)</label>
                   <Input
