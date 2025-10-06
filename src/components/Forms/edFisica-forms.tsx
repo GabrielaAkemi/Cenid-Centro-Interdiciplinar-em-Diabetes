@@ -216,7 +216,6 @@ const App: React.FC<AppProps> = ({ patientData }) => {
         body: JSON.stringify(payload),
       });
 
-      console.log(payload);
 
       setMessage("Formulário enviado com sucesso!");
       setShowModal(true);

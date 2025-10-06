@@ -2,7 +2,8 @@
 
 import type React from "react"
 import { useState, useCallback } from "react"
-import PatientBasicInfo from "./basicInfo/patientBasicInfo";
+import PatientBasicInfo, {PatientInfoData} from "./basicInfo/patientBasicInfo";
+import { apiFetch } from "@/lib/api";
 
 const inputClass = "p-3.5 border border-gray-600 rounded-md shadow-sm focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-colors duration-200 w-full bg-white text-gray-800";
 const labelClass = "text-sm font-medium text-gray-700 mb-1 block";
@@ -36,15 +37,6 @@ interface MedicationCardProps {
   showRemoveButton?: boolean
 }
 
-interface PatientInfoData {
-  nome?: string
-  dataAvaliacao?: string
-  sexo?: string
-  idade?: string
-  peso?: string
-  estatura?: string
-  data_nascimento?: string
-}
 
 interface BaasisData {
   p1: string
@@ -288,14 +280,23 @@ const BAASIS: React.FC<BaasisProps> = ({ onChange }) => {
         Objetivo: Avaliar especificamente a adesão à insulina em pacientes com DM1 e uso de MDI.
       </p>
       {questions.map((q) => (
-        <div key={q.key}>
-          <label className={labelClass}>{q.label}</label>
-          <select name={q.key} value={data[q.key as keyof BaasisData]} onChange={handleChange} className={inputClass}>
-            <option value="">Selecione</option>
-            {q.options.map((v) => <option key={v} value={v}>{v}</option>)}
-          </select>
-        </div>
-      ))}
+				<div key={q.key}>
+					<label className={labelClass}>{q.label}</label>
+					<select
+						name={q.key}
+						value={data[q.key as keyof BaasisData]}
+						onChange={handleChange}
+						className={inputClass}
+					>
+						<option value="">Selecione</option>
+						{q.options.map((opt, index) => (
+							<option key={index} value={index}>
+								{opt}
+							</option>
+						))}
+					</select>
+				</div>
+			))}
       <p className="pt-2 text-sm text-blue-800 font-medium">
         CLASSIFICAÇÃO: Não aderente se: ≥1 falha (P1), "Sim" (P2/P3), ou ≥3 dias sem (P4).
       </p>
@@ -327,14 +328,23 @@ const BAASIS_CSII: React.FC<BaasisCSIIProps> = ({ onChange }) => {
         Objetivo: Avaliar comportamentos de não adesão específicos de usuários de CSII.
       </p>
       {questions.map((q) => (
-        <div key={q.key}>
-          <label className={labelClass}>{q.label}</label>
-          <select name={q.key} value={data[q.key as keyof BaasisCSIIData]} onChange={handleChange} className={inputClass}>
-            <option value="">Selecione</option>
-            {q.options.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
-          </select>
-        </div>
-      ))}
+				<div key={q.key}>
+					<label className={labelClass}>{q.label}</label>
+					<select
+						name={q.key}
+						value={data[q.key as keyof BaasisCSIIData]}
+						onChange={handleChange}
+						className={inputClass}
+					>
+						<option value="">Selecione</option>
+						{q.options.map((opt, index) => (
+							<option key={index} value={index}>
+								{opt}
+							</option>
+						))}
+					</select>
+				</div>
+			))}
       <p className="pt-2 text-sm text-green-800 font-medium">
         CLASSIFICAÇÃO: Não aderente se: ≥1 falha (P1,4,5), "Sim" (P2), ≥3 dias (P3), ou "Frequentemente/Às vezes" (P6).
       </p>
@@ -498,24 +508,157 @@ interface AppProps {
 }
 
 const App: React.FC<AppProps> = ({ patientData }) => {
-  const [formData, setFormData] = useState<FormData>({
-    patientInfo: {}, insulinAdherence: {}, complementaryMedications: {}, otherMedications: [],
-  })
-  const handleChange = (section: keyof FormData, data: any) => {
-    setFormData((prevData) => ({ ...prevData, [section]: data }))
-  }
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    console.log("Form data submitted:", formData)
-    // Idealmente, você usaria um modal para exibir esta mensagem
-    alert("Formulário enviado com sucesso! Verifique o console para os dados.")
-  }
+	const [message, setMessage] = useState('');
+	const [showModal, setShowModal] = useState(false);
+	const [currentPage, setCurrentPage] = useState('formulario');
+	const [formKey, setFormKey] = useState(0);
+	const [formData, setFormData] = useState<FormData>({
+		patientInfo: {
+			nome: "",
+			dataAvaliacao: "",
+			sexo: "",
+			idade: "",
+			peso: "",
+			estatura: "",
+			data_nascimento: "",
+		},
+		insulinAdherence: {
+			method: "",
+			questionnaire: undefined,
+		},
+		complementaryMedications: {},
+		otherMedications: [],
+	});
+	const handleChange = (section: keyof FormData, data: any) => {
+		setFormData((prevData) => ({ ...prevData, [section]: data }))
+	}
+	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!formData.patientInfo?.dataAvaliacao) {
+        setMessage('A Data da Avaliação é obrigatória.');
+        setShowModal(true);
+        return;
+    }
+
+    const complementaryMeds = Object.entries(formData.complementaryMedications).map(([catKey, med]) => {
+        const categoria = medicationCategories.find(c => c.key === catKey)?.title || "Outro";
+        return {
+            nome: categoria,
+            nome_comercial: med.medicamento,
+            principio_ativo: med.principioAtivo,
+            prescricao: med.comPrescricaoMedica === "Sim",
+            finalidade: med.finalidade,
+            data_inicio: med.dataInicio,
+            data_termino: med.dataTermino,
+            instrucoes: med.posologias.map((p) => ({
+                posologia: p.posologia,
+                frequencia: p.frequencia,
+                dose: p.dose,
+                horario: p.horario,
+                jejum: p.emJejum === "Sim",
+            })),
+        };
+    });
+
+    
+    const otherMeds = formData.otherMedications.map(med => ({
+        nome: med.medicamento,
+        nome_comercial: med.medicamento,
+        principio_ativo: med.principioAtivo,
+        prescricao: med.comPrescricaoMedica === "Sim",
+        finalidade: med.finalidade,
+        data_inicio: med.dataInicio,
+        data_termino: med.dataTermino,
+        instrucoes: med.posologias.map((p) => ({
+            posologia: p.posologia,
+            frequencia: p.frequencia,
+            dose: p.dose,
+            horario: p.horario,
+            jejum: p.emJejum === "Sim",
+        })),
+    }));
+
+    const payload: any = {
+        patient: formData.patientInfo?.id,
+				peso: parseFloat(formData.patientInfo.peso || "0"),
+        estatura: parseFloat(formData.patientInfo.estatura || "0"),
+        data_consulta: formData.patientInfo.dataAvaliacao,
+        tratamento_medicamentos: [...complementaryMeds, ...otherMeds],
+    };
+
+
+    if (formData.insulinAdherence.method === "SICI" && formData.insulinAdherence.questionnaire) {
+			const q = formData.insulinAdherence.questionnaire as BaasisCSIIData;
+			payload.adesao_sici = {
+					omissao_bolus: Number(q.p1),
+					reducao: q.p2 === "1", // se no select você salvou 0/1 para "Sim/Não"
+					dias_falha_bomba: Number(q.p3),
+					bomba_desconectada: Number(q.p4),
+					troca_cateter: Number(q.p5),
+					ignorar_alarmes: Number(q.p6),
+			}
+		} else if (formData.insulinAdherence.method === "MDI" && formData.insulinAdherence.questionnaire) {
+			const q = formData.insulinAdherence.questionnaire as BaasisData;
+			payload.adesao_mdi = {
+					esquece_insulina: Number(q.p1),
+					reducao_doses: q.p2 === "1",
+					aplicou_fora_horario: q.p3 === "1",
+					dias_sem_insulina: Number(q.p4),
+			}
+		}
+
+
+		await apiFetch("/api/consulta-farmacia/", true, {
+			method: "POST",
+			body: JSON.stringify(payload),
+		});
+
+		setMessage("Formulário enviado com sucesso!");
+		setShowModal(true);
+		setCurrentPage("consultas");
+
+		setFormData({
+        patientInfo: {
+            nome: "",
+            dataAvaliacao: "",
+            sexo: "",
+            idade: "",
+            peso: "",
+            estatura: "",
+            data_nascimento: "",
+        },
+        insulinAdherence: {
+            method: "",
+            questionnaire: undefined,
+        },
+        complementaryMedications: {},
+        otherMedications: [],
+    });
+
+		setFormKey(prev => prev + 1);
+	};
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 font-sans p-6 text-gray-800">
         <div className="max-w-4xl mx-auto w-full bg-white p-8 rounded-lg shadow-lg space-y-8">
             <h1 className="text-3xl font-bold text-center text-blue-900 mb-2">Avaliação Farmácia</h1>
-            <form onSubmit={handleSubmit} className="space-y-0">
+
+						{showModal && (
+							<div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+								<div className="bg-white p-8 rounded-lg text-center shadow-2xl">
+									<p className="text-xl font-bold text-blue-900">{message}</p>
+									<button
+										onClick={() => setShowModal(false)}
+										className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+									>
+										Fechar
+									</button>
+								</div>
+							</div>
+						)}
+
+            <form key={formKey} onSubmit={handleSubmit} className="space-y-0">
                 <PatientBasicInfo patientData={patientData} onChange={(data) => handleChange("patientInfo", data)} />
                 <InsulinAdherence onChange={(data) => handleChange("insulinAdherence", data)} />
                 <ComplementaryMedications onChange={(data) => handleChange("complementaryMedications", data)} />
