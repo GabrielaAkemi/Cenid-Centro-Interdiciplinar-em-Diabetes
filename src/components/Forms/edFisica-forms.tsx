@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import PatientBasicInfo, { PatientInfoData } from "./basicInfo/patientBasicInfo";
 import { apiFetch } from "@/lib/api";
-
+import FileInput from "../fileInput/fileInput";
+import uploadFiles from "@/lib/fileInputPost";
 // Constantes para o formulário
 const diasSemana = [
   { key: "segunda", label: "2ª feira" },
@@ -54,6 +55,8 @@ const App: React.FC<AppProps> = ({ patientData }) => {
   const [message, setMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState('formulario');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  
 
   // Estados do formulário
   const [formData, setFormData] = useState<FormData>({
@@ -211,10 +214,15 @@ const App: React.FC<AppProps> = ({ patientData }) => {
         })),
       };
 
-      await apiFetch("/api/consulta-ed-fisica/", true, {
+      let objCriado : any = await apiFetch("/api/consulta-ed-fisica/", true, {
         method: "POST",
         body: JSON.stringify(payload),
       });
+
+      let input = fileInputRef.current;
+      if(input && input.files) {
+        uploadFiles(Array.from(input.files), 'consultaedfisica', objCriado.id);
+      }
 
 
       setMessage("Formulário enviado com sucesso!");
@@ -455,6 +463,15 @@ const App: React.FC<AppProps> = ({ patientData }) => {
                   className={`${inputClass} min-h-[120px]`}
                 ></textarea>
               </div>
+            </div>
+
+            <div className="p-4 mt-8">
+                <h2 className="text-2xl font-bold text-blue-900">Anexo de exames complementares</h2>
+                <FileInput
+                  ref={fileInputRef}
+                  name="anexar"
+                  multiple
+                />
             </div>
             
             <div className="flex justify-center">

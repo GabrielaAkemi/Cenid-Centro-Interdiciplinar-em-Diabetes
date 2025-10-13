@@ -1,9 +1,11 @@
 "use client"
 
 import type React from "react"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import PatientBasicInfo, {PatientInfoData} from "./basicInfo/patientBasicInfo";
 import { apiFetch } from "@/lib/api";
+import FileInput from "../fileInput/fileInput";
+import uploadFiles from "@/lib/fileInputPost";
 
 const inputClass = "p-3.5 border border-gray-600 rounded-md shadow-sm focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-colors duration-200 w-full bg-white text-gray-800";
 const labelClass = "text-sm font-medium text-gray-700 mb-1 block";
@@ -512,6 +514,8 @@ const App: React.FC<AppProps> = ({ patientData }) => {
 	const [showModal, setShowModal] = useState(false);
 	const [currentPage, setCurrentPage] = useState('formulario');
 	const [formKey, setFormKey] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
 	const [formData, setFormData] = useState<FormData>({
 		patientInfo: {
 			nome: "",
@@ -609,10 +613,15 @@ const App: React.FC<AppProps> = ({ patientData }) => {
 		}
 
 
-		await apiFetch("/api/consulta-farmacia/", true, {
+		let objCriado: any = await apiFetch("/api/consulta-farmacia/", true, {
 			method: "POST",
 			body: JSON.stringify(payload),
 		});
+
+    let input = fileInputRef.current;
+    if(input && input.files) {
+      uploadFiles(Array.from(input.files), 'consultafarmacia', objCriado.id);
+    }
 
 		setMessage("Formulário enviado com sucesso!");
 		setShowModal(true);
@@ -663,6 +672,15 @@ const App: React.FC<AppProps> = ({ patientData }) => {
                 <InsulinAdherence onChange={(data) => handleChange("insulinAdherence", data)} />
                 <ComplementaryMedications onChange={(data) => handleChange("complementaryMedications", data)} />
                 <OtherMedications onChange={(data) => handleChange("otherMedications", data)} />
+
+                <div className="p-4 mt-8">
+                  <h2 className="text-2xl font-bold text-blue-900">Anexo de exames complementares</h2>
+                  <FileInput
+                    ref={fileInputRef}
+                    name="anexar"
+                    multiple
+                  />
+                </div>
 
                 <div className="flex justify-center pt-8">
                     <button type="submit" className="w-full sm:w-auto px-10 py-4 bg-blue-600 text-white font-bold rounded-md shadow-lg hover:bg-blue-700 transition-colors transform hover:scale-105">
