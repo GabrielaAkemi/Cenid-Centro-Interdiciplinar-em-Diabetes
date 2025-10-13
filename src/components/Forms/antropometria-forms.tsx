@@ -453,7 +453,7 @@ export default function AntropometriaForm({patientData} : AntropometriaProps) {
 
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100 font-sans p-6 text-gray-800">
+    <div className="flex flex-col min-h-screen bg-white font-sans p-6 text-gray-800">
       <Card>
         <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">Avaliação Antropométrica</h1>
         {showModal && (

@@ -649,7 +649,7 @@ const App: React.FC<AppProps> = ({ patientData }) => {
 	};
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100 font-sans p-6 text-gray-800">
+    <div className="flex flex-col min-h-screen bg-white font-sans p-6 text-gray-800">
         <div className="max-w-4xl mx-auto w-full bg-white p-8 rounded-lg shadow-lg space-y-8">
             <h1 className="text-3xl font-bold text-center text-blue-900 mb-2">Avaliação Farmácia</h1>
 
