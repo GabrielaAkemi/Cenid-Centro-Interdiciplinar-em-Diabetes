@@ -17,7 +17,6 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 
-// Importa todos os formulários
 import FarmaciaForm from "@/components/Forms/farmacia-forms";
 import EdFisicaForm from "@/components/Forms/edFisica-forms";
 import AntropometriaForm from "@/components/Forms/antropometria-forms";
@@ -41,7 +40,6 @@ export default function Consultas() {
       fetchPaciente();
     }, [id])
 
-  // Função para renderizar o formulário correto
   const renderForm = () => {
     switch (selectedForm) {
       case "farmacia":
@@ -60,25 +58,21 @@ export default function Consultas() {
       <Sidebar />
 
       <main className="flex-1 p-6">
-        <div className="max-w-5xl mx-auto relative">
-          {/* Botão no canto superior direito */}
-          <div className="flex justify-end mb-4">
-            <button
-              onClick={() => router.back()}
-              className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors flex items-center"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar para Paciente
-            </button>
-          </div>
+      <div className="flex-1 container mx-auto py-8 relative">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <h1 className="text-3xl font-bold tracking-tight text-blue-900">
+            Iniciar Consulta
+          </h1>
+          <button
+            onClick={() => router.back()}
+            className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors flex items-center"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar para Paciente
+          </button>
+        </div>
 
-          {/* Card de Selecionar Especialidade */}
           <Card className="shadow-lg rounded-lg border border-blue-200 mb-6">
-            <CardHeader className="bg-blue-50">
-              <CardTitle className="text-2xl font-bold text-blue-900">
-                Iniciar Consulta
-              </CardTitle>
-            </CardHeader>
             <CardContent className="p-6">
               <h2 className="text-lg font-semibold text-blue-700 mb-4">
                 Selecione a Especialidade*

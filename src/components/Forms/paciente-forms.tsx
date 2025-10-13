@@ -123,7 +123,7 @@ const App = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100 font-sans p-6 text-gray-800">
+    <div className="flex flex-col min-h-screen bg-white font-sans p-6 text-gray-800">
       <div className="max-w-4xl mx-auto w-full bg-white shadow-xl rounded-xl p-8 space-y-6">
         <h1 className="text-3xl font-bold text-center text-blue-900">Formulário de Cadastro do Paciente</h1>
 

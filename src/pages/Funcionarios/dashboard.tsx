@@ -171,12 +171,17 @@ const DashboardPage: React.FC = () => {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <Select value={filterDiagnostico} onValueChange={setFilterDiagnostico} className="w-full md:w-[180px]">
-                <SelectItem value="todos">Todos os diagnósticos</SelectItem>
-                <SelectItem value="DM1">DM1</SelectItem>
-                <SelectItem value="DM2">DM2</SelectItem>
-                <SelectItem value="LADA">LADA</SelectItem>
-              </Select>
+                <Select
+                  value={filterDiagnostico}
+                  onValueChange={setFilterDiagnostico}
+                  className="w-full md:w-[180px] border border-blue-300 text-blue-900 bg-white rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <SelectItem value="todos" className="text-blue-900">Todos os diagnósticos</SelectItem>
+                  <SelectItem value="DM1" className="text-blue-900">DM1</SelectItem>
+                  <SelectItem value="DM2" className="text-blue-900">DM2</SelectItem>
+                  <SelectItem value="LADA" className="text-blue-900">LADA</SelectItem>
+                </Select>
+
             </div>
 
             <div className="rounded-md border border-blue-300 bg-white">
