@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import PatientBasicInfo, {PatientInfoData} from "./basicInfo/patientBasicInfo";
 import { apiFetch } from "@/lib/api";
+import FileInput from "../fileInput/fileInput";
+import uploadFiles from "@/lib/fileInputPost";
+
 // Mock de componentes
 const Card = ({ className, children }: any) => <div className={`max-w-4xl mx-auto w-full bg-white p-8 space-y-8 rounded-lg shadow-lg ${className}`}>{children}</div>;
 const CardContent = ({ className, children }: any) => <div className={`p-0 ${className}`}>{children}</div>;
@@ -37,25 +40,8 @@ const Check = () => (
   </svg>
 );
 
-const FileInput = ({ name, label, multiple }: any) => {
-  return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium text-gray-700">{label}</label>
-      <input
-        type="file"
-        multiple={multiple}
-        className="block w-full text-sm text-slate-500
-          file:mr-4 file:py-2 file:px-4
-          file:rounded-full file:border-0
-          file:text-sm file:font-semibold
-          file:bg-blue-100 file:text-blue-700
-          hover:file:bg-blue-200"
-      />
-    </div>
-  );
-};
 
-// Funções de cálculo simples
+
 const pegaIdade = (dataNascimento: string, dataAvaliacao: string) => {
   if (!dataNascimento || !dataAvaliacao) return 0;
   const nasc = new Date(dataNascimento);
@@ -67,27 +53,6 @@ const pegaIdade = (dataNascimento: string, dataAvaliacao: string) => {
   }
   return idade;
 };
-
-const calculaZ = (idade: number, valor: number, tipo: string, homem: boolean) => {
-  if (idade > 59) return NaN;
-  return (valor / 10).toFixed(2);
-};
-
-const classificarZImc = (zScore: number, idade: number) => {
-  if (isNaN(zScore)) return "Valor inválido";
-  return zScore < -2 ? "Abaixo do peso" : "Peso normal";
-};
-
-const classificarZAltura = (zScore: number, idade: number) => {
-  if (isNaN(zScore)) return "Valor inválido";
-  return zScore < -2 ? "Baixa estatura" : "Estatura normal";
-};
-
-const classificarZPeso = (zScore: number, idade: number) => {
-  if (isNaN(zScore)) return "Valor inválido";
-  return zScore < -2 ? "Abaixo do peso" : "Peso normal";
-};
-
 
 interface AntropometriaProps {
   patientData?: PatientInfoData;
@@ -158,6 +123,8 @@ export default function AntropometriaForm({patientData} : AntropometriaProps) {
   const [message, setMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState('formulario');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [formData, setFormData] = useState<FormDataType>({
     patientInfo: {
       id: "",
@@ -343,10 +310,16 @@ export default function AntropometriaForm({patientData} : AntropometriaProps) {
     };
 
     try {
-      await apiFetch("/api/consulta-calculadora/", true, {
+      let objCriado: any = await apiFetch("/api/consulta-calculadora/", true, {
               method: "POST",
               body: JSON.stringify(payload),
             });
+
+      let input = fileInputRef.current;
+      if(input && input.files) {
+        uploadFiles(Array.from(input.files), 'consultacalculadora', objCriado.id);
+      }
+        
       setMessage("Formulário enviado com sucesso!");
       setShowModal(true);
       setCurrentPage("consultas");
@@ -675,13 +648,13 @@ export default function AntropometriaForm({patientData} : AntropometriaProps) {
 
               <div className="p-4 mt-8">
                 <h2 className="text-2xl font-bold text-blue-900">Anexo de exames complementares</h2>
-                <p className="mt-2 text-sm text-gray-600">Este é um espaço para anexar exames, se necessário.</p>
+                <FileInput
+                  ref={fileInputRef}
+                  name="anexar"
+                  multiple
+                />
               </div>
-              <FileInput
-                name="anexar"
-                label="Anexar Documentos"
-                multiple
-              />
+              
             </section>
 
             <div className="flex justify-center mt-6">

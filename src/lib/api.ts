@@ -5,9 +5,12 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
   let headers: Record<string, string> = {
-      "Content-Type": "application/json",
       ...(options.headers as Record<string, string>)
   };
+
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if(token) {
 	const tk = localStorage.getItem("token");
