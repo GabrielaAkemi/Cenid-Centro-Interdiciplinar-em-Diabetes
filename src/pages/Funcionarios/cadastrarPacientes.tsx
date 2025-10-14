@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import LayoutSidebar from "@/components/LayoutSidebar"; // Sidebar
-import PacienteForm from "../../components/forms/paciente-forms";
+import PacienteForm from "@/components/Forms/paciente-forms";
 
 const CadastroPacientePage: React.FC = () => {
   return (

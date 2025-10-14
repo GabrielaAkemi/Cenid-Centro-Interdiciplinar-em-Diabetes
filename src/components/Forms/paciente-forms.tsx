@@ -1,68 +1,123 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent, ChangeEvent } from "react";
+import { apiFetch } from "@/lib/api";
+
+// ================= TIPOS =================
+type HistoricoFamiliar = {
+  dm1: boolean;
+  dm2: boolean;
+  outros: string;
+};
+
+type Tratamento = {
+  metodoInsulina: string;
+  metodoMonitoramento: string;
+  marcaSensor: string;
+  appGlicemia: string;
+};
+
+type Responsavel = {
+  nome: string;
+  cpf: string;
+  rg: string;
+  parentesco: string;
+  telefone: string;
+  dataNascimento: string;
+  ocupacao: string;
+};
+
+type FormData = {
+  nome: string;
+  cpf: string;
+  cartaoSUS: string;
+  rg: string;
+  telefone: string;
+  email: string;
+  dataNascimento: string;
+  sexo: string;
+  ocupacao: string;
+  cep: string;
+  endereco: string;
+  numero: string;
+  bairro: string;
+  municipio: string;
+  tipoAtendimento: string;
+  diagnostico: string;
+  dataDiagnostico: string;
+  gestante: boolean;
+  amamentando: boolean;
+  deficiencia: string;
+  historicoFamiliar: HistoricoFamiliar;
+  tratamento: Tratamento;
+  responsavel: Responsavel;
+  auxilio: string;
+  celularInternet: boolean;
+  dataCadastro: string;
+  documento: File | null;
+};
 
 // ================= CONSTANTES =================
 const TIPO_ATENDIMENTO_OPTIONS = [
-  { value: "SUS", label: "Sistema Único de Saúde (SUS)" },
-  { value: "CONVENIO", label: "Convênio/Plano de Saúde" },
-  { value: "PARTICULAR", label: "Particular" },
-  { value: "MISTO", label: "Misto (SUS + outros)" },
+  { value: "0", label: "Sistema Único de Saúde (SUS)" },
+  { value: "1", label: "Convênio/Plano de Saúde" },
+  { value: "2", label: "Particular" },
+  { value: "3", label: "Misto (SUS + outros)" },
 ];
 
 const DIAGNOSTICO_OPTIONS = [
-  { value: "DM1", label: "Diabetes Mellitus Tipo 1 (DM1)" },
-  { value: "DM2", label: "Diabetes Mellitus Tipo 2 (DM2)" },
-  { value: "LADA", label: "Diabetes Autoimune Latente do Adulto (LADA)" },
-  { value: "MODY", label: "Maturity Onset Diabetes of the Young (MODY)" },
-  { value: "GESTACIONAL", label: "Diabetes Gestacional" },
-  { value: "OUTRO", label: "Outro" },
+  { value: "0", label: "Diabetes Mellitus Tipo 1 (DM1)" },
+  { value: "1", label: "Diabetes Mellitus Tipo 2 (DM2)" },
+  { value: "2", label: "Diabetes Autoimune Latente do Adulto (LADA)" },
+  { value: "3", label: "Maturity Onset Diabetes of the Young (MODY)" },
+  { value: "4", label: "Diabetes Gestacional" },
+  { value: "5", label: "Outro" },
 ];
 
 const TIPO_DEFICIENCIA_OPTIONS = [
-  { value: "FISICA", label: "Física" },
-  { value: "VISUAL", label: "Visual" },
-  { value: "AUDITIVA", label: "Auditiva" },
-  { value: "INTELECTUAL", label: "Intelectual" },
-  { value: "MULTIPLA", label: "Múltipla" },
-  { value: "OUTRO", label: "Outro" },
+  { value: "0", label: "Física" },
+  { value: "1", label: "Visual" },
+  { value: "2", label: "Auditiva" },
+  { value: "3", label: "Intelectual" },
+  { value: "4", label: "Múltipla" },
+  { value: "5", label: "Outro" },
 ];
 
 const METODO_INSULINA_OPTIONS = [
-  { value: "CANETA", label: "Caneta de Insulina" },
-  { value: "SERINGA", label: "Seringa" },
-  { value: "BOMBA", label: "Bomba de Insulina" },
-  { value: "NAO_USA", label: "Não utiliza insulina" },
+  { value: "1", label: "Caneta de Insulina" },
+  { value: "2", label: "Seringa" },
+  { value: "3", label: "Bomba de Insulina" },
+  { value: "4", label: "Não utiliza insulina" },
 ];
 
 const METODO_MONITORAMENTO_OPTIONS = [
-  { value: "GLICOMETRO", label: "Glicômetro Tradicional" },
-  { value: "FGM", label: "Sensor Flash (FGM)" },
-  { value: "CGM", label: "Sensor Contínuo (CGM)" },
-  { value: "MULTIPLOS", label: "Múltiplos métodos" },
+  { value: "1", label: "Glicômetro Tradicional" },
+  { value: "2", label: "Sensor Flash (FGM)" },
+  { value: "3", label: "Sensor Contínuo (CGM)" },
+  { value: "4", label: "Múltiplos métodos" },
 ];
 
 const MARCA_SENSOR_OPTIONS = [
-  { value: "FREESTYLE", label: "FreeStyle Libre" },
-  { value: "FREESTYLE2", label: "FreeStyle Libre 2" },
-  { value: "DEXCOMG6", label: "Dexcom G6" },
-  { value: "DEXCOMG7", label: "Dexcom G7" },
-  { value: "MEDTRONIC", label: "Medtronic Guardian" },
-  { value: "ACCUCHEK_ACTIVE", label: "Accu-Chek Active" },
-  { value: "ACCUCHEK_GUIDE", label: "Accu-Chek Guide" },
-  { value: "ONETOUCH_SELECT", label: "One Touch Select Plus" },
-  { value: "ONETOUCH_ULTRA", label: "One Touch Ultra" },
-  { value: "CONTOUR", label: "Contour Ultra" },
-  { value: "OUTRO", label: "Outro" },
+  { value: "1", label: "FreeStyle Libre" },
+  { value: "2", label: "FreeStyle Libre 2" },
+  { value: "3", label: "Dexcom G6" },
+  { value: "4", label: "Dexcom G7" },
+  { value: "5", label: "Medtronic Guardian" },
+  { value: "6", label: "Accu-Chek Active" },
+  { value: "7", label: "Accu-Chek Guide" },
+  { value: "8", label: "One Touch Select Plus" },
+  { value: "9", label: "One Touch Ultra" },
+  { value: "10", label: "Contour Ultra" },
+  { value: "11", label: "Outro" },
 ];
 
 const APP_GLICEMIA_OPTIONS = [
-  { value: "LIBRELINK", label: "LibreLink" },
-  { value: "DEXCOM", label: "Dexcom" },
-  { value: "MEDTRONIC", label: "Medtronic" },
-  { value: "ACCUCHEK", label: "Accu-Chek" },
-  { value: "ONETOUCH", label: "One Touch" },
-  { value: "GLICOSOURCE", label: "GlicoSource" },
-  { value: "OUTRO", label: "Outro App" },
-  { value: "NAO_USA", label: "Não utiliza App" },
+  { value: "1", label: "LibreLink" },
+  { value: "2", label: "Dexcom" },
+  { value: "3", label: "Medtronic" },
+  { value: "4", label: "Accu-Chek" },
+  { value: "5", label: "One Touch" },
+  { value: "6", label: "GlicoSource" },
+  { value: "7", label: "Outro App" },
+  { value: "8", label: "Não utiliza App" },
 ];
 
 const PARENTESCO_OPTIONS = [
@@ -76,50 +131,151 @@ const PARENTESCO_OPTIONS = [
 ];
 
 const AUXILIOS_OPTIONS = [
-  { value: "BPC", label: "Benefício de Prestação Continuada (BPC)" },
-  { value: "BOLSA_FAMILIA", label: "Bolsa Família" },
-  { value: "AUXILIO_DOENCA", label: "Auxílio Doença" },
-  { value: "APOSENTADORIA_INVALIDEZ", label: "Aposentadoria por Invalidez" },
-  { value: "OUTRO", label: "Outro Auxílio" },
-  { value: "NINGUEM", label: "Nenhum Auxílio" },
+  { value: "1", label: "Benefício de Prestação Continuada (BPC)" },
+  { value: "2", label: "Bolsa Família" },
+  { value: "3", label: "Auxílio Doença" },
+  { value: "4", label: "Aposentadoria por Invalidez" },
+  { value: "5", label: "Outro Auxílio" },
+  { value: "6", label: "Nenhum Auxílio" },
 ];
 
-const App = () => {
-  const [formData, setFormData] = useState({
-    nome: "", cpf: "", cartaoSUS: "", rg: "", telefone: "", email: "", dataNascimento: "", sexo: "", ocupacao: "",
-    cep: "", endereco: "", numero: "", bairro: "", municipio: "",
-    tipoAtendimento: "", diagnostico: "", dataDiagnostico: "", gestante: false, amamentando: false, deficiencia: "",
+// ================= COMPONENTE =================
+const App: React.FC = () => {
+  const [formData, setFormData] = useState<FormData>({
+    nome: "",
+    cpf: "",
+    cartaoSUS: "",
+    rg: "",
+    telefone: "",
+    email: "",
+    dataNascimento: "",
+    sexo: "",
+    ocupacao: "",
+    cep: "",
+    endereco: "",
+    numero: "",
+    bairro: "",
+    municipio: "",
+    tipoAtendimento: "",
+    diagnostico: "",
+    dataDiagnostico: "",
+    gestante: false,
+    amamentando: false,
+    deficiencia: "",
     historicoFamiliar: { dm1: false, dm2: false, outros: "" },
-    tratamento: { metodoInsulina: "", metodoMonitoramento: "", marcaSensor: "", appGlicemia: "" },
-    responsavel: { nome: "", cpf: "", rg: "", parentesco: "", telefone: "", dataNascimento: "", ocupacao: "" },
-    auxilio: "", celularInternet: false, dataCadastro: "", documento: null,
+    tratamento: {
+      metodoInsulina: "",
+      metodoMonitoramento: "",
+      marcaSensor: "",
+      appGlicemia: "",
+    },
+    responsavel: {
+      nome: "",
+      cpf: "",
+      rg: "",
+      parentesco: "",
+      telefone: "",
+      dataNascimento: "",
+      ocupacao: "",
+    },
+    auxilio: "",
+    celularInternet: false,
+    dataCadastro: "",
+    documento: null,
   });
 
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  const handleChange = (key, value) => {
+  // Função genérica para atualizar campos simples
+  const handleChange = <K extends keyof FormData>(
+    key: K,
+    value: FormData[K]
+  ) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleNestedChange = (parent, key, value) => {
-    setFormData((prev) => ({ ...prev, [parent]: { ...prev[parent], [key]: value } }));
+  // Função para atualizar objetos aninhados
+  const handleNestedChange = <
+    P extends keyof FormData,
+    K extends keyof FormData[P]
+  >(
+    parent: P,
+    key: K,
+    value: FormData[P][K]
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [parent]: { ...prev[parent] as object, [key]: value },
+    }));
   };
 
-  const handleSubmit = (e) => {
+  // Envio do formulário
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Dados do formulário:", formData);
-    setMessage('Formulário enviado com sucesso!');
-    setShowModal(true);
-    setFormData({
-      nome: "", cpf: "", cartaoSUS: "", rg: "", telefone: "", email: "", dataNascimento: "", sexo: "", ocupacao: "",
-      cep: "", endereco: "", numero: "", bairro: "", municipio: "",
-      tipoAtendimento: "", diagnostico: "", dataDiagnostico: "", gestante: false, amamentando: false, deficiencia: "",
-      historicoFamiliar: { dm1: false, dm2: false, outros: "" },
-      tratamento: { metodoInsulina: "", metodoMonitoramento: "", marcaSensor: "", appGlicemia: "" },
-      responsavel: { nome: "", cpf: "", rg: "", parentesco: "", telefone: "", dataNascimento: "", ocupacao: "" },
-      auxilio: "", celularInternet: false, dataCadastro: "", documento: null,
-    });
+
+    const payload = {
+      nome: formData.nome,
+      cpf: formData.cpf,
+      cartao_sus: formData.cartaoSUS,
+      rg: formData.rg,
+      telefone: formData.telefone,
+      data_nascimento: formData.dataNascimento || null,
+      email: formData.email,
+      ocupacao: formData.ocupacao,
+      sexo: formData.sexo || null,
+      endereco: formData.endereco,
+      municipio: formData.municipio,
+      numero: formData.numero,
+      cep: formData.cep,
+      gestante: formData.gestante,
+      amamentando: formData.amamentando,
+      historico_dm1: formData.historicoFamiliar.dm1,
+      historico_dm2: formData.historicoFamiliar.dm2,
+      outros_dm: formData.historicoFamiliar.outros,
+      tipo_atendimento: formData.tipoAtendimento
+        ? Number(formData.tipoAtendimento)
+        : null,
+      diagnostico: formData.diagnostico ? Number(formData.diagnostico) : null,
+      deficiencia: formData.deficiencia ? Number(formData.deficiencia) : null,
+      metodo_insulina: formData.tratamento.metodoInsulina
+        ? Number(formData.tratamento.metodoInsulina)
+        : null,
+      metodo_monitoramento: formData.tratamento.metodoMonitoramento
+        ? Number(formData.tratamento.metodoMonitoramento)
+        : null,
+      marca_sensor: formData.tratamento.marcaSensor
+        ? Number(formData.tratamento.marcaSensor)
+        : null,
+      app_glicemia: formData.tratamento.appGlicemia
+        ? Number(formData.tratamento.appGlicemia)
+        : null,
+      nome_responsavel: formData.responsavel.nome || null,
+      cpf_responsavel: formData.responsavel.cpf || null,
+      rg_responsavel: formData.responsavel.rg || null,
+      telefone_responsavel: formData.responsavel.telefone || null,
+      data_nascimento_responsavel:
+        formData.responsavel.dataNascimento || null,
+      ocupacao_responsavel: formData.responsavel.ocupacao || null,
+      auxilio: formData.auxilio ? Number(formData.auxilio) : null,
+      data_cadastro: formData.dataCadastro || null,
+      celular_com_internet: formData.celularInternet,
+    };
+
+    try {
+      const response = await apiFetch("/api/pacientes/", true, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+
+      setMessage("Paciente cadastrado com sucesso!");
+      setShowModal(true);
+    } catch (err) {
+      console.error("Erro:", err);
+      setMessage("Erro ao cadastrar paciente");
+      setShowModal(true);
+    }
   };
 
   return (
