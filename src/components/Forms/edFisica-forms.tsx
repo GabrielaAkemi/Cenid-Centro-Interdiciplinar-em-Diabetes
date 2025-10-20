@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import PatientBasicInfo, { PatientInfoData } from "./basicInfo/patientBasicInfo";
 import { apiFetch } from "@/lib/api";
 import FileInput from "../fileInput/fileInput";
@@ -23,12 +23,54 @@ type StrengthMeasures = {
 
 type Cronograma = Record<string, { horario: string; tipo: string }>;
 
+interface Relato {
+  id: number;
+  dia_semana: number;
+  horario_atividade: string;
+  descricao_atividade: string;
+}
+interface InitialData {
+  id: number;
+  patient: number;
+  user: number;
+  peso: string;
+  estatura: string;
+  metodo_insulina?: string | null;
+  condicionamento?: {
+    id: number;
+    mao_dominante_1: string;
+    mao_dominante_2: string;
+    mao_dominante_3: string;
+    mao_nao_dominante_1: string;
+    mao_nao_dominante_2: string;
+    mao_nao_dominante_3: string;
+    lombar_1: string;
+    lombar_2: string;
+    lombar_3: string;
+  };
+  naf?: {
+    id: number;
+    atividade_leve_minutos?: string | null;
+    atividade_moderada_minutos?: string | null;
+    atividade_vigorosa_minutos?: string | null;
+    tempo_sentado?: string | null;
+    tempo_dormindo?: string | null;
+  };
+  prescricao_exercicio?: string | null;
+  dataConsulta?: string;
+  consulta_finalizada?: boolean;
+  observacoes?: string | null;
+  criado_em?: string;
+  atualizado_em?: string;
+  relatos?: Relato[];
+}
+
 interface FormData {
   dataConsulta: string;
-  nomeCompleto: string;
-  dataAvaliacao: string;
-  sexo: string;
-  idade: string;
+  nomeCompleto?: string;
+  dataAvaliacao?: string;
+  sexo?: string;
+  idade?: string;
   peso: string;
   estatura: string;
   metodoInsulina: string;
@@ -49,14 +91,24 @@ interface FormData {
 
 interface AppProps {
   patientData?: PatientInfoData;
+  initialData?: InitialData;
 }
 
-const App: React.FC<AppProps> = ({ patientData }) => {
+const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
   const [message, setMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState('formulario');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   
+  const patient: PatientInfoData = {
+    id: patientData?.id || initialData?.patient,
+    nome: patientData?.nome || "",
+    idade: patientData?.idade || "",
+    sexo: patientData?.sexo || "",
+    peso: patientData?.peso || initialData?.peso || "",
+    estatura: patientData?.estatura || initialData?.estatura || "",
+    data_nascimento: patientData?.data_nascimento || ""
+  };
 
   // Estados do formulário
   const [formData, setFormData] = useState<FormData>({
@@ -79,12 +131,64 @@ const App: React.FC<AppProps> = ({ patientData }) => {
     forcaMaoDominante: { medida1: "", medida2: "", medida3: "" },
     forcaMaoNaoDominante: { medida1: "", medida2: "", medida3: "" },
     forcaLombar: { medida1: "", medida2: "", medida3: "" },
-    patientInfo: {},
+    patientInfo: patient,
     cronograma: diasSemana.reduce((acc, dia) => {
       acc[dia.key] = { horario: "", tipo: "" };
       return acc;
     }, {} as Cronograma),
   });
+
+  useEffect(() => {
+    if (!initialData) return;
+
+    
+
+    // Montar cronograma de forma segura
+    const cronograma: Cronograma = diasSemana.reduce((acc, dia, index) => {
+      const relato = initialData.relatos?.find(r => r.dia_semana === index + 1);
+      acc[dia.key] = {
+        horario: relato?.horario_atividade || "",
+        tipo: relato?.descricao_atividade || "",
+      };
+      return acc;
+    }, {} as Cronograma);
+
+    setFormData({
+      dataConsulta: initialData.dataConsulta || "",
+      dataAvaliacao: initialData.dataConsulta || "",
+      peso: initialData.peso || "",
+      estatura: initialData.estatura || "",
+      metodoInsulina: initialData.metodo_insulina || "",
+      atividadeLeve: initialData.naf?.atividade_leve_minutos || "",
+      atividadeModerada: initialData.naf?.atividade_moderada_minutos || "",
+      atividadeVigorosa: initialData.naf?.atividade_vigorosa_minutos || "",
+      tempoSentado: initialData.naf?.tempo_sentado || "",
+      tempoDormindo: initialData.naf?.tempo_dormindo || "",
+      mesesPraticando: "",
+      relatorioInterrupcoes: "",
+      prescricaoExercicio: initialData.prescricao_exercicio || "",
+      forcaMaoDominante: {
+        medida1: initialData.condicionamento?.mao_dominante_1 || "",
+        medida2: initialData.condicionamento?.mao_dominante_2 || "",
+        medida3: initialData.condicionamento?.mao_dominante_3 || "",
+      },
+      forcaMaoNaoDominante: {
+        medida1: initialData.condicionamento?.mao_nao_dominante_1 || "",
+        medida2: initialData.condicionamento?.mao_nao_dominante_2 || "",
+        medida3: initialData.condicionamento?.mao_nao_dominante_3 || "",
+      },
+      forcaLombar: {
+        medida1: initialData.condicionamento?.lombar_1 || "",
+        medida2: initialData.condicionamento?.lombar_2 || "",
+        medida3: initialData.condicionamento?.lombar_3 || "",
+      },
+      patientInfo: patient,
+      cronograma,
+      nomeCompleto: patient.nome,
+      sexo: patient.sexo,
+      idade: patient.idade,
+    });
+  }, [initialData, patientData]);
 
   const handleChange = (key: keyof FormData, value: any) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -288,7 +392,7 @@ const App: React.FC<AppProps> = ({ patientData }) => {
 
         {currentPage === 'formulario' && (
           <form onSubmit={handleSubmit} className="space-y-10 text-blue-900">
-            <PatientBasicInfo patientData={patientData} onChange={(data) => handleChange("patientInfo", data)} />
+            <PatientBasicInfo patientData={formData.patientInfo} onChange={(data) => handleChange("patientInfo", data)} />
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-2xl font-bold text-blue-900">Questionário de Nível de Atividade Física (NAF)</h2>
               <div className="mt-6 space-y-6">

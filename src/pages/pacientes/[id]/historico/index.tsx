@@ -31,9 +31,12 @@ const PlaceholderForm = ({ title }: { title: string }) => (
   </div>
 );
 
+
+
 export default function Consultas() {
   const [selectedForm, setSelectedForm] = useState<string | null>(null);
   const [selectedHistory, setSelectedHistory] = useState<string | null>(null);
+  const [selectedHistoryData, setSelectedHistoryData] = useState<any | null>(null);
   const [histories, setHistories] = useState<any[]>([]);
 
   const router = useRouter();
@@ -52,14 +55,46 @@ export default function Consultas() {
     fetchPaciente();
   }, [id]);
 
-  // Simulação de históricos
+  const fetchConsultaDetalhes = async (especialidade: string, idConsulta: number) => {
+    try {
+      const endpointMap: Record<string, string> = {
+        consultacalculadora: "consulta-calculadora",
+        consultaedfisica: "consulta-ed-fisica",
+        consultafarmacia: "consulta-farmacia",
+
+      };
+
+      const endpoint = endpointMap[especialidade];
+      if (!endpoint) {
+        console.error("Especialidade sem endpoint configurado:", especialidade);
+        return;
+      }
+
+      const data: any = await apiFetch(`/api/${endpoint}/${idConsulta}/`, true);
+      setSelectedHistoryData(data);
+    } catch (error) {
+      console.error("Erro ao buscar detalhes:", error);
+    }
+  };
+
+
   const fetchHistories = async (especialidade: string) => {
-    const mock = [
-      { id: 1, data: "22/09/2025", especialidade },
-      { id: 2, data: "23/09/2025", especialidade },
-      { id: 3, data: "01/10/2025", especialidade },
-    ];
-    setHistories(mock);
+    const data: any = await apiFetch(`/api/pacientes/${id}/historico-consultas?tipo=${especialidade}`, true);
+    const cleanData: any = [];
+    data.map((consulta: any) => {
+      let cleanConsulta = {
+        id: consulta.id,
+        data: consulta.data_consulta
+              ? new Date(consulta.data_consulta).toLocaleDateString("pt-BR")
+              : "N/A",
+        especialidade
+      };
+
+      cleanData.push(cleanConsulta);
+    });
+
+
+    setHistories(cleanData);
   };
 
   const handleSelectEspecialidade = (especialidade: string) => {
@@ -70,33 +105,33 @@ export default function Consultas() {
 
   const renderForm = () => {
     switch (selectedForm) {
-      case "medicina":
+      case "consultamedicina":
         return <PlaceholderForm title="Medicina" />;
-      case "psicologia":
+      case "consultapsicologia":
         return <PlaceholderForm title="Psicologia" />;
-      case "edFisica":
-        return <EdFisicaForm patientData={paciente} />;
-      case "nutricao":
+      case "consultaedfisica":
+        return <EdFisicaForm patientData={paciente} initialData={selectedHistoryData}/>;
+      case "consultanutricao":
         return <PlaceholderForm title="Nutrição" />;
-      case "farmacia":
-        return <FarmaciaForm patientData={paciente} />;
-      case "bioquimica":
+      case "consultafarmacia":
+        return <FarmaciaForm patientData={paciente} initialData={selectedHistoryData}/>;
+      case "consultabioquimica":
         return <PlaceholderForm title="Bioquímica" />;
-      case "calculadora":
-        return <AntropometriaForm patientData={paciente} />;
+      case "consultacalculadora":
+        return <AntropometriaForm patientData={paciente} initialData={selectedHistoryData}/>;
       default:
         return null;
     }
   };
 
   const especialidades = [
-    { key: "medicina", label: "Medicina", icon: Activity },
-    { key: "psicologia", label: "Psicologia", icon: Brain },
-    { key: "edFisica", label: "Educação Física", icon: Dumbbell },
-    { key: "nutricao", label: "Nutrição", icon: Apple },
-    { key: "farmacia", label: "Farmácia", icon: Pill },
-    { key: "bioquimica", label: "Bioquímica", icon: FlaskConical },
-    { key: "calculadora", label: "Calculadora", icon: Calculator },
+    { key: "consultamedicina", label: "Medicina", icon: Activity },
+    { key: "consultapsicologia", label: "Psicologia", icon: Brain },
+    { key: "consultaedfisica", label: "Educação Física", icon: Dumbbell },
+    { key: "consultanutricao", label: "Nutrição", icon: Apple },
+    { key: "consultafarmacia", label: "Farmácia", icon: Pill },
+    { key: "consultabioquimica", label: "Bioquímica", icon: FlaskConical },
+    { key: "consultacalculadora", label: "Calculadora", icon: Calculator },
   ];
 
   return (
@@ -163,7 +198,11 @@ export default function Consultas() {
                     {histories.map((h) => (
                       <button
                         key={h.id}
-                        onClick={() => setSelectedHistory(h.data)}
+                        onClick={() => {
+                          setSelectedHistory(h.data);
+                          fetchConsultaDetalhes(selectedForm!, h.id);
+                        }}
+
                         className="group text-left flex items-center justify-between px-4 py-3 border rounded-md transition-all hover:bg-blue-50 hover:shadow-sm"
                       >
                         <div className="flex items-center gap-3">

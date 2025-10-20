@@ -56,6 +56,7 @@ const pegaIdade = (dataNascimento: string, dataAvaliacao: string) => {
 
 interface AntropometriaProps {
   patientData?: PatientInfoData;
+  initialData?: any;
 }
 
 interface FormDataType {
@@ -63,7 +64,7 @@ interface FormDataType {
     id: number | string;
     nome: string;
     dataAvaliacao: string;
-    dataNascimento: string;
+    data_nascimento: string;
     idade: string;
     sexo: string;
     peso: string;
@@ -119,22 +120,33 @@ interface FormDataType {
   observacoes: string;
 }
 
-export default function AntropometriaForm({patientData} : AntropometriaProps) {
+export default function AntropometriaForm({patientData, initialData} : AntropometriaProps) {
   const [message, setMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState('formulario');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+    const patient = {
+    id: patientData?.id ?? initialData?.patient ?? 0,
+    nome: patientData?.nome || "",
+    idade: patientData?.idade || "",
+    sexo: patientData?.sexo || "",
+    peso: patientData?.peso?.toString() || initialData?.peso?.toString() || "",
+    estatura: patientData?.estatura?.toString() || initialData?.estatura?.toString() || "",
+    data_nascimento: patientData?.data_nascimento || "",
+    dataAvaliacao: initialData?.data_consulta || new Date().toISOString().split("T")[0],
+  };
+
   const [formData, setFormData] = useState<FormDataType>({
     patientInfo: {
-      id: "",
-      nome: "",
-      dataNascimento: "",
-      dataAvaliacao: new Date().toISOString().split("T")[0],
+      id: patient.id || "",
+      nome: patient.nome || "",
+      data_nascimento: patient.data_nascimento || "",
+      dataAvaliacao: initialData?.data_consulta || new Date().toISOString().split("T")[0],
       idade: "",
-      sexo: "",
-      peso: "",
-      estatura: "",
+      sexo: patient.sexo || "",
+      peso: patient.peso?.toString() || "",
+      estatura: patient.estatura?.toString() || "",
     },
     pacienteId: "",
     nomePaciente: "",
@@ -186,6 +198,74 @@ export default function AntropometriaForm({patientData} : AntropometriaProps) {
     observacoes: "",
   });
 
+  useEffect(() => {
+    if (!initialData) return;
+
+    setFormData({
+      patientInfo: {
+        id: patient.id,
+        nome: patient.nome,
+        dataAvaliacao: patient.dataAvaliacao,
+        data_nascimento: patient.data_nascimento,
+        idade: "",
+        sexo: patient.sexo,
+        peso: patient.peso,
+        estatura: patient.estatura,
+      },
+      pacienteId: patient.id.toString(),
+      nomePaciente: patient.nome,
+      dataAvaliacao: patient.dataAvaliacao,
+      dataNascimento: patient.data_nascimento,
+      idade: "",
+      sexo: patient.sexo,
+      peso_corporal: patient.peso,
+      estatura_metros: patient.estatura,
+      circunferencia_braco: initialData?.medidas?.circunferencia_braco?.toString() || "",
+      circunferencia_cintura: initialData?.medidas?.circunferencia_cintura?.toString() || "",
+      dobra_tricipal: initialData?.medidas?.dobra_tricipital?.toString() || "",
+      imc: "",
+      imc_escore_z: "",
+      classificacao_imc: "",
+      peso_tabela: initialData?.peso?.toString() || "",
+      peso_escore_z: "",
+      classificacao_peso: "",
+      estatura_tabela: initialData?.estatura?.toString() || "",
+      estatura_escore_z: "",
+      classificacao_estatura: "",
+      circunferencia_braco_tabela: initialData?.medidas?.circunferencia_braco?.toString() || "",
+      circunferencia_braco_escore_z: "",
+      circunferencia_braco_classificacao: "",
+      circunferencia_cintura_tabela: initialData?.medidas?.circunferencia_cintura?.toString() || "",
+      circunferencia_cintura_escore_z: "",
+      circunferencia_cintura_classificacao: "",
+      dobra_tricipal_tabela: initialData?.medidas?.dobra_tricipital?.toString() || "",
+      dobra_tricipal_escore_z: "",
+      dobra_tricipal_classificacao: "",
+      gordura_corporal_bioimpedância_porcentagem_valor: initialData?.bio_impedancia?.gordura_porcentagem?.toString() || "",
+      gordura_corporal_bioimpedância_porcentagem_diagnostico: "",
+      gordura_corporal_bioimpedância_kg_valor: initialData?.bio_impedancia?.gordura_kg?.toString() || "",
+      gordura_corporal_bioimpedância_kg_diagnostico: "",
+      massa_magra_bioimpedância_kg_valor: initialData?.bio_impedancia?.massa_kg?.toString() || "",
+      massa_magra_bioimpedância_kg_diagnostico: "",
+      massa_magra_bioimpedância_porcentagem_valor: initialData?.bio_impedancia?.massa_porcentagem?.toString() || "",
+      massa_magra_bioimpedância_porcentagem_diagnostico: "",
+      agua_corporal_bioimpedância_litros_valor: initialData?.bio_impedancia?.agua_corporal_litros?.toString() || "",
+      agua_corporal_bioimpedância_litros_diagnostico: "",
+      agua_corporal_bioimpedância_porcentagem_valor: initialData?.bio_impedancia?.agua_corporal_porcentagem?.toString() || "",
+      agua_corporal_bioimpedância_porcentagem_diagnostico: "",
+      agua_na_massa_magra_porcentagem_valor: initialData?.bio_impedancia?.agua_massa_porcentagem?.toString() || "",
+      agua_na_massa_magra_porcentagem_diagnostico: "",
+      resistencia_r_ohms_valor: initialData?.bio_impedancia?.resistencia?.toString() || "",
+      resistencia_r_ohms_diagnostico: "",
+      reatancia_xc_ohms_valor: initialData?.bio_impedancia?.reatancia?.toString() || "",
+      reatancia_xc_ohms_diagnostico: "",
+      observacoes: initialData?.observacoes || "",
+    });
+
+    handleCalculate();
+  }, [initialData, patientData]);
+
+
   const [pacientes, setPacientes] = useState<any[]>([]);
   const [buscaNome, setBuscaNome] = useState("");
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -203,7 +283,7 @@ export default function AntropometriaForm({patientData} : AntropometriaProps) {
           id: data.id || "",
           nome: data.nome || "",
           dataAvaliacao: data.dataAvaliacao || "",
-          dataNascimento: data.data_nascimento || "",
+          data_nascimento: data.data_nascimento || "",
           idade: data.idade || "",
           sexo: data.sexo || "",
           peso: data.peso || "",
@@ -328,7 +408,7 @@ export default function AntropometriaForm({patientData} : AntropometriaProps) {
         patientInfo: {
           id: "",
           nome: "",
-          dataNascimento: "",
+          data_nascimento: "",
           dataAvaliacao: new Date().toISOString().split("T")[0],
           idade: "",
           sexo: "",
@@ -472,7 +552,13 @@ export default function AntropometriaForm({patientData} : AntropometriaProps) {
 
         <CardContent className="p-0">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <PatientBasicInfo patientData={patientData} onChange={handlePatientInfoChange} />
+            <PatientBasicInfo 
+              patientData={{
+                ...formData.patientInfo,
+                id: Number(formData.patientInfo.id) || undefined,
+              }}
+              onChange={handlePatientInfoChange} 
+            />
             {/* Medidas Antropométricas */}
             <section className="p-4 space-y-4 border-b border-gray-200">
               <h2 className="text-2xl font-bold text-blue-900">Medidas Antropométricas</h2>

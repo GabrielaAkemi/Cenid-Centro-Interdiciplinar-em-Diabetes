@@ -23,9 +23,7 @@ export async function apiFetch<T>(
     ...options,
   })
 
-  if (!res.ok) {
-    throw new Error(`Erro na requisição: ${res.status}`)
-  }
+
 
   return res.json()
 }

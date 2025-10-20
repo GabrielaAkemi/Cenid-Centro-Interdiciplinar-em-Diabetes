@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import PatientBasicInfo, {PatientInfoData} from "./basicInfo/patientBasicInfo";
 import { apiFetch } from "@/lib/api";
 import FileInput from "../fileInput/fileInput";
@@ -53,10 +53,12 @@ interface BaasisCSIIData extends BaasisData {
 }
 
 interface BaasisProps {
+  value?: BaasisData
   onChange: (data: BaasisData) => void
 }
 
 interface BaasisCSIIProps {
+  value?: BaasisCSIIData
   onChange: (data: BaasisCSIIData) => void
 }
 
@@ -66,15 +68,18 @@ interface InsulinAdherenceData {
 }
 
 interface InsulinAdherenceProps {
+  value: InsulinAdherenceData
   onChange: (data: InsulinAdherenceData) => void
 }
 
 interface ComplementaryMedicationsProps {
   onChange: (data: Record<string, MedicationData>) => void
+  initialMedications?: Record<string, MedicationData>
 }
 
 interface OtherMedicationsProps {
   onChange: (data: MedicationData[]) => void
+  initialMedications?: MedicationData[]
 }
 
 interface FormData {
@@ -259,14 +264,20 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
 
 
 
-const BAASIS: React.FC<BaasisProps> = ({ onChange }) => {
-  const [data, setData] = useState<BaasisData>({ p1: "", p2: "", p3: "", p4: "" })
+const BAASIS: React.FC<BaasisProps> = ({ onChange, value }) => {
+  const [data, setData] = useState<BaasisData>({ p1: "", p2: "", p3: "", p4: "" });
+
+  useEffect(() => {
+    if (value) setData(value);
+  }, [value]);
+
+
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target
     const newData = { ...data, [name]: value }
     setData(newData)
     onChange(newData)
-  }
+  };
 
   const questions: Question[] = [
     { key: "p1", label: "P1. Esqueceu insulina na última semana?", options: ["Nunca", "1-2x", "3-4x", "5+"] },
@@ -306,8 +317,13 @@ const BAASIS: React.FC<BaasisProps> = ({ onChange }) => {
   )
 }
 
-const BAASIS_CSII: React.FC<BaasisCSIIProps> = ({ onChange }) => {
+const BAASIS_CSII: React.FC<BaasisCSIIProps> = ({ onChange, value }) => {
   const [data, setData] = useState<BaasisCSIIData>({ p1: "", p2: "", p3: "", p4: "", p5: "", p6: "" })
+
+  useEffect(() => {
+    if (value) setData(value);
+  }, [value]);
+
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target
     const newData = { ...data, [name]: value }
@@ -354,8 +370,13 @@ const BAASIS_CSII: React.FC<BaasisCSIIProps> = ({ onChange }) => {
   )
 }
 
-const InsulinAdherence: React.FC<InsulinAdherenceProps> = ({ onChange }) => {
-  const [method, setMethod] = useState<string>("")
+const InsulinAdherence: React.FC<InsulinAdherenceProps> = ({ value, onChange }) => {
+  const [method, setMethod] = useState<string>(value.method || "")
+
+  useEffect(() => {
+    setMethod(value.method || "")
+  }, [value.method])
+
   const handleMethodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newMethod = e.target.value
     setMethod(newMethod)
@@ -376,8 +397,8 @@ const InsulinAdherence: React.FC<InsulinAdherenceProps> = ({ onChange }) => {
           <option value="MDI">MDI</option>
         </select>
       </div>
-      {method === "MDI" && <BAASIS onChange={handleQuestionnaireChange} />}
-      {method === "SICI" && <BAASIS_CSII onChange={handleQuestionnaireChange} />}
+      {method === "MDI" && <BAASIS value={value.questionnaire as BaasisData} onChange={handleQuestionnaireChange} />}
+      {method === "SICI" && <BAASIS_CSII value={value.questionnaire as BaasisCSIIData} onChange={handleQuestionnaireChange} />}
     </div>
   )
 }
@@ -404,8 +425,12 @@ const createInitialMedState = (): MedicationData => ({
   posologias: [{ posologia: "", frequencia: "", dose: "", horario: "", emJejum: "" }],
 })
 
-const ComplementaryMedications: React.FC<ComplementaryMedicationsProps> = ({ onChange }) => {
-  const [meds, setMeds] = useState<Record<string, MedicationData>>({})
+const ComplementaryMedications: React.FC<ComplementaryMedicationsProps> = ({ onChange, initialMedications  }) => {
+  const [meds, setMeds] = useState<Record<string, MedicationData>>(initialMedications || {})
+  useEffect(() => {
+    if (initialMedications) setMeds(initialMedications)
+  }, [initialMedications])
+
   const handleToggle = (key: string) => {
     setMeds(prevMeds => {
       const newMeds = { ...prevMeds }
@@ -471,8 +496,13 @@ const ComplementaryMedications: React.FC<ComplementaryMedicationsProps> = ({ onC
   )
 }
 
-const OtherMedications: React.FC<OtherMedicationsProps> = ({ onChange }) => {
-  const [meds, setMeds] = useState<MedicationData[]>([])
+const OtherMedications: React.FC<OtherMedicationsProps> = ({ onChange, initialMedications }) => {
+  const [meds, setMeds] = useState<MedicationData[]>(initialMedications || [])
+
+  useEffect(() => {
+    if (initialMedications) setMeds(initialMedications)
+  }, [initialMedications])
+
   const addMedication = () => {
     const newMeds = [...meds, createInitialMedState()]
     setMeds(newMeds)
@@ -505,27 +535,52 @@ const OtherMedications: React.FC<OtherMedicationsProps> = ({ onChange }) => {
   )
 }
 
-interface AppProps {
-  patientData?: PatientInfoData;
+interface Instrucao { 
+  id: number; 
+  posologia: string; 
+  frequencia: string; 
+  dose: string; 
+  horario: string; 
+  jejum: boolean; 
+  tratamento: number; 
+} 
+
+interface TratamentoMedicamento { 
+  id: number; 
+  nome: string; 
+  nome_comercial: string;
+  principio_ativo: string; 
+  prescricao: boolean; 
+  finalidade: string; 
+  data_inicio: string; 
+  data_termino: string; 
+  instrucoes: Instrucao[]; 
 }
 
-const App: React.FC<AppProps> = ({ patientData }) => {
+interface AppProps {
+  patientData?: PatientInfoData;
+  initialData?: any;
+}
+
+const App: React.FC<AppProps> = ({ patientData, initialData }) => {
 	const [message, setMessage] = useState('');
 	const [showModal, setShowModal] = useState(false);
 	const [currentPage, setCurrentPage] = useState('formulario');
 	const [formKey, setFormKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const patient: PatientInfoData = {
+    id: patientData?.id || initialData.patient,
+    nome: patientData?.nome || "",
+    idade: patientData?.idade || "",
+    sexo: patientData?.sexo || "",
+    peso: patientData?.peso || initialData?.peso || "",
+    estatura: patientData?.estatura || initialData?.estatura || "",
+    data_nascimento: patientData?.data_nascimento || ""
+  };
+
 	const [formData, setFormData] = useState<FormData>({
-		patientInfo: {
-			nome: "",
-			dataAvaliacao: "",
-			sexo: "",
-			idade: "",
-			peso: "",
-			estatura: "",
-			data_nascimento: "",
-		},
+		patientInfo: patient,
 		insulinAdherence: {
 			method: "",
 			questionnaire: undefined,
@@ -533,6 +588,78 @@ const App: React.FC<AppProps> = ({ patientData }) => {
 		complementaryMedications: {},
 		otherMedications: [],
 	});
+
+  useEffect(() => {
+    if (!initialData) return;
+
+    let questionnaire: BaasisData | BaasisCSIIData | undefined = undefined;
+
+    if (initialData.metodo_insulina === "MDI" && initialData.adesao_mdi) {
+      const m = initialData.adesao_mdi;
+      questionnaire = {
+        p1: String(m.esqueceu_insulina),
+        p2: m.reducao_doses ? "1" : "0",
+        p3: m.aplicou_fora_horario ? "1" : "0",
+        p4: String(m.dias_sem_insulina)
+      };
+    } else if (initialData.metodo_insulina === "SICI" && initialData.adesao_sici) {
+      const s = initialData.adesao_sici;
+      questionnaire = {
+        p1: String(s.omissao_bolus),
+        p2: s.reducao ? "1" : "0",
+        p3: String(s.dias_falha_bomba),
+        p4: String(s.bomba_desconectada),
+        p5: String(s.troca_cateter),
+        p6: String(s.ignorar_alarmes),
+      };
+    }
+
+    const complementaryMedications: Record<string, MedicationData> = {};
+    const otherMedications: MedicationData[] = [];
+
+    initialData.tratamento_medicamentos.forEach((med: TratamentoMedicamento) => {
+      const medData: MedicationData = {
+        medicamento: med.nome,
+        principioAtivo: med.principio_ativo,
+        comPrescricaoMedica: med.prescricao ? "Sim" : "Não",
+        dataInicio: med.data_inicio,
+        dataTermino: med.data_termino,
+        finalidade: med.finalidade,
+        posologias: med.instrucoes.map(i => ({
+          id: i.id,
+          posologia: i.posologia,
+          frequencia: i.frequencia,
+          dose: i.dose,
+          horario: i.horario,
+          emJejum: i.jejum ? "Sim" : "Não",
+        })),
+      };
+
+      const category = medicationCategories.find(c => c.title === med.nome);
+      if (category) {
+        complementaryMedications[category.key] = medData;
+      } else {
+        otherMedications.push(medData);
+      }
+    });
+
+
+
+    setFormData(prev => ({
+      ...prev,
+      patientInfo: patient,
+      nomeCompleto: patient.nome,
+      sexo: patient.sexo,
+      idade: patient.idade,
+        insulinAdherence: {
+        method: initialData.metodo_insulina || "",
+        questionnaire
+      },
+      complementaryMedications: complementaryMedications,
+      otherMedications: otherMedications,
+    }));
+  }, [initialData, patientData]);
+
 	const handleChange = (section: keyof FormData, data: any) => {
 		setFormData((prevData) => ({ ...prevData, [section]: data }))
 	}
@@ -589,6 +716,7 @@ const App: React.FC<AppProps> = ({ patientData }) => {
         estatura: parseFloat(formData.patientInfo.estatura || "0"),
         data_consulta: formData.patientInfo.dataAvaliacao,
         tratamento_medicamentos: [...complementaryMeds, ...otherMeds],
+        metodo_insulina: formData.insulinAdherence.method
     };
 
 
@@ -668,10 +796,10 @@ const App: React.FC<AppProps> = ({ patientData }) => {
 						)}
 
             <form key={formKey} onSubmit={handleSubmit} className="space-y-0">
-                <PatientBasicInfo patientData={patientData} onChange={(data) => handleChange("patientInfo", data)} />
-                <InsulinAdherence onChange={(data) => handleChange("insulinAdherence", data)} />
-                <ComplementaryMedications onChange={(data) => handleChange("complementaryMedications", data)} />
-                <OtherMedications onChange={(data) => handleChange("otherMedications", data)} />
+                <PatientBasicInfo patientData={formData.patientInfo} onChange={(data) => handleChange("patientInfo", data)} />
+                <InsulinAdherence value={formData.insulinAdherence} onChange={(data) => handleChange("insulinAdherence", data)} />
+                <ComplementaryMedications initialMedications={formData.complementaryMedications} onChange={(data) => handleChange("complementaryMedications", data)} />
+                <OtherMedications initialMedications={formData.otherMedications} onChange={(data) => handleChange("otherMedications", data)} />
 
                 <div className="p-4 mt-8">
                   <h2 className="text-2xl font-bold text-blue-900">Anexo de exames complementares</h2>

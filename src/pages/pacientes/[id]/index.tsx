@@ -137,7 +137,7 @@ const PatientDetails = () => {
               Iniciar Consulta
             </button>
             <button
-              onClick={() => router.push("/h-consultas/historico")}
+              onClick={() => router.push(`/pacientes/${id}/historico`)}
               className="bg-blue-900 text-white border border-blue-900 hover:bg-blue-800 font-semibold py-2 px-6 rounded-md shadow-md transition-colors"
             >
               Histórico

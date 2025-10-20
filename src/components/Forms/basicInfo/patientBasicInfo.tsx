@@ -44,29 +44,39 @@ const calculateAge = (birthDateStr: string) => {
 };
 
 const PatientBasicInfo: React.FC<PatientBasicInfoProps> = ({ onChange, patientData }) => {
-  const [data, setData] = useState<PatientInfoData>({
-    ...patientData,
-    idade: patientData?.data_nascimento ? calculateAge(patientData.data_nascimento) : "",
-    sexo: patientData?.sexo === "M" ? "Masculino" : patientData?.sexo === "F" ? "Feminino" : "",
-  });
+    const [data, setData] = useState<PatientInfoData>({
+      id: patientData?.id,
+      nome: patientData?.nome || "",
+      dataAvaliacao: patientData?.dataAvaliacao || new Date().toISOString().split("T")[0],
+      data_nascimento: patientData?.data_nascimento || "",
+      sexo: patientData?.sexo === "M" ? "Masculino" : patientData?.sexo === "F" ? "Feminino" : "",
+      idade: patientData?.data_nascimento ? calculateAge(patientData.data_nascimento) : "",
+      peso: patientData?.peso || "",
+      estatura: patientData?.estatura || "",
+    });
 
-  // ** Sincroniza sempre que patientData mudar **
-  useEffect(() => {
-    if (patientData) {
-      setData({
-        ...patientData,
-        idade: patientData.data_nascimento ? calculateAge(patientData.data_nascimento) : "",
-        sexo: patientData?.sexo === "M" ? "Masculino" : patientData?.sexo === "F" ? "Feminino" : "",
-      });
-    }
-  }, [patientData]);
+    useEffect(() => {
+      if (!patientData) return;
+      setData(prev => ({
+        ...prev,
+        id: patientData.id,
+        nome: patientData.nome || "",
+        dataAvaliacao: patientData.dataAvaliacao || prev.dataAvaliacao,
+        data_nascimento: patientData.data_nascimento || prev.data_nascimento,
+        sexo: patientData.sexo === "M" ? "Masculino" : patientData.sexo === "F" ? "Feminino" : prev.sexo,
+        idade: patientData.data_nascimento ? calculateAge(patientData.data_nascimento) : prev.idade,
+        peso: patientData.peso || prev.peso,
+        estatura: patientData.estatura || prev.estatura,
+      }));
+    }, [patientData?.id]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    const newData = { ...data, [name]: value };
-    setData(newData);
-    onChange(newData);
-  };
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const { name, value } = e.target;
+      const newData = { ...data, [name]: value };
+      setData(newData);
+      onChange(newData);
+    };
+
 
   const fields: FormField[] = [
     { name: "nome", label: "Nome completo:", type: "text", readOnly: true },
