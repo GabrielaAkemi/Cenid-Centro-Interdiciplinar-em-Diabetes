@@ -57,6 +57,62 @@ interface Patient {
   data_cadastro: string;
 }
 
+const TipoAtendimentoMap: Record<number, string> = {
+  0: "Sistema Único de Saúde (SUS)",
+  1: "Convênio/Plano de Saúde",
+  2: "Particular",
+  3: "Misto (SUS + outros)",
+};
+
+const DiagnosticoMap: Record<number, string> = {
+  0: "DM1",
+  1: "DM2",
+  2: "LADA",
+  3: "MODY",
+  4: "Gestacional",
+  5: "Outro",
+};
+
+const DeficienciaMap: Record<number, string> = {
+  0: "Física",
+  1: "Visual",
+  2: "Auditiva",
+  3: "Intelectual",
+  4: "Múltipla",
+  5: "Outro",
+};
+
+const MetodoInsulinaMap: Record<number, string> = {
+  1: "Caneta de Insulina",
+  2: "Seringa",
+  3: "Bomba de Insulina",
+  4: "Não utiliza",
+};
+
+const MetodoMonitoramentoMap: Record<number, string> = {
+  1: "Glicômetro Tradicional",
+  2: "Sensor Flash",
+  3: "Sensor Contínuo",
+  4: "Múltiplos Métodos",
+};
+
+
+const AppGlicemiaMap: Record<number, string> = {
+  1: "LibreLink",
+  2: "Dexcom",
+  3: "Medtronic",
+  4: "Accu-Chek",
+  5: "OneTouch",
+  6: "GlicoSource",
+  7: "Outro",
+  8: "Não utiliza",
+};
+
+const getLabel = (map: Record<number, string>, value?: number | string) => {
+  if (value === undefined || value === null) return "N/A";
+  if (typeof value === "number") return map[value] || "Outro";
+  return value;
+};
 
 const formatDateSafely = (dateString?: string) => {
   if (!dateString) return "N/A";
@@ -94,21 +150,21 @@ const PatientDetails = () => {
     { icon: Calendar, label: "Data de Nascimento", value: formatDateSafely(paciente.data_nascimento) },
     { icon: Mail, label: "Email", value: paciente.email },
     { icon: Phone, label: "Telefone", value: paciente.telefone },
-    { icon: User, label: "Sexo", value: paciente.sexo },
+    { icon: User, label: "Sexo", value: paciente.sexo == "M" ? "Masculino": "Feminino" },
     { icon: Home, label: "Endereço", value: `${paciente.endereco}, ${paciente.numero}, ${paciente.municipio}` },
     { icon: User, label: "Ocupação", value: paciente.ocupacao },
-    { icon: Stethoscope, label: "Diagnóstico", value: paciente.diagnostico },
-    { icon: Baby, label: "Gestante", value: paciente.gestante },
-    { icon: Baby, label: "Amamentando", value: paciente.amamentando },
-    { icon: Accessibility, label: "Deficiência", value: paciente.deficiencia },
-    { icon: Syringe, label: "Método de Insulina", value: paciente.metodo_insulina },
-    { icon: Smartphone, label: "Monitoramento Glicemia", value: paciente.metodo_monitoramento },
-    { icon: Smartphone, label: "Uso de App", value: paciente.app_glicemia },
+    { icon: Stethoscope, label: "Diagnóstico", value: getLabel(DiagnosticoMap, paciente.diagnostico) },
+    { icon: Baby, label: "Gestante", value: paciente.gestante ? "Sim" : "Não" },
+    { icon: Baby, label: "Amamentando", value: paciente.amamentando ? "Sim" : "Não" },
+    { icon: Accessibility, label: "Deficiência", value: getLabel(DeficienciaMap, paciente.deficiencia) },
+    { icon: Syringe, label: "Método de Insulina", value: getLabel(MetodoInsulinaMap, paciente.metodo_insulina) },
+    { icon: Smartphone, label: "Monitoramento Glicemia", value: getLabel(MetodoMonitoramentoMap, paciente.metodo_monitoramento) },
+    { icon: Smartphone, label: "Uso de App", value: getLabel(AppGlicemiaMap, paciente.app_glicemia) },
     { icon: User, label: "Responsável", value: paciente.nome_responsavel },
     { icon: FileText, label: "CPF do Responsável", value: paciente.cpf_responsavel },
     { icon: Phone, label: "Telefone do Responsável", value: paciente.telefone_responsavel },
     { icon: Calendar, label: "Data de Cadastro", value: formatDateSafely(paciente.data_cadastro) },
-    { icon: Smartphone, label: "Acesso à Internet", value: paciente.celular_com_internet },
+    { icon: Smartphone, label: "Acesso à Internet", value: paciente.celular_com_internet ? "Sim" : "Não" },
   ] : [];
 
   if (!paciente) {
