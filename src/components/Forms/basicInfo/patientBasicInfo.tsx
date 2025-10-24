@@ -13,6 +13,7 @@ interface FormField {
   options?: string[]
   step?: string
   readOnly?: boolean
+  placeholder?: string
 }
 
 export interface PatientInfoData {
@@ -44,47 +45,48 @@ const calculateAge = (birthDateStr: string) => {
 };
 
 const PatientBasicInfo: React.FC<PatientBasicInfoProps> = ({ onChange, patientData }) => {
-    const [data, setData] = useState<PatientInfoData>({
-      id: patientData?.id,
-      nome: patientData?.nome || "",
-      dataAvaliacao: patientData?.dataAvaliacao || new Date().toISOString().split("T")[0],
-      data_nascimento: patientData?.data_nascimento || "",
-      sexo: patientData?.sexo === "M" ? "Masculino" : patientData?.sexo === "F" ? "Feminino" : "",
-      idade: patientData?.data_nascimento ? calculateAge(patientData.data_nascimento) : "",
-      peso: patientData?.peso || "",
-      estatura: patientData?.estatura || "",
-    });
+  const [data, setData] = useState<PatientInfoData>({
+    id: patientData?.id,
+    nome: patientData?.nome || "",
+    dataAvaliacao: patientData?.dataAvaliacao || new Date().toISOString().split("T")[0],
+    data_nascimento: patientData?.data_nascimento || "",
+    sexo: patientData?.sexo === "M" ? "Masculino" : patientData?.sexo === "F" ? "Feminino" : "",
+    idade: patientData?.data_nascimento ? calculateAge(patientData.data_nascimento) : "",
+    peso: patientData?.peso || "",
+    // começa vazio (não com valor 0)
+    estatura: patientData?.estatura || "",
+  });
 
-    useEffect(() => {
-      if (!patientData) return;
-      setData(prev => ({
-        ...prev,
-        id: patientData.id,
-        nome: patientData.nome || "",
-        dataAvaliacao: patientData.dataAvaliacao || prev.dataAvaliacao,
-        data_nascimento: patientData.data_nascimento || prev.data_nascimento,
-        sexo: patientData.sexo === "M" ? "Masculino" : patientData.sexo === "F" ? "Feminino" : prev.sexo,
-        idade: patientData.data_nascimento ? calculateAge(patientData.data_nascimento) : prev.idade,
-        peso: patientData.peso || prev.peso,
-        estatura: patientData.estatura || prev.estatura,
-      }));
-    }, [patientData?.id]);
+  useEffect(() => {
+    if (!patientData) return;
+    setData(prev => ({
+      ...prev,
+      id: patientData.id,
+      nome: patientData.nome || "",
+      dataAvaliacao: patientData.dataAvaliacao || prev.dataAvaliacao,
+      data_nascimento: patientData.data_nascimento || prev.data_nascimento,
+      sexo: patientData.sexo === "M" ? "Masculino" : patientData.sexo === "F" ? "Feminino" : prev.sexo,
+      idade: patientData.data_nascimento ? calculateAge(patientData.data_nascimento) : prev.idade,
+      peso: patientData.peso ?? prev.peso,
+      estatura: patientData.estatura ?? prev.estatura ?? "",
+    }));
+  }, [patientData?.id]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      const { name, value } = e.target;
-      const newData = { ...data, [name]: value };
-      setData(newData);
-      onChange(newData);
-    };
-
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    const newData = { ...data, [name]: value };
+    setData(newData);
+    onChange(newData);
+  };
 
   const fields: FormField[] = [
     { name: "nome", label: "Nome completo:", type: "text", readOnly: true },
     { name: "dataAvaliacao", label: "Data da avaliação:", type: "date" },
     { name: "sexo", label: "Sexo:", type: "select", options: ["Masculino", "Feminino"], readOnly: true },
     { name: "idade", label: "Idade (anos):", type: "number", readOnly: true },
-    { name: "peso", label: "Peso (kg):", type: "number", step: "0.1" },
-    { name: "estatura", label: "Estatura (metros):", type: "number", step: "0.01" },
+    { name: "peso", label: "Peso (kg):", type: "number", step: "0.1", placeholder: "0,0" },
+    // 👇 aqui definimos o placeholder "0,00"
+    { name: "estatura", label: "Estatura (metros):", type: "number", step: "0.01", placeholder: "0,00" },
     { name: "data_nascimento", label: "Data de Nascimento:", type: "date", readOnly: true },
   ];
 
@@ -113,7 +115,8 @@ const PatientBasicInfo: React.FC<PatientBasicInfoProps> = ({ onChange, patientDa
                 name={field.name}
                 id={field.name}
                 step={field.step}
-                value={data[field.name as keyof PatientInfoData] || ""}
+                placeholder={field.placeholder} // 👈 mostra o 0,00 quando vazio
+                value={data[field.name as keyof PatientInfoData] ?? ""}
                 onChange={handleChange}
                 className={`${inputClass} ${field.readOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 readOnly={field.readOnly}
