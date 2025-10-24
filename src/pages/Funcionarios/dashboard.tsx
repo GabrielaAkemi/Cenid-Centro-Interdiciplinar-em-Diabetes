@@ -12,12 +12,41 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api"
 
+export enum Diagnostico {
+  DM1 = 0,
+  DM2 = 1,
+  LADA = 2,
+  MODY = 3,
+  GESTACIONAL = 4,
+  OUTRO = 5,
+}
+
+export const DiagnosticoLabel: Record<Diagnostico, string> = {
+  [Diagnostico.DM1]: "DM1",
+  [Diagnostico.DM2]: "DM2",
+  [Diagnostico.LADA]: "LADA",
+  [Diagnostico.MODY]: "MODY",
+  [Diagnostico.GESTACIONAL]: "Gestacional",
+  [Diagnostico.OUTRO]: "Outro",
+};
+
+
+export const DiagnosticoColor: Record<Diagnostico, string> = {
+  [Diagnostico.DM1]: "bg-red-600 text-white",
+  [Diagnostico.DM2]: "bg-red-400 text-white",
+  [Diagnostico.LADA]: "bg-blue-300 text-blue-900",
+  [Diagnostico.MODY]: "bg-green-300 text-green-900",
+  [Diagnostico.GESTACIONAL]: "bg-pink-300 text-pink-900",
+  [Diagnostico.OUTRO]: "bg-gray-300 text-gray-900",
+};
+
+
 interface Patient {
   id: string;
   nome: string;
   cpf: string;
-  dataNascimento: string;
-  diagnostico: string;
+  data_nascimento: string;
+  diagnostico: Diagnostico;
   telefone: string;
   email: string;
   data_cadastro: string;
@@ -67,9 +96,9 @@ const DashboardPage: React.FC = () => {
 
   const diagnosticCounts = patients.reduce(
     (acc, p) => {
-      if (p.diagnostico === "DM1") acc.DM1++;
-      else if (p.diagnostico === "DM2") acc.DM2++;
-      else if (p.diagnostico === "LADA") acc.LADA++;
+      if (p.diagnostico === 0) acc.DM1++;
+      else if (p.diagnostico === 1) acc.DM2++;
+      else if (p.diagnostico === 2) acc.LADA++;
       return acc;
     },
     { DM1: 0, DM2: 0, LADA: 0 }
@@ -82,7 +111,8 @@ const DashboardPage: React.FC = () => {
       p.email?.toLowerCase().includes(search.toLowerCase());
 
     const matchesDiagnostico =
-      filterDiagnostico === "todos" || p.diagnostico === filterDiagnostico;
+      filterDiagnostico === "todos" ||
+      p.diagnostico === Number(filterDiagnostico);
 
     return matchesSearch && matchesDiagnostico;
   });
@@ -206,20 +236,16 @@ const DashboardPage: React.FC = () => {
                       >
                         <TableCell className="font-medium">{patient.nome}</TableCell>
                         <TableCell>{patient.cpf}</TableCell>
-                        <TableCell>{formatDateSafely(patient.dataNascimento)}</TableCell>
+                        <TableCell>{formatDateSafely(patient.data_nascimento)}</TableCell>
                         <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium
-                            ${patient.diagnostico === "DM1"
-                              ? "bg-red-600 text-white"
-                              : patient.diagnostico === "DM2"
-                              ? "bg-red-400 text-white"
-                              : "bg-blue-300 text-blue-900"
-                            }`}
-                          >
-                            {patient.diagnostico}
-                          </span>
-                        </TableCell>
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                DiagnosticoColor[patient.diagnostico as Diagnostico]
+                              }`}
+                            >
+                              {DiagnosticoLabel[patient.diagnostico as Diagnostico]}
+                            </span>
+                          </TableCell>
                         <TableCell>
                           <div>{patient.telefone}</div>
                           <div className="text-sm text-blue-900">{patient.email}</div>

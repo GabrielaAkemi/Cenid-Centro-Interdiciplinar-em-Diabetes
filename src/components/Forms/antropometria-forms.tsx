@@ -126,15 +126,15 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
   const [currentPage, setCurrentPage] = useState('formulario');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-    const patient = {
-    id: patientData?.id ?? initialData?.patient ?? 0,
-    nome: patientData?.nome || "",
-    idade: patientData?.idade || "",
-    sexo: patientData?.sexo || "",
-    peso: patientData?.peso?.toString() || initialData?.peso?.toString() || "",
-    estatura: patientData?.estatura?.toString() || initialData?.estatura?.toString() || "",
-    data_nascimento: patientData?.data_nascimento || "",
-    dataAvaliacao: initialData?.data_consulta || new Date().toISOString().split("T")[0],
+  const patient = {
+    id: 0,
+    nome: "",
+    idade:"",
+    sexo: "",
+    peso: "",
+    estatura:"",
+    data_nascimento:"",
+    dataAvaliacao:new Date().toISOString().split("T")[0],
   };
 
   const [formData, setFormData] = useState<FormDataType>({
@@ -199,6 +199,30 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
   });
 
   useEffect(() => {
+    const patient = {
+      id: patientData?.id ?? initialData?.patient ?? 0,
+      nome: patientData?.nome || "",
+      idade: patientData?.idade || "",
+      sexo: patientData?.sexo || "",
+      peso: patientData?.peso?.toString() || initialData?.peso?.toString() || "",
+      estatura: patientData?.estatura?.toString() || initialData?.estatura?.toString() || "",
+      data_nascimento: patientData?.data_nascimento || "",
+      dataAvaliacao: initialData?.data_consulta || new Date().toISOString().split("T")[0],
+    };
+
+    setFormData(prev => ({
+      ...prev,             
+      patientInfo: {      
+        id: patient.id,
+        nome: patient.nome,
+        dataAvaliacao: patient.dataAvaliacao,
+        data_nascimento: patient.data_nascimento,
+        idade: "",
+        sexo: patient.sexo,
+        peso: patient.peso,
+        estatura: patient.estatura,
+      },
+    }));
     if (!initialData) return;
 
     setFormData({
@@ -261,9 +285,16 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
       reatancia_xc_ohms_diagnostico: "",
       observacoes: initialData?.observacoes || "",
     });
-
-    handleCalculate();
   }, [initialData, patientData]);
+
+  useEffect(() => {
+    const peso = parseFloat(formData.patientInfo.peso);
+    const estatura = parseFloat(formData.patientInfo.estatura);
+
+    if (peso && estatura) {
+      handleCalculate();
+    }
+  }, [formData.patientInfo.peso, formData.patientInfo.estatura]);
 
 
   const [pacientes, setPacientes] = useState<any[]>([]);
@@ -516,20 +547,6 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
     };
   }, []);
 
-  useEffect(() => {
-    if (buscaNome.length < 2) {
-      setPacientes([]);
-      return;
-    }
-    const timeout = setTimeout(async () => {
-      const mockData = [
-        { id: 1, nome: "João Silva", sexo: "Masculino", dataNascimento: "1995-03-20" },
-        { id: 2, nome: "Maria Oliveira", sexo: "Feminino", dataNascimento: "1998-07-15" },
-      ].filter(p => p.nome.toLowerCase().includes(buscaNome.toLowerCase()));
-      setPacientes(mockData);
-    }, 400);
-    return () => clearTimeout(timeout);
-  }, [buscaNome]);
 
 
   return (

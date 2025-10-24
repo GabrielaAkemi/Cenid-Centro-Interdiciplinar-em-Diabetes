@@ -100,10 +100,20 @@ export default function Consultas() {
   const handleSelectEspecialidade = (especialidade: string) => {
     setSelectedForm(especialidade);
     setSelectedHistory(null);
+    setSelectedHistoryData(null);
+    setHistories([]);
     fetchHistories(especialidade);
   };
 
   const renderForm = () => {
+    if (
+      (selectedForm === "consultafarmacia" ||
+      selectedForm === "consultaedfisica" ||
+      selectedForm === "consultacalculadora") &&
+      !selectedHistoryData
+    ) {
+      return;
+    }
     switch (selectedForm) {
       case "consultamedicina":
         return <PlaceholderForm title="Medicina" />;

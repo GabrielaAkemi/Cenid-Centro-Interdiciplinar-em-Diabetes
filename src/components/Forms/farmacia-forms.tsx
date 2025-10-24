@@ -569,18 +569,9 @@ const App: React.FC<AppProps> = ({ patientData, initialData }) => {
 	const [formKey, setFormKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const patient: PatientInfoData = {
-    id: patientData?.id || initialData.patient,
-    nome: patientData?.nome || "",
-    idade: patientData?.idade || "",
-    sexo: patientData?.sexo || "",
-    peso: patientData?.peso || initialData?.peso || "",
-    estatura: patientData?.estatura || initialData?.estatura || "",
-    data_nascimento: patientData?.data_nascimento || ""
-  };
-
+  
 	const [formData, setFormData] = useState<FormData>({
-		patientInfo: patient,
+		patientInfo: {},
 		insulinAdherence: {
 			method: "",
 			questionnaire: undefined,
@@ -590,74 +581,98 @@ const App: React.FC<AppProps> = ({ patientData, initialData }) => {
 	});
 
   useEffect(() => {
-    if (!initialData) return;
+    let patient: PatientInfoData = {
+      id: patientData?.id || initialData?.patient || 0,
+      nome: patientData?.nome || "",
+      idade: patientData?.idade || "",
+      sexo: patientData?.sexo || "",
+      peso: (patientData?.peso ?? initialData?.peso ?? "").toString(),
+      estatura: (patientData?.estatura ?? initialData?.estatura ?? "").toString(),
+      data_nascimento: patientData?.data_nascimento || "",
+      dataAvaliacao: initialData?.data_consulta || new Date().toISOString().split("T")[0],
+    };
 
-    let questionnaire: BaasisData | BaasisCSIIData | undefined = undefined;
+    if (initialData) {
+      patient.peso = (initialData?.peso ?? "").toString();
+      patient.estatura = (initialData?.estatura ?? "").toString();
 
-    if (initialData.metodo_insulina === "MDI" && initialData.adesao_mdi) {
-      const m = initialData.adesao_mdi;
-      questionnaire = {
-        p1: String(m.esqueceu_insulina),
-        p2: m.reducao_doses ? "1" : "0",
-        p3: m.aplicou_fora_horario ? "1" : "0",
-        p4: String(m.dias_sem_insulina)
-      };
-    } else if (initialData.metodo_insulina === "SICI" && initialData.adesao_sici) {
-      const s = initialData.adesao_sici;
-      questionnaire = {
-        p1: String(s.omissao_bolus),
-        p2: s.reducao ? "1" : "0",
-        p3: String(s.dias_falha_bomba),
-        p4: String(s.bomba_desconectada),
-        p5: String(s.troca_cateter),
-        p6: String(s.ignorar_alarmes),
-      };
-    }
+      let questionnaire: BaasisData | BaasisCSIIData | undefined = undefined;
 
-    const complementaryMedications: Record<string, MedicationData> = {};
-    const otherMedications: MedicationData[] = [];
-
-    initialData.tratamento_medicamentos.forEach((med: TratamentoMedicamento) => {
-      const medData: MedicationData = {
-        medicamento: med.nome,
-        principioAtivo: med.principio_ativo,
-        comPrescricaoMedica: med.prescricao ? "Sim" : "Não",
-        dataInicio: med.data_inicio,
-        dataTermino: med.data_termino,
-        finalidade: med.finalidade,
-        posologias: med.instrucoes.map(i => ({
-          id: i.id,
-          posologia: i.posologia,
-          frequencia: i.frequencia,
-          dose: i.dose,
-          horario: i.horario,
-          emJejum: i.jejum ? "Sim" : "Não",
-        })),
-      };
-
-      const category = medicationCategories.find(c => c.title === med.nome);
-      if (category) {
-        complementaryMedications[category.key] = medData;
-      } else {
-        otherMedications.push(medData);
+      if (initialData.metodo_insulina === "MDI" && initialData.adesao_mdi) {
+        const m = initialData.adesao_mdi;
+        questionnaire = {
+          p1: String(m.esqueceu_insulina),
+          p2: m.reducao_doses ? "1" : "0",
+          p3: m.aplicou_fora_horario ? "1" : "0",
+          p4: String(m.dias_sem_insulina)
+        };
+      } else if (initialData.metodo_insulina === "SICI" && initialData.adesao_sici) {
+        const s = initialData.adesao_sici;
+        questionnaire = {
+          p1: String(s.omissao_bolus),
+          p2: s.reducao ? "1" : "0",
+          p3: String(s.dias_falha_bomba),
+          p4: String(s.bomba_desconectada),
+          p5: String(s.troca_cateter),
+          p6: String(s.ignorar_alarmes),
+        };
       }
-    });
+
+      const complementaryMedications: Record<string, MedicationData> = {};
+      const otherMedications: MedicationData[] = [];
+
+      initialData.tratamento_medicamentos.forEach((med: TratamentoMedicamento) => {
+        const medData: MedicationData = {
+          medicamento: med.nome,
+          principioAtivo: med.principio_ativo,
+          comPrescricaoMedica: med.prescricao ? "Sim" : "Não",
+          dataInicio: med.data_inicio,
+          dataTermino: med.data_termino,
+          finalidade: med.finalidade,
+          posologias: med.instrucoes.map(i => ({
+            id: i.id,
+            posologia: i.posologia,
+            frequencia: i.frequencia,
+            dose: i.dose,
+            horario: i.horario,
+            emJejum: i.jejum ? "Sim" : "Não",
+          })),
+        };
+
+        const category = medicationCategories.find(c => c.title === med.nome);
+        if (category) {
+          complementaryMedications[category.key] = medData;
+        } else {
+          otherMedications.push(medData);
+        }
+      });
 
 
 
-    setFormData(prev => ({
-      ...prev,
-      patientInfo: patient,
-      nomeCompleto: patient.nome,
-      sexo: patient.sexo,
-      idade: patient.idade,
-        insulinAdherence: {
-        method: initialData.metodo_insulina || "",
-        questionnaire
-      },
-      complementaryMedications: complementaryMedications,
-      otherMedications: otherMedications,
-    }));
+      setFormData(prev => ({
+        ...prev,
+        patientInfo: patient,
+        nomeCompleto: patient.nome,
+        sexo: patient.sexo,
+        idade: patient.idade,
+          insulinAdherence: {
+          method: initialData.metodo_insulina || "",
+          questionnaire
+        },
+        complementaryMedications: complementaryMedications,
+        otherMedications: otherMedications,
+      }));
+    }
+    else {
+      setFormData(prev => ({
+        ...prev,
+        patientInfo: patient,
+        insulinAdherence: { method: "", questionnaire: undefined },
+        complementaryMedications: {},
+        otherMedications: []
+      }));
+      return;
+    }
   }, [initialData, patientData]);
 
 	const handleChange = (section: keyof FormData, data: any) => {
