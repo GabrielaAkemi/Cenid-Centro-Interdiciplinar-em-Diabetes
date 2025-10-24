@@ -109,7 +109,7 @@ const AppGlicemiaMap: Record<number, string> = {
 };
 
 const getLabel = (map: Record<number, string>, value?: number | string) => {
-  if (value === undefined || value === null) return "N/A";
+  if (value === undefined || value === null) return "-";
   if (typeof value === "number") return map[value] || "Outro";
   return value;
 };
@@ -151,7 +151,7 @@ const PatientDetails = () => {
     { icon: Mail, label: "Email", value: paciente.email },
     { icon: Phone, label: "Telefone", value: paciente.telefone },
     { icon: User, label: "Sexo", value: paciente.sexo == "M" ? "Masculino": "Feminino" },
-    { icon: Home, label: "Endereço", value: `${paciente.endereco}, ${paciente.numero}, ${paciente.municipio}` },
+    { icon: Home, label: "Endereço", value: paciente.endereco && paciente.numero && paciente.municipio ? `${paciente.endereco}, ${paciente.numero}, ${paciente.municipio}` : "-" },
     { icon: User, label: "Ocupação", value: paciente.ocupacao },
     { icon: Stethoscope, label: "Diagnóstico", value: getLabel(DiagnosticoMap, paciente.diagnostico) },
     { icon: Baby, label: "Gestante", value: paciente.gestante ? "Sim" : "Não" },
@@ -160,10 +160,10 @@ const PatientDetails = () => {
     { icon: Syringe, label: "Método de Insulina", value: getLabel(MetodoInsulinaMap, paciente.metodo_insulina) },
     { icon: Smartphone, label: "Monitoramento Glicemia", value: getLabel(MetodoMonitoramentoMap, paciente.metodo_monitoramento) },
     { icon: Smartphone, label: "Uso de App", value: getLabel(AppGlicemiaMap, paciente.app_glicemia) },
-    { icon: User, label: "Responsável", value: paciente.nome_responsavel },
-    { icon: FileText, label: "CPF do Responsável", value: paciente.cpf_responsavel },
-    { icon: Phone, label: "Telefone do Responsável", value: paciente.telefone_responsavel },
-    { icon: Calendar, label: "Data de Cadastro", value: formatDateSafely(paciente.data_cadastro) },
+    { icon: User, label: "Responsável", value: paciente.nome_responsavel ? paciente.nome_responsavel : "-" },
+    { icon: FileText, label: "CPF do Responsável", value: paciente.cpf_responsavel ? paciente.cpf_responsavel : "-" },
+    { icon: Phone, label: "Telefone do Responsável", value: paciente.telefone_responsavel ? paciente.telefone_responsavel : "-" },
+    { icon: Calendar, label: "Data de Cadastro", value: paciente.data_cadastro ? formatDateSafely(paciente.data_cadastro) : "-" },
     { icon: Smartphone, label: "Acesso à Internet", value: paciente.celular_com_internet ? "Sim" : "Não" },
   ] : [];
 

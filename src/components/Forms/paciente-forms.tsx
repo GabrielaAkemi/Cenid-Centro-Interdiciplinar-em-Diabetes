@@ -258,7 +258,6 @@ const App: React.FC = () => {
         formData.responsavel.dataNascimento || null,
       ocupacao_responsavel: formData.responsavel.ocupacao || null,
       auxilio: formData.auxilio ? Number(formData.auxilio) : null,
-      data_cadastro: formData.dataCadastro || null,
       celular_com_internet: formData.celularInternet,
     };
 
@@ -677,18 +676,7 @@ const App: React.FC = () => {
                   Celular com internet
                 </label>
               </div>
-              <div className="flex flex-col space-y-1">
-                <label className="text-sm font-medium text-gray-700">Data do Cadastro</label>
-                <input
-                  type="date"
-                  value={formData.dataCadastro}
-                  onChange={(e) => handleChange("dataCadastro", e.target.value)}
-                  className="rounded-lg p-3 border border-gray-300 focus:ring focus:ring-blue-200"
-                />
-                <span className="text-xs text-gray-500 mt-1">
-                  Esta data corresponde ao dia em que o paciente foi cadastrado.
-                </span>
-              </div>
+              
               <div className="flex flex-col space-y-1">
                 <label className="text-sm font-medium text-gray-700">Documento</label>
                 <input
