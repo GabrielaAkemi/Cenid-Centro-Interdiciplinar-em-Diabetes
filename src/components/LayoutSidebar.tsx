@@ -27,7 +27,7 @@ const Sidebar: React.FC = () => {
         {/* Botão para cadastro de pacientes com novo ícone */}
         <button
           className={`flex items-center gap-2 px-6 py-3 w-full text-left hover:bg-blue-700 ${
-            pathname === "/Funcionarios/cadastroPaciente" ? "bg-blue-900 font-semibold" : ""
+            pathname === "/Funcionarios/cadastrarPacientes" ? "bg-blue-900 font-semibold" : ""
           }`}
           onClick={() => router.push("/Funcionarios/cadastrarPacientes")}
         >
