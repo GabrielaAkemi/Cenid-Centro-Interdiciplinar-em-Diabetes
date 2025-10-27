@@ -304,7 +304,37 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    let newValue = value;
+
+    
+    if (name != "observacoes") {
+        let tempValue = value;
+
+      tempValue = tempValue.replace(/[^0-9,.]/g, ''); 
+
+      if (tempValue.includes(',')) {
+          tempValue = tempValue.replace(/\./g, '');
+      } else {
+          tempValue = tempValue.replace(/,/g, '');
+      }
+      
+      const separator = tempValue.includes(',') ? ',' : '.';
+      const parts = tempValue.split(separator);
+
+      if (parts.length > 2) {
+        newValue = parts[0] + separator + parts.slice(1).join('');
+      } else {
+        newValue = tempValue;
+      }
+
+      if (newValue.startsWith('.') || newValue.startsWith(',')) {
+          newValue = '0' + newValue;
+      }
+
+    } else {
+        newValue = value;
+    }
+    setFormData(prev => ({ ...prev, [name]: newValue }));
   };
 
     const handlePatientInfoChange = (data: PatientInfoData) => {
@@ -583,7 +613,7 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
                 <div>
                   <label className="text-sm font-medium text-gray-700">Circunferência do Braço (cm)</label>
                   <Input
-                    type="number"
+                    type="text"
                     step="0.1"
                     placeholder="Digite a medida"
                     name="circunferencia_braco"
@@ -594,7 +624,7 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
                 <div>
                   <label className="text-sm font-medium text-gray-700">Circunferência da Cintura (cm)</label>
                   <Input
-                    type="number"
+                    type="text"
                     step="0.1"
                     placeholder="Digite a medida"
                     name="circunferencia_cintura"
@@ -605,7 +635,7 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
                 <div>
                   <label className="text-sm font-medium text-gray-700">Dobra Tricipital (mm)</label>
                   <Input
-                    type="number"
+                    type="text"
                     step="0.1"
                     placeholder="Digite a medida"
                     name="dobra_tricipal"
@@ -635,38 +665,38 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
                   <TableBody>
                     <TableRow>
                       <TableCell>Circunferência da Cintura (cm)</TableCell>
-                      <TableCell><Input type="number" readOnly value={formData.circunferencia_cintura_tabela} /></TableCell>
-                      <TableCell><Input type="number" readOnly value={formData.circunferencia_cintura_escore_z} /></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.circunferencia_cintura_tabela} /></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.circunferencia_cintura_escore_z} /></TableCell>
                       <TableCell><Input type="text" readOnly value={formData.circunferencia_cintura_classificacao} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Circunferência do Braço (cm)</TableCell>
-                      <TableCell><Input type="number" readOnly value={formData.circunferencia_braco_tabela} /></TableCell>
-                      <TableCell><Input type="number" readOnly value={formData.circunferencia_braco_escore_z} /></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.circunferencia_braco_tabela} /></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.circunferencia_braco_escore_z} /></TableCell>
                       <TableCell><Input type="text" readOnly value={formData.circunferencia_braco_classificacao} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Dobra Tricipital (mm)</TableCell>
-                      <TableCell><Input type="number" readOnly value={formData.dobra_tricipal_tabela} /></TableCell>
-                      <TableCell><Input type="number" readOnly value={formData.dobra_tricipal_escore_z} /></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.dobra_tricipal_tabela} /></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.dobra_tricipal_escore_z} /></TableCell>
                       <TableCell><Input type="text" readOnly value={formData.dobra_tricipal_classificacao} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>IMC (kg/m²)</TableCell>
-                      <TableCell><Input type="number" readOnly value={formData.imc} /></TableCell>
-                      <TableCell><Input type="number" readOnly value={formData.imc_escore_z} /></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.imc} /></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.imc_escore_z} /></TableCell>
                       <TableCell><Input type="text" readOnly value={formData.classificacao_imc} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Peso (kg)</TableCell>
-                      <TableCell><Input type="number" readOnly value={formData.peso_tabela} /></TableCell>
-                      <TableCell><Input type="number" readOnly value={formData.peso_escore_z} /></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.peso_tabela} /></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.peso_escore_z} /></TableCell>
                       <TableCell><Input type="text" readOnly value={formData.classificacao_peso} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Estatura</TableCell>
-                      <TableCell><Input type="number" readOnly value={formData.estatura_tabela} /></TableCell>
-                      <TableCell><Input type="number" readOnly value={formData.estatura_escore_z} /></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.estatura_tabela} /></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.estatura_escore_z} /></TableCell>
                       <TableCell><Input type="text" readOnly value={formData.classificacao_estatura} /></TableCell>
                     </TableRow>
                   </TableBody>
