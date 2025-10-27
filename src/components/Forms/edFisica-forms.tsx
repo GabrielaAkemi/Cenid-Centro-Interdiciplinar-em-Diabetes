@@ -19,6 +19,8 @@ type StrengthMeasures = {
   medida1: string;
   medida2: string;
   medida3: string;
+  media?: string;
+  forcaRelativa?: string;
 };
 
 type Cronograma = Record<string, { horario: string; tipo: string }>;
@@ -190,8 +192,36 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
     });
   }, [initialData, patientData]);
 
-  const handleChange = (key: keyof FormData, value: any) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
+  const handleChange = (key: keyof FormData, value: any, isNumeric: boolean = false) => {
+    let newValue = value;
+
+      if (isNumeric) {
+        let tempValue = String(value);
+
+        tempValue = tempValue.replace(/[^0-9]/g, ''); 
+
+        if (tempValue.includes(',')) {
+          tempValue = tempValue.replace(/\./g, ''); 
+        } else {
+          tempValue = tempValue.replace(/,/g, '');
+      }
+      
+      const separator = tempValue.includes(',') ? ',' : '.';
+      const parts = tempValue.split(separator);
+
+       if (parts.length > 2) {
+          newValue = parts[0] + separator + parts.slice(1).join('');
+       } else {
+          newValue = tempValue;
+       }
+
+       
+        if (newValue.startsWith('.') || newValue.startsWith(',')) {
+          newValue = '0' + newValue;
+        }
+    } 
+
+    setFormData((prev) => ({ ...prev, [key]: newValue }));
   };
 
   const handleStrengthChange = (
@@ -202,13 +232,57 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
     field: keyof StrengthMeasures,
     value: string
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [measureName]: {
-        ...prev[measureName],
-        [field]: value,
-      },
-    }));
+    let newValue = value;
+
+
+    let tempValue = String(value);
+
+    tempValue = tempValue.replace(/[^0-9,.]/g, ''); 
+
+    
+    if (tempValue.includes(',')) {
+      tempValue = tempValue.replace(/\./g, '');
+    } else {
+      tempValue = tempValue.replace(/,/g, '');
+    }
+
+    const separator = tempValue.includes(',') ? ',' : '.';
+    const parts = tempValue.split(separator);
+
+    if (parts.length > 2) {
+      newValue = parts[0] + separator + parts.slice(1).join('');
+    } else {
+      newValue = tempValue;
+    }
+
+    
+    if (newValue.startsWith('.') || newValue.startsWith(',')) {
+      newValue = '0' + newValue;
+    }
+
+
+    setFormData((prev) => {
+        const measuresWithNewValue: StrengthMeasures = {
+            ...prev[measureName],
+            [field]: newValue,
+            media: "", 
+            forcaRelativa: "",
+        };
+
+        const peso = prev.patientInfo?.peso || "0.0";
+
+        const calculatedResults = calculateStrength(measuresWithNewValue, peso);
+
+       
+        return {
+            ...prev,
+            [measureName]: {
+                ...measuresWithNewValue,
+                media: calculatedResults.media,
+                forcaRelativa: calculatedResults.forcaRelativa,
+            },
+        };
+    });
   };
 
   const handleCronogramaChange = (
@@ -258,7 +332,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
         : "0.00";
     const forcaRelativa =
       parseFloat(peso) > 0
-        ? (parseFloat(maiorValor) / parseFloat(peso)).toFixed(2)
+        ? (parseFloat(media) / parseFloat(peso)).toFixed(2)
         : "0.00";
     return { media, forcaRelativa };
   };
@@ -269,9 +343,9 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
     medida3: measures.medida3 ? parseFloat(measures.medida3).toFixed(2) : "0.00",
   });
 
-  const { media: mediaDominante, forcaRelativa: forcaRelativaDominante } = calculateStrength(formData.forcaMaoDominante, formData.peso);
-  const { media: mediaNaoDominante, forcaRelativa: forcaRelativaNaoDominante } = calculateStrength(formData.forcaMaoNaoDominante, formData.peso);
-  const { media: mediaLombar, forcaRelativa: forcaRelativaLombar } = calculateStrength(formData.forcaLombar, formData.peso);
+  const { media: mediaDominante, forcaRelativa: forcaRelativaDominante } = calculateStrength(formData.forcaMaoDominante, formData.patientInfo?.peso ?? '0.0');
+  const { media: mediaNaoDominante, forcaRelativa: forcaRelativaNaoDominante } = calculateStrength(formData.forcaMaoNaoDominante, formData.patientInfo?.peso ?? '0.0');
+  const { media: mediaLombar, forcaRelativa: forcaRelativaLombar } = calculateStrength(formData.forcaLombar, formData.patientInfo?.peso ?? '0.0');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -401,27 +475,27 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
                   <div>
                     <label className={labelClass}>Atividade Leve:</label>
                     <input
-                      type="number"
+                      type="text"
                       value={formData.atividadeLeve}
-                      onChange={(e) => handleChange("atividadeLeve", e.target.value)}
+                      onChange={(e) => handleChange("atividadeLeve", e.target.value, true)}
                       className={inputClass}
                     />
                   </div>
                   <div>
                     <label className={labelClass}>Atividade Moderada:</label>
                     <input
-                      type="number"
+                      type="text"
                       value={formData.atividadeModerada}
-                      onChange={(e) => handleChange("atividadeModerada", e.target.value)}
+                      onChange={(e) => handleChange("atividadeModerada", e.target.value, true)}
                       className={inputClass}
                     />
                   </div>
                   <div>
                     <label className={labelClass}>Atividade Vigorosa:</label>
                     <input
-                      type="number"
+                      type="text"
                       value={formData.atividadeVigorosa}
-                      onChange={(e) => handleChange("atividadeVigorosa", e.target.value)}
+                      onChange={(e) => handleChange("atividadeVigorosa", e.target.value, true)}
                       className={inputClass}
                     />
                   </div>
@@ -438,18 +512,18 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
                   <div>
                     <label className={labelClass}>Tempo sentado/deitado:</label>
                     <input
-                      type="number"
+                      type="text"
                       value={formData.tempoSentado}
-                      onChange={(e) => handleChange("tempoSentado", e.target.value)}
+                      onChange={(e) => handleChange("tempoSentado", e.target.value, true)}
                       className={inputClass}
                     />
                   </div>
                   <div>
                     <label className={labelClass}>Tempo de sono:</label>
                     <input
-                      type="number"
+                      type="text"
                       value={formData.tempoDormindo}
-                      onChange={(e) => handleChange("tempoDormindo", e.target.value)}
+                      onChange={(e) => handleChange("tempoDormindo", e.target.value, true)}
                       className={inputClass}
                     />
                   </div>
@@ -530,25 +604,25 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     <tr>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Força da mão dominante (kg)</td>
-                      <td className="px-6 py-4"><input type="number" step="0.1" value={formData.forcaMaoDominante.medida1} onChange={(e) => handleStrengthChange("forcaMaoDominante", "medida1", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
-                      <td className="px-6 py-4"><input type="number" step="0.1" value={formData.forcaMaoDominante.medida2} onChange={(e) => handleStrengthChange("forcaMaoDominante", "medida2", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
-                      <td className="px-6 py-4"><input type="number" step="0.1" value={formData.forcaMaoDominante.medida3} onChange={(e) => handleStrengthChange("forcaMaoDominante", "medida3", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoDominante.medida1} onChange={(e) => handleStrengthChange("forcaMaoDominante", "medida1", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoDominante.medida2} onChange={(e) => handleStrengthChange("forcaMaoDominante", "medida2", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoDominante.medida3} onChange={(e) => handleStrengthChange("forcaMaoDominante", "medida3", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
                       <td className="px-6 py-4 font-semibold text-sm text-gray-900">{mediaDominante}</td>
                       <td className="px-6 py-4 font-semibold text-sm text-gray-900">{forcaRelativaDominante}</td>
                     </tr>
                     <tr>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Força da mão não dominante (kg)</td>
-                      <td className="px-6 py-4"><input type="number" step="0.1" value={formData.forcaMaoNaoDominante.medida1} onChange={(e) => handleStrengthChange("forcaMaoNaoDominante", "medida1", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
-                      <td className="px-6 py-4"><input type="number" step="0.1" value={formData.forcaMaoNaoDominante.medida2} onChange={(e) => handleStrengthChange("forcaMaoNaoDominante", "medida2", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
-                      <td className="px-6 py-4"><input type="number" step="0.1" value={formData.forcaMaoNaoDominante.medida3} onChange={(e) => handleStrengthChange("forcaMaoNaoDominante", "medida3", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoNaoDominante.medida1} onChange={(e) => handleStrengthChange("forcaMaoNaoDominante", "medida1", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoNaoDominante.medida2} onChange={(e) => handleStrengthChange("forcaMaoNaoDominante", "medida2", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoNaoDominante.medida3} onChange={(e) => handleStrengthChange("forcaMaoNaoDominante", "medida3", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
                       <td className="px-6 py-4 font-semibold text-sm text-gray-900">{mediaNaoDominante}</td>
                       <td className="px-6 py-4 font-semibold text-sm text-gray-900">{forcaRelativaNaoDominante}</td>
                     </tr>
                     <tr>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Força Lombar (kg)</td>
-                      <td className="px-6 py-4"><input type="number" step="0.1" value={formData.forcaLombar.medida1} onChange={(e) => handleStrengthChange("forcaLombar", "medida1", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
-                      <td className="px-6 py-4"><input type="number" step="0.1" value={formData.forcaLombar.medida2} onChange={(e) => handleStrengthChange("forcaLombar", "medida2", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
-                      <td className="px-6 py-4"><input type="number" step="0.1" value={formData.forcaLombar.medida3} onChange={(e) => handleStrengthChange("forcaLombar", "medida3", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaLombar.medida1} onChange={(e) => handleStrengthChange("forcaLombar", "medida1", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaLombar.medida2} onChange={(e) => handleStrengthChange("forcaLombar", "medida2", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaLombar.medida3} onChange={(e) => handleStrengthChange("forcaLombar", "medida3", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
                       <td className="px-6 py-4 font-semibold text-sm text-gray-900">{mediaLombar}</td>
                       <td className="px-6 py-4 font-semibold text-sm text-gray-900">{forcaRelativaLombar}</td>
                     </tr>
