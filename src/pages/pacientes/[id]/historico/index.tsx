@@ -120,15 +120,15 @@ export default function Consultas() {
       case "consultapsicologia":
         return <PlaceholderForm title="Psicologia" />;
       case "consultaedfisica":
-        return <EdFisicaForm patientData={paciente} initialData={selectedHistoryData}/>;
+        return <EdFisicaForm patientData={paciente} initialData={selectedHistoryData} somenteLeitura={true}/>;
       case "consultanutricao":
         return <PlaceholderForm title="Nutrição" />;
       case "consultafarmacia":
-        return <FarmaciaForm patientData={paciente} initialData={selectedHistoryData}/>;
+        return <FarmaciaForm patientData={paciente} initialData={selectedHistoryData} somenteLeitura={true}/>;
       case "consultabioquimica":
         return <PlaceholderForm title="Bioquímica" />;
       case "consultacalculadora":
-        return <AntropometriaForm patientData={paciente} initialData={selectedHistoryData}/>;
+        return <AntropometriaForm patientData={paciente} initialData={selectedHistoryData} somenteLeitura={true}/>;
       default:
         return null;
     }

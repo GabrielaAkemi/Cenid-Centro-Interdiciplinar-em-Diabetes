@@ -93,7 +93,6 @@ export default function BioquimicaFormRefatorado() {
             </div>
           </div>
 
-          {/* Tabela de medidas */}
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-blue-900 mb-4">Exames Laboratoriais</h2>
             <div className="overflow-x-auto rounded-md border border-gray-600">
@@ -124,7 +123,6 @@ export default function BioquimicaFormRefatorado() {
             </div>
           </div>
 
-          {/* Anexo de exames */}
           <div className="p-4 mt-4">
             <h2 className="text-2xl font-bold text-blue-900 mb-2">Anexo de exames complementares</h2>
             <FileInput name="anexar" multiple />

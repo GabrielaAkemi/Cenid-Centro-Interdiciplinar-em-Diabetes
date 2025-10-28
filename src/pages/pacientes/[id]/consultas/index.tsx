@@ -66,7 +66,6 @@ export default function Consultas() {
   const getBorderColor = (tipo: string) => {
   const anoAtual = new Date().getFullYear();
 
-  // Filtra consultas desse tipo e deste ano
   const consulta = consultas.find(
     c => c.tipo === tipo && new Date(c.data_consulta).getFullYear() === anoAtual
   );
@@ -81,7 +80,6 @@ export default function Consultas() {
       : "border-yellow-400 hover:border-yellow-600";
   };
 
-  // Ajuste a função consultaFinalizada
   const consultaFinalizada = (consulta: Consulta) => {
     return (consulta as any).finalizado === true;
   };

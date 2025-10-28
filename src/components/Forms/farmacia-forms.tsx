@@ -37,6 +37,7 @@ interface MedicationCardProps {
   onDataChange: (data: MedicationData) => void
   onRemove?: () => void
   showRemoveButton?: boolean
+  somenteLeitura?: boolean
 }
 
 
@@ -55,11 +56,13 @@ interface BaasisCSIIData extends BaasisData {
 interface BaasisProps {
   value?: BaasisData
   onChange: (data: BaasisData) => void
+  somenteLeitura?: boolean
 }
 
 interface BaasisCSIIProps {
-  value?: BaasisCSIIData
-  onChange: (data: BaasisCSIIData) => void
+    value?: BaasisCSIIData
+    onChange: (data: BaasisCSIIData) => void
+    somenteLeitura?: boolean
 }
 
 interface InsulinAdherenceData {
@@ -70,16 +73,19 @@ interface InsulinAdherenceData {
 interface InsulinAdherenceProps {
   value: InsulinAdherenceData
   onChange: (data: InsulinAdherenceData) => void
+  somenteLeitura?: boolean
 }
 
 interface ComplementaryMedicationsProps {
   onChange: (data: Record<string, MedicationData>) => void
   initialMedications?: Record<string, MedicationData>
+  somenteLeitura?: boolean;
 }
 
 interface OtherMedicationsProps {
   onChange: (data: MedicationData[]) => void
   initialMedications?: MedicationData[]
+  somenteLeitura?: boolean
 }
 
 interface FormData {
@@ -107,6 +113,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
   onDataChange,
   onRemove,
   showRemoveButton,
+  somenteLeitura
 }) => {
   const handleFieldChange = (field: keyof MedicationData, value: string) => {
     onDataChange({ ...medicationData, [field]: value })
@@ -155,6 +162,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
             value={medicationData.medicamento}
             onChange={(e) => handleFieldChange("medicamento", e.target.value)}
             className={inputClass}
+            readOnly={somenteLeitura}
           />
         </div>
         <div>
@@ -164,19 +172,25 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
             value={medicationData.principioAtivo}
             onChange={(e) => handleFieldChange("principioAtivo", e.target.value)}
             className={inputClass}
+            readOnly={somenteLeitura}
           />
         </div>
         <div>
           <label className={labelClass}>Com prescrição médica?</label>
-          <select
+            <select
             value={medicationData.comPrescricaoMedica}
-            onChange={(e) => handleFieldChange("comPrescricaoMedica", e.target.value)}
+            onChange={(e) => {
+                if (!somenteLeitura) {
+                handleFieldChange("comPrescricaoMedica", e.target.value);
+                }
+            }}
             className={inputClass}
-          >
-            <option value="">Selecione</option>
-            <option value="Sim">Sim</option>
-            <option value="Não">Não</option>
-          </select>
+            disabled={somenteLeitura} // bloqueia no modo histórico
+            >
+            <option value="sim">Sim</option>
+            <option value="nao">Não</option>
+            </select>
+
         </div>
         <div>
           <label className={labelClass}>Data início:</label>
@@ -194,11 +208,13 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
             value={medicationData.dataTermino}
             onChange={(e) => handleFieldChange("dataTermino", e.target.value)}
             className={inputClass}
+            readOnly={somenteLeitura}
+
           />
         </div>
         <div>
           <label className={labelClass}>Tempo de uso:</label>
-          <input type="text" value={calculateTempoDeUso()} readOnly className={`${inputClass} bg-gray-100 cursor-not-allowed`} />
+          <input type="text" value={calculateTempoDeUso()} className={`${inputClass} bg-gray-100 cursor-not-allowed`} readOnly={somenteLeitura}/>
         </div>
         <div className="md:col-span-2 lg:col-span-3">
           <label className={labelClass}>Finalidade do uso:</label>
@@ -207,6 +223,8 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
             value={medicationData.finalidade}
             onChange={(e) => handleFieldChange("finalidade", e.target.value)}
             className={inputClass}
+            readOnly={somenteLeitura}
+
           />
         </div>
       </div>
@@ -228,10 +246,13 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
             <tbody className="bg-white divide-y divide-gray-200">
               {medicationData.posologias.map((pos, i) => (
                 <tr key={i}>
-                  <td className="p-2"><input type="text" value={pos.posologia} onChange={(e) => handlePosologiaChange(i, "posologia", e.target.value)} className={tableInputClass} /></td>
-                  <td className="p-2"><input type="text" value={pos.frequencia} onChange={(e) => handlePosologiaChange(i, "frequencia", e.target.value)} className={tableInputClass} /></td>
-                  <td className="p-2"><input type="text" value={pos.dose} onChange={(e) => handlePosologiaChange(i, "dose", e.target.value)} className={tableInputClass} /></td>
-                  <td className="p-2"><input type="text" value={pos.horario} onChange={(e) => handlePosologiaChange(i, "horario", e.target.value)} className={tableInputClass} /></td>
+                  <td className="p-2"><input type="text" value={pos.posologia} onChange={(e) => handlePosologiaChange(i, "posologia", e.target.value)} className={tableInputClass} readOnly={somenteLeitura}
+/></td>
+                  <td className="p-2"><input type="text" value={pos.frequencia} onChange={(e) => handlePosologiaChange(i, "frequencia", e.target.value)} className={tableInputClass} readOnly={somenteLeitura}
+/></td>
+                  <td className="p-2"><input type="text" value={pos.dose} onChange={(e) => handlePosologiaChange(i, "dose", e.target.value)} className={tableInputClass} readOnly={somenteLeitura}
+ /></td>
+                  <td className="p-2"><input type="text" value={pos.horario} onChange={(e) => handlePosologiaChange(i, "horario", e.target.value)} className={tableInputClass} readOnly={somenteLeitura} /></td>
                   <td className="p-2">
                     <select value={pos.emJejum} onChange={(e) => handlePosologiaChange(i, "emJejum", e.target.value)} className={tableInputClass}>
                       <option value="">Selecione</option>
@@ -261,10 +282,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
   )
 }
 
-
-
-
-const BAASIS: React.FC<BaasisProps> = ({ onChange, value }) => {
+const BAASIS: React.FC<BaasisProps> = ({ onChange, value,  somenteLeitura }) => {
   const [data, setData] = useState<BaasisData>({ p1: "", p2: "", p3: "", p4: "" });
 
   useEffect(() => {
@@ -317,19 +335,21 @@ const BAASIS: React.FC<BaasisProps> = ({ onChange, value }) => {
   )
 }
 
-const BAASIS_CSII: React.FC<BaasisCSIIProps> = ({ onChange, value }) => {
+const BAASIS_CSII: React.FC<BaasisCSIIProps> = ({ onChange, value, somenteLeitura }) => {
   const [data, setData] = useState<BaasisCSIIData>({ p1: "", p2: "", p3: "", p4: "", p5: "", p6: "" })
 
   useEffect(() => {
-    if (value) setData(value);
-  }, [value]);
+    if (value) setData(value)
+  }, [value])
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (somenteLeitura) return // Bloqueia qualquer alteração
     const { name, value } = e.target
     const newData = { ...data, [name]: value }
     setData(newData)
     onChange(newData)
   }
+
   const questions: Question[] = [
     { key: "p1", label: "P1. Omissão de bolus na última semana:", options: ["Nunca", "1-2x", "3-4x", "5+"] },
     { key: "p2", label: "P2. Redução não autorizada de bolus:", options: ["Sim", "Não"] },
@@ -346,23 +366,25 @@ const BAASIS_CSII: React.FC<BaasisCSIIProps> = ({ onChange, value }) => {
         Objetivo: Avaliar comportamentos de não adesão específicos de usuários de CSII.
       </p>
       {questions.map((q) => (
-				<div key={q.key}>
-					<label className={labelClass}>{q.label}</label>
-					<select
-						name={q.key}
-						value={data[q.key as keyof BaasisCSIIData]}
-						onChange={handleChange}
-						className={inputClass}
-					>
-						<option value="">Selecione</option>
-						{q.options.map((opt, index) => (
-							<option key={index} value={index}>
-								{opt}
-							</option>
-						))}
-					</select>
-				</div>
-			))}
+        <div key={q.key}>
+          <label className={labelClass}>{q.label}</label>
+          <select
+            name={q.key}
+            value={String(data[q.key as keyof BaasisCSIIData] ?? "")}
+            onChange={handleChange}
+            className={`${inputClass} ${somenteLeitura ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
+            disabled={somenteLeitura} // impede alteração
+            tabIndex={somenteLeitura ? -1 : 0} // impede foco via teclado
+          >
+            <option value="">Selecione</option>
+            {q.options.map((opt, index) => (
+              <option key={index} value={String(index)}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </div>
+      ))}
       <p className="pt-2 text-sm text-green-800 font-medium">
         CLASSIFICAÇÃO: Não aderente se: ≥1 falha (P1,4,5), "Sim" (P2), ≥3 dias (P3), ou "Frequentemente/Às vezes" (P6).
       </p>
@@ -370,7 +392,9 @@ const BAASIS_CSII: React.FC<BaasisCSIIProps> = ({ onChange, value }) => {
   )
 }
 
-const InsulinAdherence: React.FC<InsulinAdherenceProps> = ({ value, onChange }) => {
+
+
+const InsulinAdherence: React.FC<InsulinAdherenceProps> = ({ value, onChange, somenteLeitura }) => {
   const [method, setMethod] = useState<string>(value.method || "")
 
   useEffect(() => {
@@ -391,11 +415,22 @@ const InsulinAdherence: React.FC<InsulinAdherenceProps> = ({ value, onChange }) 
       <h2 className={sectionTitleClass}>Adesão ao tratamento com insulina</h2>
       <div className="mt-6 max-w-sm">
         <label className={labelClass}>Método de administração de insulina:</label>
-        <select value={method} onChange={handleMethodChange} className={inputClass}>
-          <option value="">Selecione</option>
-          <option value="SICI">SICI</option>
-          <option value="MDI">MDI</option>
+        <select
+            value={method}
+            onChange={(e) => {
+                if (!somenteLeitura) {
+                handleMethodChange(e)
+                }
+            }}
+            className={`${inputClass} ${somenteLeitura ? "pointer-events-none bg-gray-100 text-gray-500" : ""}`}
+            disabled={!!somenteLeitura} 
+            >
+            <option value="">Selecione</option>
+            <option value="SICI">SICI</option>
+            <option value="MDI">MDI</option>
         </select>
+
+
       </div>
       {method === "MDI" && <BAASIS value={value.questionnaire as BaasisData} onChange={handleQuestionnaireChange} />}
       {method === "SICI" && <BAASIS_CSII value={value.questionnaire as BaasisCSIIData} onChange={handleQuestionnaireChange} />}
@@ -425,7 +460,7 @@ const createInitialMedState = (): MedicationData => ({
   posologias: [{ posologia: "", frequencia: "", dose: "", horario: "", emJejum: "" }],
 })
 
-const ComplementaryMedications: React.FC<ComplementaryMedicationsProps> = ({ onChange, initialMedications  }) => {
+const ComplementaryMedications: React.FC<ComplementaryMedicationsProps> = ({ onChange, initialMedications, somenteLeitura}) => {
   const [meds, setMeds] = useState<Record<string, MedicationData>>(initialMedications || {})
   useEffect(() => {
     if (initialMedications) setMeds(initialMedications)
@@ -463,13 +498,13 @@ const ComplementaryMedications: React.FC<ComplementaryMedicationsProps> = ({ onC
                             <label className="flex items-center cursor-pointer">
                                 <span className="mr-3 text-sm font-medium text-gray-900">Em uso?</span>
                                 <div className="relative">
-                                    <input type="checkbox" checked={!!meds[cat.key]} onChange={() => handleToggle(cat.key)} className="sr-only peer" />
+                                    <input type="checkbox" checked={!!meds[cat.key]} onChange={() => handleToggle(cat.key)} className="sr-only peer" readOnly={somenteLeitura}/>
                                     <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                                 </div>
                             </label>
                         )}
                     </div>
-                    {meds[cat.key] && !cat.isParent && <MedicationCard medicationData={meds[cat.key]} onDataChange={(data) => handleDataChange(cat.key, data)} />}
+                    {meds[cat.key] && !cat.isParent && <MedicationCard medicationData={meds[cat.key]} onDataChange={(data) => handleDataChange(cat.key, data)} somenteLeitura={somenteLeitura} />}
                     {cat.isParent && (
                         <div className="pl-4 mt-4 space-y-4">
                             {medicationCategories.filter(subCat => subCat.parent === cat.key).map(subCat => (
@@ -479,7 +514,7 @@ const ComplementaryMedications: React.FC<ComplementaryMedicationsProps> = ({ onC
                                         <label className="flex items-center cursor-pointer">
                                             <span className="mr-3 text-sm font-medium text-gray-900">Em uso?</span>
                                             <div className="relative">
-                                                <input type="checkbox" checked={!!meds[subCat.key]} onChange={() => handleToggle(subCat.key)} className="sr-only peer" />
+                                                <input type="checkbox" checked={!!meds[subCat.key]} onChange={() => handleToggle(subCat.key)} className="sr-only peer" readOnly={somenteLeitura} />
                                                 <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                                             </div>
                                         </label>
@@ -560,9 +595,10 @@ interface TratamentoMedicamento {
 interface AppProps {
   patientData?: PatientInfoData;
   initialData?: any;
+  somenteLeitura?: boolean;
 }
 
-const App: React.FC<AppProps> = ({ patientData, initialData }) => {
+const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura }) => {
 	const [message, setMessage] = useState('');
 	const [showModal, setShowModal] = useState(false);
 	const [currentPage, setCurrentPage] = useState('formulario');
@@ -812,8 +848,12 @@ const App: React.FC<AppProps> = ({ patientData, initialData }) => {
 
             <form key={formKey} onSubmit={handleSubmit} className="space-y-0">
                 <PatientBasicInfo patientData={formData.patientInfo} onChange={(data) => handleChange("patientInfo", data)} />
-                <InsulinAdherence value={formData.insulinAdherence} onChange={(data) => handleChange("insulinAdherence", data)} />
-                <ComplementaryMedications initialMedications={formData.complementaryMedications} onChange={(data) => handleChange("complementaryMedications", data)} />
+                <InsulinAdherence
+                value={formData.insulinAdherence}
+                onChange={(data) => handleChange("insulinAdherence", data)}
+                somenteLeitura={somenteLeitura}
+                />
+                <ComplementaryMedications initialMedications={formData.complementaryMedications} onChange={(data) => handleChange("complementaryMedications", data)} somenteLeitura={somenteLeitura}/>
                 <OtherMedications initialMedications={formData.otherMedications} onChange={(data) => handleChange("otherMedications", data)} />
 
                 <div className="p-4 mt-8">
@@ -825,11 +865,18 @@ const App: React.FC<AppProps> = ({ patientData, initialData }) => {
                   />
                 </div>
 
-                <div className="flex justify-center pt-8">
-                    <button type="submit" className="w-full sm:w-auto px-10 py-4 bg-blue-600 text-white font-bold rounded-md shadow-lg hover:bg-blue-700 transition-colors transform hover:scale-105">
-                        Salvar Avaliação
+              
+                  {!somenteLeitura && (
+                  <div className="flex justify-center">
+                    <button
+                      type="submit"
+                      className="w-full sm:w-auto px-10 py-4 bg-red-600 text-white font-bold rounded-md shadow-lg hover:bg-red-700 transition-colors transform hover:scale-105"
+                    >
+                      Salvar Avaliação
                     </button>
-                </div>
+                  </div>
+                )}
+            
             </form>
         </div>
     </div>
