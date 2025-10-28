@@ -81,11 +81,14 @@ export default function Consultas() {
   const fetchHistories = async (especialidade: string) => {
     const data: any = await apiFetch(`/api/pacientes/${id}/historico-consultas?tipo=${especialidade}`, true);
     const cleanData: any = [];
+
+    
     data.map((consulta: any) => {
+      let dataConsulta = consulta.data_consulta || consulta.dataConsulta || undefined;
       let cleanConsulta = {
         id: consulta.id,
-        data: consulta.data_consulta
-              ? new Date(consulta.data_consulta).toLocaleDateString("pt-BR")
+        data: dataConsulta
+              ? new Date(dataConsulta).toLocaleDateString("pt-BR")
               : "N/A",
         especialidade
       };

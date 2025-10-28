@@ -61,6 +61,8 @@ interface InitialData {
   prescricao_exercicio?: string | null;
   dataConsulta?: string;
   consulta_finalizada?: boolean;
+  meses_relato?: string | null;
+  relato_interrupcao?: string | null;
   observacoes?: string | null;
   criado_em?: string;
   atualizado_em?: string;
@@ -166,8 +168,8 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
       atividadeVigorosa: initialData.naf?.atividade_vigorosa_minutos || "",
       tempoSentado: initialData.naf?.tempo_sentado || "",
       tempoDormindo: initialData.naf?.tempo_dormindo || "",
-      mesesPraticando: "",
-      relatorioInterrupcoes: "",
+      mesesPraticando: initialData.meses_relato || "",
+      relatorioInterrupcoes: initialData.relato_interrupcao || "",
       prescricaoExercicio: initialData.prescricao_exercicio || "",
       forcaMaoDominante: {
         medida1: initialData.condicionamento?.mao_dominante_1 || "",
@@ -188,7 +190,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
       cronograma,
       nomeCompleto: patient.nome,
       sexo: patient.sexo,
-      idade: patient.idade,
+      idade: patient.idade
     });
   }, [initialData, patientData]);
 
@@ -373,7 +375,11 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
           tempo_dormindo: formData.tempoDormindo || null,
         },
         condicionamento: {
-          ...normalizeStrength(formData.forcaMaoDominante),
+          ...Object.fromEntries(
+            Object.entries(normalizeStrength(formData.forcaMaoDominante)).map(
+              ([k, v]) => [`mao_dominante_${k.slice(-1)}`, v]
+            )
+          ),
           ...Object.fromEntries(
             Object.entries(normalizeStrength(formData.forcaMaoNaoDominante)).map(
               ([k, v]) => [`mao_nao_dominante_${k.slice(-1)}`, v]
@@ -390,6 +396,8 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
           horario_atividade: formData.cronograma[dia.key].horario,
           descricao_atividade: formData.cronograma[dia.key].tipo,
         })),
+        meses_relato: formData.mesesPraticando,
+        relato_interrupcao: formData.relatorioInterrupcoes
       };
 
       let objCriado : any = await apiFetch("/api/consulta-ed-fisica/", true, {
