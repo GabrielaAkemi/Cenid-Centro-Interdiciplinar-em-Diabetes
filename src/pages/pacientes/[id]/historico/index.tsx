@@ -71,7 +71,16 @@ export default function Consultas() {
       }
 
       const data: any = await apiFetch(`/api/${endpoint}/${idConsulta}/`, true);
-      setSelectedHistoryData(data);
+
+      const anexos: any = await apiFetch(
+        `/api/anexos/?content_type=${especialidade}&object_id=${idConsulta}`,
+        true
+      );
+
+      setSelectedHistoryData({
+        ...data,
+        anexos,
+      });
     } catch (error) {
       console.error("Erro ao buscar detalhes:", error);
     }
@@ -120,15 +129,15 @@ export default function Consultas() {
       case "consultapsicologia":
         return <PlaceholderForm title="Psicologia" />;
       case "consultaedfisica":
-        return <EdFisicaForm patientData={paciente} initialData={selectedHistoryData} somenteLeitura={true}/>;
+        return <EdFisicaForm patientData={paciente} initialData={selectedHistoryData} somenteLeitura={true} attachments={selectedHistoryData?.anexos || []}/>;
       case "consultanutricao":
         return <PlaceholderForm title="Nutrição" />;
       case "consultafarmacia":
-        return <FarmaciaForm patientData={paciente} initialData={selectedHistoryData} somenteLeitura={true}/>;
+        return <FarmaciaForm patientData={paciente} initialData={selectedHistoryData} somenteLeitura={true} attachments={selectedHistoryData?.anexos || []}/>;
       case "consultabioquimica":
         return <PlaceholderForm title="Bioquímica" />;
       case "consultacalculadora":
-        return <AntropometriaForm patientData={paciente} initialData={selectedHistoryData} somenteLeitura={true}/>;
+        return <AntropometriaForm patientData={paciente} initialData={selectedHistoryData} somenteLeitura={true} attachments={selectedHistoryData?.anexos || []}/>;
       default:
         return null;
     }

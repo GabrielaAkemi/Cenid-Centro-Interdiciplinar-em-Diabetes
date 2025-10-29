@@ -3,6 +3,10 @@ import PatientBasicInfo, { PatientInfoData } from "./basicInfo/patientBasicInfo"
 import { apiFetch } from "@/lib/api";
 import FileInput from "../fileInput/fileInput";
 import uploadFiles from "@/lib/fileInputPost";
+import ListaAnexos from "../listaAnexos/listaAnexos";
+
+
+
 // Constantes para o formulário
 const diasSemana = [
   { key: "segunda", label: "2ª feira" },
@@ -93,9 +97,10 @@ interface AppProps {
   patientData?: PatientInfoData;
   initialData?: InitialData;
   somenteLeitura?: boolean;
+  attachments?: any;
 }
 
-const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura  }) => {
+const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, attachments  }) => {
   const [message, setMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState('formulario');
@@ -578,11 +583,15 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura  }) 
 
             <div className="p-4 mt-8">
                 <h2 className="text-2xl font-bold text-blue-900">Anexo de exames complementares</h2>
-                <FileInput
-                  ref={fileInputRef}
-                  name="anexar"
-                  multiple
-                />
+                {somenteLeitura ? (
+                <ListaAnexos attachments={attachments} />
+                  ) : (
+                    <FileInput
+                      ref={fileInputRef}
+                      name="anexar"
+                      multiple
+                    />
+                  )}
             </div>
             {!somenteLeitura && (
               <div className="flex justify-center">

@@ -6,6 +6,8 @@ import PatientBasicInfo, {PatientInfoData} from "./basicInfo/patientBasicInfo";
 import { apiFetch } from "@/lib/api";
 import FileInput from "../fileInput/fileInput";
 import uploadFiles from "@/lib/fileInputPost";
+import ListaAnexos from "../listaAnexos/listaAnexos";
+
 
 const inputClass = "p-3.5 border border-gray-600 rounded-md shadow-sm focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-colors duration-200 w-full bg-white text-gray-800";
 const labelClass = "text-sm font-medium text-gray-700 mb-1 block";
@@ -596,9 +598,10 @@ interface AppProps {
   patientData?: PatientInfoData;
   initialData?: any;
   somenteLeitura?: boolean;
+  attachments?: any;
 }
 
-const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura }) => {
+const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, attachments }) => {
 	const [message, setMessage] = useState('');
 	const [showModal, setShowModal] = useState(false);
 	const [currentPage, setCurrentPage] = useState('formulario');
@@ -858,11 +861,15 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura }) =
 
                 <div className="p-4 mt-8">
                   <h2 className="text-2xl font-bold text-blue-900">Anexo de exames complementares</h2>
-                  <FileInput
-                    ref={fileInputRef}
-                    name="anexar"
-                    multiple
-                  />
+                  {somenteLeitura ? (
+                  <ListaAnexos attachments={attachments} />
+                    ) : (
+                      <FileInput
+                        ref={fileInputRef}
+                        name="anexar"
+                        multiple
+                      />
+                    )}
                 </div>
 
               

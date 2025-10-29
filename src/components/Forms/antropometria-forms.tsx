@@ -5,6 +5,7 @@ import PatientBasicInfo, {PatientInfoData} from "./basicInfo/patientBasicInfo";
 import { apiFetch } from "@/lib/api";
 import FileInput from "../fileInput/fileInput";
 import uploadFiles from "@/lib/fileInputPost";
+import ListaAnexos from "../listaAnexos/listaAnexos";
 
 const Card = ({ className, children }: any) => <div className={`max-w-4xl mx-auto w-full bg-white p-8 space-y-8 rounded-lg shadow-lg ${className}`}>{children}</div>;
 const CardContent = ({ className, children }: any) => <div className={`p-0 ${className}`}>{children}</div>;
@@ -53,10 +54,13 @@ const pegaIdade = (dataNascimento: string, dataAvaliacao: string) => {
   return idade;
 };
 
+
+
 interface AntropometriaProps {
   patientData?: PatientInfoData;
   initialData?: any;
   somenteLeitura?: boolean;
+  attachments?: any;
 }
 
 interface FormDataType {
@@ -122,7 +126,7 @@ interface FormDataType {
   observacoes: string;
 }
 
-export default function AntropometriaForm({patientData, initialData, somenteLeitura} : AntropometriaProps) {
+export default function AntropometriaForm({patientData, initialData, somenteLeitura, attachments} : AntropometriaProps) {
   const [message, setMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState('formulario');
@@ -757,12 +761,16 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
 
               <div className="p-4 mt-8">
                 <h2 className="text-2xl font-bold text-blue-900">Anexo de exames complementares</h2>
-                <FileInput
-                  ref={fileInputRef}
-                  name="anexar"
-                  multiple
-              
-                />
+
+                {somenteLeitura ? (
+                  <ListaAnexos attachments={attachments} />
+                ) : (
+                  <FileInput
+                    ref={fileInputRef}
+                    name="anexar"
+                    multiple
+                  />
+                )}
               </div>
               
             </section>
