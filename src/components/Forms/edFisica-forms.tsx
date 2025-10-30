@@ -4,7 +4,7 @@ import { apiFetch } from "@/lib/api";
 import FileInput from "../fileInput/fileInput";
 import uploadFiles from "@/lib/fileInputPost";
 import ListaAnexos from "../listaAnexos/listaAnexos";
-
+import StatusToggle, {getStatusContainerClasses} from "../checkConcluido/statusToggle";
 
 
 // Constantes para o formulário
@@ -103,6 +103,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
   const [message, setMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState('formulario');
+  const [status, setStatus] = useState<"andamento" | "concluida">("andamento");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   const patient: PatientInfoData = {
@@ -191,6 +192,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
       sexo: patient.sexo,
       idade: patient.idade,
     });
+    setStatus(initialData.consulta_finalizada ? 'concluida' : 'andamento');
   }, [initialData, patientData]);
 
   const handleChange = (key: keyof FormData, value: any) => {
@@ -373,8 +375,14 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans p-6 text-gray-800">
-      <div className="max-w-4xl mx-auto w-full bg-white p-8 rounded-lg shadow-lg space-y-8">
+      <div className={`max-w-4xl mx-auto w-full p-8 rounded-lg shadow-xl border-2 transition-colors duration-300 ${getStatusContainerClasses(status)}`}>
         <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">Avaliação de Educação Física</h1>
+
+        <StatusToggle 
+          value={status} 
+          onChange={setStatus} 
+          somenteLeitura={somenteLeitura} 
+        />
 
         {showModal && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">

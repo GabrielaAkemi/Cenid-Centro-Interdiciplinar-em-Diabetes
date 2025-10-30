@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api";
 import FileInput from "../fileInput/fileInput";
 import uploadFiles from "@/lib/fileInputPost";
 import ListaAnexos from "../listaAnexos/listaAnexos";
+import StatusToggle, {getStatusContainerClasses} from "../checkConcluido/statusToggle";
 
 const Card = ({ className, children }: any) => <div className={`max-w-4xl mx-auto w-full bg-white p-8 space-y-8 rounded-lg shadow-lg ${className}`}>{children}</div>;
 const CardContent = ({ className, children }: any) => <div className={`p-0 ${className}`}>{children}</div>;
@@ -130,6 +131,7 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
   const [message, setMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState('formulario');
+  const [status, setStatus] = useState<"andamento" | "concluida">("andamento");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const patient = {
@@ -291,6 +293,8 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
       reatancia_xc_ohms_diagnostico: "",
       observacoes: initialData?.observacoes || "",
     });
+
+    setStatus(initialData.consulta_finalizada ? 'concluida' : 'andamento');
   }, [initialData, patientData]);
 
   useEffect(() => {
@@ -557,8 +561,14 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans p-6 text-gray-800">
-      <Card>
+      <div className={`max-w-4xl mx-auto w-full p-8 rounded-lg shadow-xl border-2 transition-colors duration-300 ${getStatusContainerClasses(status)}`}>
         <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">Avaliação Antropométrica</h1>
+        <StatusToggle 
+          value={status} 
+          onChange={setStatus} 
+          somenteLeitura={somenteLeitura} 
+        />
+        
         {showModal && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-8 rounded-lg text-center shadow-2xl">
@@ -804,7 +814,7 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
             </Dialog>
           </form> 
         </CardContent> 
-      </Card> 
+      </div> 
     </div> 
   ); 
 }
