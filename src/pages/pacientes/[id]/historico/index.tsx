@@ -1,26 +1,34 @@
 "use client";
 
+import Sidebar from "@/components/LayoutSidebar";
+import { Card, CardContent } from "@/components/ui/card";
+import { apiFetch } from "@/lib/api";
 import {
   Activity,
-  Brain,
-  Dumbbell,
   Apple,
-  Pill,
-  FlaskConical,
-  Calculator,
   ArrowLeft,
+  Brain,
+  Calculator,
   CalendarDays,
+  Dumbbell,
+  FlaskConical,
+  Pill,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
-import Sidebar from "@/components/LayoutSidebar";
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { apiFetch } from "@/lib/api";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import FarmaciaForm from "@/components/Forms/farmacia-forms";
-import EdFisicaForm from "@/components/Forms/edFisica-forms";
 import AntropometriaForm from "@/components/Forms/antropometria-forms";
+import EdFisicaForm from "@/components/Forms/edFisica-forms";
+import FarmaciaForm from "@/components/Forms/farmacia-forms";
+
+// 🔹 Interface para tipar o item do histórico
+interface HistoryItem {
+  id: number;
+  data: string;
+  especialidade: string;
+  consulta_finalizada: boolean; // Campo de status
+}
 
 // 🔹 Formulários placeholders para as outras especialidades
 const PlaceholderForm = ({ title }: { title: string }) => (
@@ -31,19 +39,18 @@ const PlaceholderForm = ({ title }: { title: string }) => (
   </div>
 );
 
-
-
 export default function Consultas() {
   const [selectedForm, setSelectedForm] = useState<string | null>(null);
   const [selectedHistory, setSelectedHistory] = useState<string | null>(null);
-  const [selectedHistoryData, setSelectedHistoryData] = useState<any | null>(null);
-  const [histories, setHistories] = useState<any[]>([]);
+  const [selectedHistoryData, setSelectedHistoryData] = useState<any | null>(
+    null,
+  );
+  const [histories, setHistories] = useState<HistoryItem[]>([]); // Usa a interface
+  const [paciente, setPaciente] = useState<any>(null);
 
   const router = useRouter();
   const params = useParams();
   const id = params?.id;
-
-  const [paciente, setPaciente] = useState<any>(null);
 
   const fetchPaciente = async () => {
     const data = await apiFetch(`/api/pacientes/${id}/`, true);
@@ -55,13 +62,15 @@ export default function Consultas() {
     fetchPaciente();
   }, [id]);
 
-  const fetchConsultaDetalhes = async (especialidade: string, idConsulta: number) => {
+  const fetchConsultaDetalhes = async (
+    especialidade: string,
+    idConsulta: number,
+  ) => {
     try {
       const endpointMap: Record<string, string> = {
         consultacalculadora: "consulta-calculadora",
         consultaedfisica: "consulta-ed-fisica",
         consultafarmacia: "consulta-farmacia",
-
       };
 
       const endpoint = endpointMap[especialidade];
@@ -86,22 +95,25 @@ export default function Consultas() {
     }
   };
 
-
   const fetchHistories = async (especialidade: string) => {
-    const data: any = await apiFetch(`/api/pacientes/${id}/historico-consultas?tipo=${especialidade}`, true);
-    const cleanData: any = [];
-    data.map((consulta: any) => {
-      let cleanConsulta = {
+    const data: any = await apiFetch(
+      `/api/pacientes/${id}/historico-consultas?tipo=${especialidade}`,
+      true,
+    );
+
+    // Mapeia os dados da API para a interface HistoryItem
+    const cleanData: HistoryItem[] = data.map((consulta: any) => {
+      
+
+      return {
         id: consulta.id,
         data: consulta.data_consulta
-              ? new Date(consulta.data_consulta).toLocaleDateString("pt-BR")
-              : "N/A",
-        especialidade
+          ? new Date(consulta.data_consulta).toLocaleDateString("pt-BR")
+          : "N/A",
+        especialidade,
+        consulta_finalizada: consulta.consulta_finalizada, // Salva o status
       };
-
-      cleanData.push(cleanConsulta);
     });
-
 
     setHistories(cleanData);
   };
@@ -117,11 +129,11 @@ export default function Consultas() {
   const renderForm = () => {
     if (
       (selectedForm === "consultafarmacia" ||
-      selectedForm === "consultaedfisica" ||
-      selectedForm === "consultacalculadora") &&
+        selectedForm === "consultaedfisica" ||
+        selectedForm === "consultacalculadora") &&
       !selectedHistoryData
     ) {
-      return;
+      return; // Aguarda os dados serem carregados
     }
     switch (selectedForm) {
       case "consultamedicina":
@@ -214,14 +226,13 @@ export default function Consultas() {
 
                 {histories.length > 0 ? (
                   <div className="flex flex-col gap-3">
-                    {histories.map((h) => (
+                    {histories.map((h: HistoryItem) => (
                       <button
                         key={h.id}
                         onClick={() => {
                           setSelectedHistory(h.data);
                           fetchConsultaDetalhes(selectedForm!, h.id);
                         }}
-
                         className="group text-left flex items-center justify-between px-4 py-3 border rounded-md transition-all hover:bg-blue-50 hover:shadow-sm"
                       >
                         <div className="flex items-center gap-3">
@@ -229,6 +240,19 @@ export default function Consultas() {
                           <span className="text-blue-900 font-medium">
                             Consulta do dia {h.data}
                           </span>
+
+                          {/* --- BADGES DE STATUS --- */}
+                          {h.consulta_finalizada ? (
+                            <span className="px-2 py-0.5 text-xs font-semibold text-green-800 bg-green-200 rounded-full">
+                              Finalizada
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded-full">
+                              Em Andamento
+                            </span>
+                          )}
+                          {/* --- FIM DOS BADGES --- */}
+                          
                         </div>
                         <span className="text-sm text-blue-700 opacity-70 group-hover:opacity-100">
                           Ver formulário →
