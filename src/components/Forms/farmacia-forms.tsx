@@ -801,8 +801,8 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
 
     const payload: any = {
         patient: formData.patientInfo?.id,
-				peso: parseFloat(formData.patientInfo.peso || "0"),
-        estatura: parseFloat(formData.patientInfo.estatura || "0"),
+				peso: parseFloat(formData.patientInfo.peso?.replace(',', '.') || "0"),
+        estatura: parseFloat(formData.patientInfo.estatura?.replace(',', '.') || "0"),
         data_consulta: formData.patientInfo.dataAvaliacao,
         tratamento_medicamentos: [...complementaryMeds, ...otherMeds],
         metodo_insulina: formData.insulinAdherence.method,

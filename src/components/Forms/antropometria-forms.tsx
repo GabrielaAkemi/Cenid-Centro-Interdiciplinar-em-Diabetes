@@ -420,6 +420,7 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
       alert("Erro ao calcular escore Z. Tente novamente.");
     }
   };
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -434,16 +435,18 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
       await handleCalculate();
     }
 
+    
+
     const payload = {
       patient: formData.patientInfo.id,
-      peso: parseFloat(formData.patientInfo.peso) || 0,
-      estatura: parseFloat(formData.patientInfo.estatura) || 0,
+      peso: parseFloat(formData.patientInfo.peso?.replace(',', '.')) || 0,
+      estatura: parseFloat(formData.patientInfo.estatura?.replace(',', '.')) || 0,
       medidas: {
-        peso: parseFloat(formData.patientInfo.peso) || 0,
-        estatura: parseFloat(formData.patientInfo.estatura) || 0,
-        circunferencia_braco: parseFloat(formData.circunferencia_braco) || 0,
-        circunferencia_cintura: parseFloat(formData.circunferencia_cintura) || 0,
-        dobra_tricipital: parseFloat(formData.dobra_tricipal) || 0,
+        peso: parseFloat(formData.patientInfo.peso?.replace(',', '.')) || 0,
+        estatura: parseFloat(formData.patientInfo.estatura?.replace(',', '.')) || 0,
+        circunferencia_braco: parseFloat(formData.circunferencia_braco?.replace(',', '.')) || 0,
+        circunferencia_cintura: parseFloat(formData.circunferencia_cintura?.replace(',', '.')) || 0,
+        dobra_tricipital: parseFloat(formData.dobra_tricipal?.replace(',', '.')) || 0,
       },
       bio_impedancia: {
         gordura_porcentagem: parseFloat(formData.gordura_corporal_bioimpedância_porcentagem_valor) || 0,

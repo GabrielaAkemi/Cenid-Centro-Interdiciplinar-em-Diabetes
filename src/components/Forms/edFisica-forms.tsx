@@ -367,8 +367,8 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
       const payload: any = {
         patient: formData.patientInfo?.id,
         dataConsulta: formData.patientInfo?.dataAvaliacao,
-        peso: formData.patientInfo?.peso || null,
-        estatura: formData.patientInfo?.estatura || null,
+        peso: formData.patientInfo.peso?.replace(',', '.')|| null,
+        estatura: formData.patientInfo.estatura?.replace(',', '.') || null,
         metodo_insulina: formData.metodoInsulina || null,
         prescricao_exercicio: formData.prescricaoExercicio || null,
         naf: {
