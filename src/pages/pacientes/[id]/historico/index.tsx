@@ -103,12 +103,12 @@ export default function Consultas() {
     // Mapeia os dados da API para a interface HistoryItem
     const cleanData: HistoryItem[] = data.map((consulta: any) => {
       
-
+      let dataConsulta = consulta.data_consulta || consulta.dataConsulta || undefined;
       return {
         id: consulta.id,
-        data: consulta.data_consulta
-          ? new Date(consulta.data_consulta).toLocaleDateString("pt-BR")
-          : "N/A",
+         data: dataConsulta
+              ? new Date(dataConsulta).toLocaleDateString("pt-BR")
+              : "N/A",
         especialidade,
         consulta_finalizada: consulta.consulta_finalizada, // Salva o status
       };

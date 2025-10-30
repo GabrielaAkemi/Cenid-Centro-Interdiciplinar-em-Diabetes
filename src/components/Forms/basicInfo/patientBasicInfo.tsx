@@ -74,7 +74,34 @@ const PatientBasicInfo: React.FC<PatientBasicInfoProps> = ({ onChange, patientDa
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    const newData = { ...data, [name]: value };
+    let newValue = value;
+
+    if (name === "peso" || name === "estatura") {
+      let tempValue = value;
+
+      tempValue = tempValue.replace(/[^0-9,.]/g, ''); 
+
+      if (tempValue.includes(',')) {
+          tempValue = tempValue.replace(/\./g, '');
+      } else {
+          tempValue = tempValue.replace(/,/g, '');
+      }
+      
+      const separator = tempValue.includes(',') ? ',' : '.';
+      const parts = tempValue.split(separator);
+
+      if (parts.length > 2) {
+        newValue = parts[0] + separator + parts.slice(1).join('');
+      } else {
+        newValue = tempValue;
+      }
+
+      if (newValue.startsWith('.') || newValue.startsWith(',')) {
+          newValue = '0' + newValue;
+      }
+    }
+
+    const newData = { ...data, [name]: newValue };
     setData(newData);
     onChange(newData);
   };
@@ -84,9 +111,8 @@ const PatientBasicInfo: React.FC<PatientBasicInfoProps> = ({ onChange, patientDa
     { name: "dataAvaliacao", label: "Data da avaliação:", type: "date" },
     { name: "sexo", label: "Sexo:", type: "select", options: ["Masculino", "Feminino"], readOnly: true },
     { name: "idade", label: "Idade (anos):", type: "number", readOnly: true },
-    { name: "peso", label: "Peso (kg):", type: "number", step: "0.1", placeholder: "0,0" },
-    // 👇 aqui definimos o placeholder "0,00"
-    { name: "estatura", label: "Estatura (metros):", type: "number", step: "0.01", placeholder: "0,00" },
+    { name: "peso", label: "Peso (kg):", type: "text", step: "0.1", placeholder: "00,0" },
+    { name: "estatura", label: "Estatura (metros):", type: "text", step: "0.01", placeholder: "0,00" },
     { name: "data_nascimento", label: "Data de Nascimento:", type: "date", readOnly: true },
   ];
 
@@ -115,7 +141,7 @@ const PatientBasicInfo: React.FC<PatientBasicInfoProps> = ({ onChange, patientDa
                 name={field.name}
                 id={field.name}
                 step={field.step}
-                placeholder={field.placeholder} // 👈 mostra o 0,00 quando vazio
+                placeholder={field.placeholder}
                 value={data[field.name as keyof PatientInfoData] ?? ""}
                 onChange={handleChange}
                 className={`${inputClass} ${field.readOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
