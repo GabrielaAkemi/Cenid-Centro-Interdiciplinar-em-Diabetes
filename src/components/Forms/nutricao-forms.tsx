@@ -4,9 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Upload, Check } from 'lucide-react';
 
-// --- MOCK DE COMPONENTES SHADCN/UI (Estilizado conforme os exemplos) ---
 
-// Componentes de Layout
 const Card = ({ children }: { children: React.ReactNode }) => (
   <div className="max-w-4xl mx-auto w-full bg-white p-8 space-y-8 rounded-lg shadow-xl border border-gray-100">
     {children}
@@ -18,7 +16,6 @@ const CardContent = ({ children }: { children: React.ReactNode }) => <div classN
 const Separator = () => <div className="h-[2px] my-6 bg-blue-100" />;
 
 
-// Componentes de Formulário
 const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ className, ...props }, ref) => (
   <input
     ref={ref}
@@ -47,7 +44,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ className, ch
 
   switch (variant) {
     case 'default':
-      // Cor de salvar principal, seguindo o exemplo 2 (vermelho) ou adaptando para azul forte
       variantClasses = 'bg-red-600 text-white hover:bg-red-700 hover:scale-[1.02]';
       break;
     case 'outline':
@@ -87,7 +83,6 @@ const RadioGroup = ({ children, className, ...props }: React.HTMLAttributes<HTML
 );
 
 
-// Componentes de Tabela
 const Table = ({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) => <table className={`min-w-full overflow-hidden border-collapse rounded-lg border border-gray-400 ${className}`} {...props} />;
 const TableHeader = ({ ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => <thead className="bg-blue-50" {...props} />;
 const TableHead = ({ className, ...props }: React.ThHTMLAttributes<HTMLTableHeaderCellElement>) => <th className={`px-4 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider ${className}`} {...props} />;
@@ -95,7 +90,6 @@ const TableBody = ({ ...props }: React.HTMLAttributes<HTMLTableSectionElement>) 
 const TableRow = ({ ...props }: React.HTMLAttributes<HTMLTableRowElement>) => <tr className="hover:bg-gray-50 transition-colors" {...props} />;
 const TableCell = ({ className, ...props }: React.TdHTMLAttributes<HTMLTableDataCellElement>) => <td className={`px-4 py-3 whitespace-nowrap text-sm text-gray-800 ${className}`} {...props} />;
 
-// Componentes de Feedback (Modal/Dialog)
 const Dialog = ({ open, onOpenChange, children }: { open: boolean, onOpenChange: (open: boolean) => void, children: React.ReactNode }) => (
     open ? (
       <div className="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center z-50 p-4" onClick={() => onOpenChange(false)}>
@@ -108,8 +102,6 @@ const Dialog = ({ open, onOpenChange, children }: { open: boolean, onOpenChange:
 const DialogContent = ({ children }: { children: React.ReactNode }) => children;
 
 
-// --- ZOD SCHEMA E TIPAGEM ---
-
 const AlimentoSchema = z.object({
   tipo: z.enum(["nunca", "mensal", "semanal", "diario", ""]),
   valor: z.string().optional(),
@@ -120,23 +112,12 @@ const NutricaoSchema = z
     nome: z.string().min(1, 'O nome do paciente deve ser preenchido'),
     idade: z.string().optional(),
     idadeMeses: z.string().optional(),
-
-    // Método de contagem de carboidrato
     metodoContagem: z.string().optional(),
     nomeAplicativo: z.string().optional(),
-
-    // Frequência alimentar
-    // Record<string, typeof AlimentoSchema> precisa ser reescrito para evitar complexidade na inferência
     frequenciaAlimentar: z.record(z.string(), AlimentoSchema).optional(),
-
-    // Recordatório alimentar
     recordatorioAlimentar: z.string().optional(),
     anexoRecordatorio: z.any().optional(),
-
-    // Avaliação nutricional
     avaliacaoNutricional: z.string().optional(),
-
-    // Recomendações
     recomendacoes: z.string().optional(),
   })
   .refine(
@@ -154,9 +135,6 @@ const NutricaoSchema = z
 type NutricaoFormValues = z.infer<typeof NutricaoSchema>;
 type AlimentoKey = keyof NonNullable<NutricaoFormValues['frequenciaAlimentar']>;
 type FrequenciaAlimentar = NonNullable<NutricaoFormValues['frequenciaAlimentar']>;
-
-
-// --- DADOS E CONSTANTES ---
 
 const alimentosFrequenciaMap = [
     { id: 'paoMassas', nome: 'Pão e massas' },
@@ -193,12 +171,8 @@ const macronutrientes = [
     { nome: 'Fibras', min: '25', max: '38', vet: 'não se aplica' },
 ];
 
-// --- COMPONENTE PRINCIPAL ---
-
 export default function App() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-
-  // Mapeamento inicial para frequenciaAlimentar para evitar undefined
   const defaultFrequencia = useMemo(() => {
     return alimentosFrequenciaMap.reduce((acc, current) => {
       acc[current.id as AlimentoKey] = { tipo: '', valor: '' };
@@ -224,16 +198,12 @@ export default function App() {
 
   const { control, handleSubmit, setValue, getValues, formState: { errors } } = form;
   
-  // Custom hook para ver o estado de um campo
   const metodoContagemWatch = useWatch({ control, name: 'metodoContagem' });
 
 
   const onSubmit = (data: NutricaoFormValues) => {
     console.log('Dados do Formulário Submetidos:', data);
-    // Aqui você faria a chamada de API
     setShowSuccessDialog(true);
-    // Para fins de demonstração, não resetaremos o formulário
-    // form.reset();
   };
 
   const atualizarFrequenciaAlimentar = useCallback(
@@ -248,26 +218,20 @@ export default function App() {
         },
       };
 
-      // Se mudar para 'nunca' ou 'diario', limpa o valor (campo 'mensal'/'semanal')
       if (campo === 'tipo') {
         if (valor === 'nunca' || valor === 'diario') {
             newFrequencia[alimento].valor = '';
         } else if (valor === 'mensal' || valor === 'semanal') {
-            // Se for 'mensal' ou 'semanal', garantir que o tipo não seja 'nunca' ou 'diario' se houver valor
             newFrequencia[alimento].tipo = valor;
         } else {
-            // Se o valor estiver vazio, assume que não tem
             newFrequencia[alimento].tipo = '';
             newFrequencia[alimento].valor = '';
         }
       }
 
-      // Se for para atualizar 'valor', mas não houver tipo, define o tipo
       if (campo === 'valor' && valor !== '') {
         const currentType = currentFrequencia[alimento]?.tipo;
         if (currentType !== 'mensal' && currentType !== 'semanal') {
-             // Não podemos inferir o tipo só com o valor, mas manteremos o tipo que o usuário escolheu antes.
-             // Para o escopo, se digitar no input, assumimos que é o tipo da coluna
         }
       }
 
@@ -277,7 +241,6 @@ export default function App() {
     [getValues, setValue]
   );
 
-  // Função para lidar com o input de arquivo (simples, sem upload real)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files ? e.target.files[0] : null;
     setValue('anexoRecordatorio', file, { shouldValidate: true });
@@ -290,13 +253,10 @@ export default function App() {
         <CardTitle>Avaliação de Nutrição</CardTitle>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
-            {/* 1. Dados do Paciente */}
             <section className="p-4 space-y-6">
               <h3 className="text-xl font-bold text-blue-900">Dados do Paciente</h3>
               <Separator />
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
-                {/* Nome */}
                 <div className="md:col-span-3">
                     <label htmlFor="nome" className="text-sm font-medium text-gray-700 mb-1 block">Nome do Paciente *</label>
                     <Controller
@@ -312,8 +272,6 @@ export default function App() {
                     />
                     {errors.nome && <p className="text-red-500 text-xs mt-1">{errors.nome.message}</p>}
                 </div>
-                
-                {/* Idade (Anos) */}
                 <div>
                     <label htmlFor="idade" className="text-sm font-medium text-gray-700 mb-1 block">Idade (anos)</label>
                     <Controller
@@ -331,8 +289,6 @@ export default function App() {
                         )}
                     />
                 </div>
-                
-                {/* Idade (Meses) */}
                 <div>
                     <label htmlFor="idadeMeses" className="text-sm font-medium text-gray-700 mb-1 block">Idade (meses)</label>
                     <Controller
@@ -352,8 +308,6 @@ export default function App() {
                 </div>
               </div>
             </section>
-
-            {/* 2. Razão de CHO (Tabela Vazia de Exemplo) */}
             <section className="p-4 space-y-6">
               <h3 className="text-xl font-bold text-blue-900">Razão de CHO</h3>
               <Separator />
@@ -379,7 +333,6 @@ export default function App() {
               </div>
             </section>
 
-            {/* 3. Fator de sensibilidade (FS) (Tabela Vazia de Exemplo) */}
             <section className="p-4 space-y-6">
               <h3 className="text-xl font-bold text-blue-900">Fator de sensibilidade (FS)</h3>
               <Separator />
@@ -405,7 +358,6 @@ export default function App() {
               </div>
             </section>
 
-            {/* 4. Método de Contagem de Carboidrato */}
             <section className="p-4 space-y-6">
               <h3 className="text-xl font-bold text-blue-900">MÉTODO DE CONTAGEM DE CARBOIDRATO</h3>
               <Separator />
@@ -457,7 +409,6 @@ export default function App() {
               )}
             </section>
 
-            {/* 5. Estimativa da Necessidade Energética Diária (NED) (Tabela Vazia de Exemplo) */}
             <section className="p-4 space-y-6">
               <h3 className="text-xl font-bold text-blue-900">
                 ESTIMATIVA da NECESSIDADE ENERGÉTICA DIÁRIA (NED) (Kcal/dia)
@@ -481,7 +432,6 @@ export default function App() {
               </div>
             </section>
 
-            {/* 6. Análise da Frequência Alimentar */}
             <section className="p-4 space-y-6">
               <h3 className="text-xl font-bold text-blue-900">ANÁLISE DA FREQUÊNCIA ALIMENTAR</h3>
               <Separator />
@@ -509,7 +459,6 @@ export default function App() {
                             render={({ field }) => {
                                 const currentValue = field.value || { tipo: '', valor: '' };
                                 
-                                // Funções para simplificar a atualização com o useCallback
                                 const handleRadioChange = (tipo: 'nunca' | 'diario') => {
                                     atualizarFrequenciaAlimentar(alimento.id as AlimentoKey, 'tipo', tipo);
                                 };
@@ -524,7 +473,6 @@ export default function App() {
                                     <TableRow>
                                         <TableCell className="font-medium text-blue-900">{alimento.nome}</TableCell>
                                         
-                                        {/* Nunca */}
                                         <TableCell className="text-center">
                                             <RadioGroup
                                                 value={currentValue.tipo === 'nunca' ? 'nunca' : ''}
@@ -535,7 +483,6 @@ export default function App() {
                                             </RadioGroup>
                                         </TableCell>
                                         
-                                        {/* Mensal */}
                                         <TableCell>
                                             <Input
                                                 type="number"
@@ -546,7 +493,6 @@ export default function App() {
                                             />
                                         </TableCell>
                                         
-                                        {/* Semanal */}
                                         <TableCell>
                                             <Input
                                                 type="number"
@@ -557,7 +503,6 @@ export default function App() {
                                             />
                                         </TableCell>
                                         
-                                        {/* Diário */}
                                         <TableCell className="text-center">
                                             <RadioGroup
                                                 value={currentValue.tipo === 'diario' ? 'diario' : ''}
@@ -577,12 +522,10 @@ export default function App() {
               </div>
             </section>
 
-            {/* 7. Recordatório Alimentar */}
             <section className="p-4 space-y-6">
               <h3 className="text-xl font-bold text-blue-900">RECORDATÓRIO ALIMENTAR</h3>
               <Separator />
 
-              {/* Anexar Arquivo */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">ANEXAR ARQUIVO</label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center bg-gray-50">
@@ -600,14 +543,12 @@ export default function App() {
                       />
                     )}
                   />
-                  {/* Simulação de status do arquivo anexo */}
                   {getValues('anexoRecordatorio') && (
                       <p className='text-xs mt-2 text-green-600 font-semibold'>Arquivo anexado: {getValues('anexoRecordatorio').name}</p>
                   )}
                 </div>
               </div>
 
-              {/* Registrar Dados */}
               <div>
                 <label htmlFor="recordatorioAlimentar" className="text-sm font-medium text-gray-700 mb-1 block">REGISTRAR DADOS DO RECORDATÓRIO ALIMENTAR</label>
                 <Controller
@@ -624,8 +565,6 @@ export default function App() {
                 {errors.recordatorioAlimentar && <p className="text-red-500 text-xs mt-1">{errors.recordatorioAlimentar.message}</p>}
               </div>
             </section>
-
-            {/* 8. Resumo do Recordatório Alimentar */}
             <section className="p-4 space-y-6">
               <h3 className="text-xl font-bold text-blue-900">RESUMO DO RECORDATÓRIO ALIMENTAR</h3>
               <Separator />
@@ -678,14 +617,11 @@ export default function App() {
               </div>
             </section>
             
-            {/* O botão foi removido daqui (posição central) */}
 
-            {/* 9. Avaliação Clínica e Prescrição Dietética */}
             <section className="p-4 space-y-6">
               <h3 className="text-xl font-bold text-blue-900">AVALIAÇÃO CLÍNICA E PRESCRIÇÃO DIETÉTICA NUTRIÇÃO</h3>
               <Separator />
               
-              {/* Hipótese Diagnóstica Nutricional */}
               <div>
                 <label htmlFor="avaliacaoNutricional" className="text-sm font-medium text-gray-700 mb-1 block">HIPÓTESE DIAGNÓSTICA NUTRICIONAL</label>
                 <p className="text-sm text-gray-500 mb-2">
@@ -705,7 +641,6 @@ export default function App() {
                 {errors.avaliacaoNutricional && <p className="text-red-500 text-xs mt-1">{errors.avaliacaoNutricional.message}</p>}
               </div>
               
-              {/* Conduta Nutricional */}
               <div>
                 <label htmlFor="recomendacoes" className="text-sm font-medium text-gray-700 mb-1 block">CONDUTA NUTRICIONAL</label>
                 <p className="text-sm text-gray-500 mb-2">
@@ -726,7 +661,6 @@ export default function App() {
               </div>
             </section>
             
-            {/* Botão Salvar no final do formulário, centralizado */}
             <div className="flex justify-center pt-4">
               <Button type="submit" className="bg-red-600 hover:bg-red-700">
                 Salvar Avaliação
@@ -737,7 +671,6 @@ export default function App() {
         </CardContent>
       </Card>
 
-      {/* Modal de Sucesso */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
           <DialogContent>
             <div className="flex flex-col items-center py-4">

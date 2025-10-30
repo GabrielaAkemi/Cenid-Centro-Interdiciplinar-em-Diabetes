@@ -8,7 +8,6 @@ import { Activity, AlertCircle, Brain, CalendarIcon, HeartPulse, ClipboardList }
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 
-// --- CLASSES DE ESTILO BASEADAS NO MODELO FARMÁCIA (TEMA AZUL) ---
 const inputClass = "p-3.5 border border-gray-400 rounded-md shadow-sm focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-colors duration-200 w-full bg-white text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed";
 const labelClass = "text-sm font-medium text-blue-900 mb-1 block";
 const sectionTitleClass = "text-2xl font-bold text-blue-900";
@@ -17,19 +16,15 @@ const sectionContainerClass = "p-6 border-b border-gray-200";
 const primaryButtonClass = "w-full sm:w-auto px-8 py-3 bg-blue-600 text-white font-bold rounded-md shadow-lg hover:bg-blue-700 transition-colors transform hover:scale-105 flex items-center justify-center";
 const errorClass = "text-sm text-red-500 mt-1";
 
-// Mock de componente de erro e separador
 const FormMessage = ({ children }: { children: React.ReactNode }) => {
   return children ? <p className={errorClass}>{children as string}</p> : null
 }
 const Separator = ({ className }: { className: string }) => <div className={`h-px ${className}`}></div>
 
 
-// --- SCHEMA E TIPOS (AJUSTADO: REMOVENDO CAMPOS NÃO UTILIZADOS NO FORM) ---
 const PsicologiaSchema = z.object({
   nome: z.string().min(1, "O nome do paciente deve ser preenchido"),
-  // Simplificado para string no formato YYYY-MM-DD para usar input type="date"
   dataAvaliacao: z.string().min(1, "A data da avaliação deve ser selecionada"),
-  // Mantidos como array de strings, pois são usados para cálculo de score
   respostasAnsiedade: z.array(z.string().optional()).length(7),
   respostasDepressao: z.array(z.string().optional()).length(9),
   respostasAutocuidado: z.array(z.string().optional()).length(15),
@@ -39,25 +34,14 @@ const PsicologiaSchema = z.object({
 
 type PsicologiaFormValues = z.infer<typeof PsicologiaSchema>
 
-// --- COMPONENTE AUXILIAR PARA ESTILIZAÇÃO DO ÍCONE (NOVA SOLUÇÃO) ---
-/**
- * Clona um elemento React válido (como um ícone Lucide) e injeta a classe CSS,
- * resolvendo problemas de tipagem/runtime com React.cloneElement.
- */
 const StyledIcon: React.FC<{ icon: React.ReactNode }> = ({ icon }) => {
-    // Definimos as classes de estilo padrão para os ícones
     const iconProps = { className: 'h-5 w-5 text-blue-600' };
 
     if (React.isValidElement(icon)) {
-        // Clonamos o ícone e injetamos as classes, usando 'as any' no props
-        // para contornar problemas de tipagem estrita com React.cloneElement em props genéricos.
         return React.cloneElement(icon, iconProps as any);
     }
-    // Retorna o ícone original se não for um elemento válido (texto, string, etc.)
     return <>{icon}</>;
 };
-
-// --- COMPONENTE PRINCIPAL REFATORADO ---
 
 export default function PsicologiaFormRefatorado() {
   const form = useForm<PsicologiaFormValues>({
@@ -71,17 +55,15 @@ export default function PsicologiaFormRefatorado() {
 
   const onSubmit = (data: PsicologiaFormValues) => {
     console.log("Dados do formulário de Psicologia:", data)
-    // Aqui seria a integração com a API/Firebase no novo projeto
   }
 
-  // Função helper para converter e somar as respostas (mantida)
+  
   const calcularScore = (respostas: (string | undefined)[]) => {
     return respostas
       .map((resposta) => Number.parseInt(resposta || "0"))
       .reduce((total, valor) => total + valor, 0)
   }
 
-  // Calcular Ansiedade (mantida)
   const calcularScoreAnsiedade = (respostas: (string | undefined)[]) => calcularScore(respostas)
   const classificarAnsiedade = (score: number) => {
     if (score < 5) return "Ansiedade Mínima"
@@ -90,7 +72,6 @@ export default function PsicologiaFormRefatorado() {
     return "Ansiedade Grave"
   }
 
-  // Calcular Depressão (mantida)
   const calcularScoreDepressao = (respostas: (string | undefined)[]) => calcularScore(respostas)
   const classificarDepressao = (score: number) => {
     if (score < 5) return "Ausente"
@@ -100,7 +81,6 @@ export default function PsicologiaFormRefatorado() {
     return "Depressão Severa"
   }
 
-  // Calcular Autocuidado (mantida)
   const calcularScoreAutocuidado = (respostas: (string | undefined)[]) => calcularScore(respostas)
   const classificarAutocuidado = (score: number) => {
     const percentual = (score / 75) * 100
@@ -110,7 +90,6 @@ export default function PsicologiaFormRefatorado() {
     return "Excelente"
   }
 
-  // Componente mock de Card (refatorado para div com tema azul)
   interface StatCardProps {
     title: string
     value: string | number
@@ -122,7 +101,6 @@ export default function PsicologiaFormRefatorado() {
     <div className={`bg-white p-4 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 border-l-4 border-blue-500 ${className}`}>
       <div className="flex items-start justify-between">
         <h4 className="text-sm font-medium text-gray-600">{title}</h4>
-        {/* Uso do componente StyledIcon para aplicar o className de forma segura */}
         <StyledIcon icon={icon} />
       </div>
       <div className="mt-2">
@@ -171,8 +149,6 @@ export default function PsicologiaFormRefatorado() {
     "Faz exercícios físico",
     "Você modifica a dose de insulina baseado nos valores da glicose, comida e/ou exercícios",
   ]
-
-  // Função para renderizar as opções de rádio para os quizzes (PHQ-9 e GAD-7)
   const renderQuizOptions = (baseName: keyof PsicologiaFormValues, index: number, maxScore: number) => {
     return (
       <div className="flex space-x-4">
@@ -198,12 +174,11 @@ export default function PsicologiaFormRefatorado() {
     )
   }
 
-  // Função para renderizar as opções de rádio para o Inventário de Autocuidado (SCI-R)
   const renderAutocuidadoOptions = (baseName: keyof PsicologiaFormValues, index: number, maxScore: number) => {
     return (
       <div className="flex space-x-3">
         {[...Array(maxScore).keys()].map((value) => {
-          const valor = value + 1 // Escala de 1 a 5
+          const valor = value + 1 
           return (
             <div key={valor} className="flex flex-col items-center space-y-1">
               <input
@@ -234,11 +209,11 @@ export default function PsicologiaFormRefatorado() {
         <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">Avaliação de Saúde Mental - Psicologia</h1>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          {/* Dados do Paciente */}
+      
           <div className={sectionContainerClass}>
             <h2 className={sectionTitleClass}>Dados do Paciente</h2>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Nome */}
+            
               <div>
                 <label className={labelClass}>Nome do Paciente</label>
                 <input
@@ -250,7 +225,6 @@ export default function PsicologiaFormRefatorado() {
                 <FormMessage>{form.formState.errors.nome?.message}</FormMessage>
               </div>
 
-              {/* Data da Avaliação (Simplificado com input type="date") */}
               <div>
                 <label className={labelClass}>Data da Avaliação</label>
                 <div className="relative">
@@ -266,7 +240,6 @@ export default function PsicologiaFormRefatorado() {
             </div>
           </div>
           
-          {/* Aviso */}
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <div className="flex items-center text-blue-800">
               <AlertCircle className="h-5 w-5 mr-3 flex-shrink-0" />
@@ -276,7 +249,6 @@ export default function PsicologiaFormRefatorado() {
             </div>
           </div>
 
-          {/* Avaliação da Ansiedade (GAD-7) */}
           <div className={sectionContainerClass}>
             <h2 className={`${sectionTitleClass} flex items-center gap-2 mb-4`}>
               <HeartPulse className="h-6 w-6" /> Avaliação da Ansiedade (GAD-7)
@@ -308,7 +280,6 @@ export default function PsicologiaFormRefatorado() {
             </div>
           </div>
 
-          {/* Resultados da Ansiedade */}
           <div className={sectionContainerClass}>
             <h2 className={subTitleClass}>Resultados da Avaliação de Ansiedade (GAD-7)</h2>
             <Separator className="bg-blue-200" />
@@ -329,7 +300,6 @@ export default function PsicologiaFormRefatorado() {
             </div>
           </div>
 
-          {/* Avaliação da Depressão (PHQ-9) */}
           <div className={sectionContainerClass}>
             <h2 className={`${sectionTitleClass} flex items-center gap-2 mb-4`}>
               <Brain className="h-6 w-6" /> Avaliação da Depressão (PHQ-9)
@@ -361,7 +331,6 @@ export default function PsicologiaFormRefatorado() {
             </div>
           </div>
 
-          {/* Resultados da Depressão */}
           <div className={sectionContainerClass}>
             <h2 className={subTitleClass}>Resultados da Avaliação de Depressão (PHQ-9)</h2>
             <Separator className="bg-blue-200" />
@@ -382,7 +351,6 @@ export default function PsicologiaFormRefatorado() {
             </div>
           </div>
 
-          {/* Inventário de Autocuidado em Diabetes (SCI-R) */}
           <div className={sectionContainerClass}>
             <h2 className={`${sectionTitleClass} flex items-center gap-2 mb-4`}>
               <ClipboardList className="h-6 w-6" /> Inventário de Autocuidado em Diabetes (SCI-R)
@@ -413,7 +381,6 @@ export default function PsicologiaFormRefatorado() {
             </div>
           </div>
 
-          {/* Resultados do Autocuidado */}
           <div className={sectionContainerClass}>
             <h2 className={subTitleClass}>Resultados do Inventário de Autocuidado</h2>
             <Separator className="bg-blue-200" />
@@ -434,7 +401,6 @@ export default function PsicologiaFormRefatorado() {
             </div>
           </div>
 
-          {/* Hipótese Diagnóstica */}
           <div className={sectionContainerClass}>
             <h2 className={sectionTitleClass}>HIPÓTESE DIAGNÓSTICA GERAL</h2>
             <Separator className="bg-blue-200" />
@@ -452,7 +418,6 @@ export default function PsicologiaFormRefatorado() {
             </div>
           </div>
 
-          {/* Conduta Clínica */}
           <div className="p-6">
             <h2 className={sectionTitleClass}>CONDUTA CLÍNICA</h2>
             <Separator className="bg-blue-200" />

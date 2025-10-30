@@ -170,7 +170,6 @@ type FormData = {
   documento: File | null;
 };
 
-// ================= CONSTANTES =================
 const TIPO_ATENDIMENTO_OPTIONS = [
   { value: "0", label: "Sistema Único de Saúde (SUS)" },
   { value: "1", label: "Convênio/Plano de Saúde" },
@@ -254,7 +253,6 @@ const AUXILIOS_OPTIONS = [
   { value: "6", label: "Nenhum Auxílio" },
 ];
 
-// ================= COMPONENTE =================
 const App: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     nome: "",
@@ -323,7 +321,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Limpa o erro aninhado ao digitar
   const handleNestedChange = <
     P extends keyof FormData,
     K extends keyof FormData[P]

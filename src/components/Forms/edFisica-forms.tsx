@@ -18,7 +18,6 @@ const diasSemana = [
   { key: "domingo", label: "Domingo" },
 ];
 
-// ---- Tipos auxiliares ----
 type StrengthMeasures = {
   medida1: string;
   medida2: string;
@@ -287,7 +286,6 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
     }
 
     try {
-      // Montar payload apenas com campos que existem na API
       const payload: any = {
         patient: formData.patientInfo?.id,
         dataConsulta: formData.patientInfo?.dataAvaliacao,
