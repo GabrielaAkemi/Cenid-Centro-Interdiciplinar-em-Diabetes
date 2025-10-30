@@ -892,7 +892,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
             )}
 
             <form key={formKey} onSubmit={handleSubmit} className="space-y-0">
-                <PatientBasicInfo patientData={formData.patientInfo} onChange={(data) => handleChange("patientInfo", data)} />
+                <PatientBasicInfo patientData={formData.patientInfo} onChange={(data) => handleChange("patientInfo", data)} somenteLeitura={somenteLeitura} />
                 <InsulinAdherence
                 value={formData.insulinAdherence}
                 onChange={(data) => handleChange("insulinAdherence", data)}

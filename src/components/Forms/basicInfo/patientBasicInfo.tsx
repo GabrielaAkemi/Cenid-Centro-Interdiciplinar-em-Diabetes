@@ -30,6 +30,7 @@ export interface PatientInfoData {
 interface PatientBasicInfoProps {
   onChange: (data: PatientInfoData) => void
   patientData: PatientInfoData | undefined;
+  somenteLeitura?: boolean;
 }
 
 const calculateAge = (birthDateStr: string) => {
@@ -44,7 +45,7 @@ const calculateAge = (birthDateStr: string) => {
   return age.toString();
 };
 
-const PatientBasicInfo: React.FC<PatientBasicInfoProps> = ({ onChange, patientData }) => {
+const PatientBasicInfo: React.FC<PatientBasicInfoProps> = ({ onChange, patientData, somenteLeitura }) => {
   const [data, setData] = useState<PatientInfoData>({
     id: patientData?.id,
     nome: patientData?.nome || "",
@@ -108,11 +109,11 @@ const PatientBasicInfo: React.FC<PatientBasicInfoProps> = ({ onChange, patientDa
 
   const fields: FormField[] = [
     { name: "nome", label: "Nome completo:", type: "text", readOnly: true },
-    { name: "dataAvaliacao", label: "Data da avaliação:", type: "date" },
+    { name: "dataAvaliacao", label: "Data da avaliação:", type: "date", readOnly: somenteLeitura },
     { name: "sexo", label: "Sexo:", type: "select", options: ["Masculino", "Feminino"], readOnly: true },
     { name: "idade", label: "Idade (anos):", type: "number", readOnly: true },
-    { name: "peso", label: "Peso (kg):", type: "text", step: "0.1", placeholder: "00,0" },
-    { name: "estatura", label: "Estatura (metros):", type: "text", step: "0.01", placeholder: "0,00" },
+    { name: "peso", label: "Peso (kg):", type: "text", step: "0.1", placeholder: "00,0", readOnly: somenteLeitura },
+    { name: "estatura", label: "Estatura (metros):", type: "text", step: "0.01", placeholder: "0,00", readOnly: somenteLeitura },
     { name: "data_nascimento", label: "Data de Nascimento:", type: "date", readOnly: true },
   ];
 
