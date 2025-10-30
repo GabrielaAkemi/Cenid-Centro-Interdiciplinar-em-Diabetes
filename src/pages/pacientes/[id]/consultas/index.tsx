@@ -20,6 +20,11 @@ import { apiFetch } from "@/lib/api";
 import FarmaciaForm from "@/components/Forms/farmacia-forms";
 import EdFisicaForm from "@/components/Forms/edFisica-forms";
 import AntropometriaForm from "@/components/Forms/antropometria-forms";
+import BioquimicaForm from "@/components/Forms/bioQuimica-forms";
+import MedicinaForm from "@/components/Forms/medicina-forms";
+import PsicologiaForm from "@/components/Forms/psicologia-forms";
+import NutricaoForm from "@/components/Forms/nutricao-forms";
+
 
 interface Consulta {
   id: number;
@@ -61,7 +66,6 @@ export default function Consultas() {
   const getBorderColor = (tipo: string) => {
   const anoAtual = new Date().getFullYear();
 
-  // Filtra consultas desse tipo e deste ano
   const consulta = consultas.find(
     c => c.tipo === tipo && new Date(c.data_consulta).getFullYear() === anoAtual
   );
@@ -76,7 +80,6 @@ export default function Consultas() {
       : "border-yellow-400 hover:border-yellow-600";
   };
 
-  // Ajuste a função consultaFinalizada
   const consultaFinalizada = (consulta: Consulta) => {
     return (consulta as any).finalizado === true;
   };
@@ -89,6 +92,14 @@ export default function Consultas() {
         return <EdFisicaForm patientData={paciente} />;
       case "calculadora":
         return <AntropometriaForm patientData={paciente} />;
+      case "medicina":
+        return <MedicinaForm/>;
+      case "bioquimica":
+        return <BioquimicaForm/>;
+      case "psicologia":
+        return <PsicologiaForm/>;
+      case "nutricao":
+        return <NutricaoForm/>;
       default:
         return null;
     }
@@ -118,12 +129,16 @@ export default function Consultas() {
                 Selecione a Especialidade*
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <button className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("medicina")} transition-all`}>
+                <button 
+                  onClick={() => setSelectedForm("medicina")}
+                className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("medicina")} transition-all`}>
                   <Activity className="h-8 w-8 mb-2 text-red-600" />
                   <span className="text-blue-900">Medicina</span>
                 </button>
 
-                <button className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("psicologia")} transition-all`}>
+                <button 
+                  onClick={() => setSelectedForm("psicologia")}
+                className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("psicologia")} transition-all`}>
                   <Brain className="h-8 w-8 mb-2 text-red-600" />
                   <span className="text-blue-900">Psicologia</span>
                 </button>
@@ -136,7 +151,9 @@ export default function Consultas() {
                   <span className="text-blue-900">Educação Física</span>
                 </button>
 
-                <button className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("nutricao")} transition-all`}>
+                <button 
+                   onClick={() => setSelectedForm("nutricao")}
+                  className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("nutricao")} transition-all`}>
                   <Apple className="h-8 w-8 mb-2 text-red-600" />
                   <span className="text-blue-900">Nutrição</span>
                 </button>
@@ -149,7 +166,10 @@ export default function Consultas() {
                   <span className="text-blue-900">Farmácia</span>
                 </button>
 
-                <button className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("bioquimica")} transition-all`}>
+                <button
+                  onClick={() => setSelectedForm("bioquimica")}
+
+                className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("bioquimica")} transition-all`}>
                   <FlaskConical className="h-8 w-8 mb-2 text-red-600" />
                   <span className="text-blue-900">Bioquímica</span>
                 </button>

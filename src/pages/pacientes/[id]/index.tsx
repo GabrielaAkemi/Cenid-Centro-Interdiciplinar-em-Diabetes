@@ -1,7 +1,7 @@
 "use client";
 import {useState, useEffect} from "react";
 import Image from "next/image";
-import { useRouter, useParams  } from "next/navigation"; // <- corrigi aqui, estava "next/router"
+import { useRouter, useParams  } from "next/navigation"; 
 import {
   Card,
   CardContent,
@@ -23,7 +23,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { format } from "date-fns";
-import DashboardContent from "@/components/DashboardContent"; // <- adicionado para sidebar/layout
+import DashboardContent from "@/components/DashboardContent"; 
 import { apiFetch } from "@/lib/api"
 
 interface Patient {
@@ -180,7 +180,6 @@ const PatientDetails = () => {
   return (
     <DashboardContent>
       <div className="container mx-auto py-6">
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold tracking-tight text-blue-900">
             Detalhes do Paciente
@@ -210,7 +209,6 @@ const PatientDetails = () => {
 
         
 
-        {/* Card com informações */}
         <Card className="bg-white border border-blue-300 shadow-lg">
           <CardHeader className="bg-blue-50">
             <CardTitle className="text-blue-900">{paciente.nome}</CardTitle>

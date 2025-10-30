@@ -5,8 +5,9 @@ import PatientBasicInfo, {PatientInfoData} from "./basicInfo/patientBasicInfo";
 import { apiFetch } from "@/lib/api";
 import FileInput from "../fileInput/fileInput";
 import uploadFiles from "@/lib/fileInputPost";
+import ListaAnexos from "../listaAnexos/listaAnexos";
+import StatusToggle, {getStatusContainerClasses} from "../checkConcluido/statusToggle";
 
-// Mock de componentes
 const Card = ({ className, children }: any) => <div className={`max-w-4xl mx-auto w-full bg-white p-8 space-y-8 rounded-lg shadow-lg ${className}`}>{children}</div>;
 const CardContent = ({ className, children }: any) => <div className={`p-0 ${className}`}>{children}</div>;
 const CardHeader = ({ className, children }: any) => <div className={`p-4 ${className}`}>{children}</div>;
@@ -54,9 +55,13 @@ const pegaIdade = (dataNascimento: string, dataAvaliacao: string) => {
   return idade;
 };
 
+
+
 interface AntropometriaProps {
   patientData?: PatientInfoData;
   initialData?: any;
+  somenteLeitura?: boolean;
+  attachments?: any;
 }
 
 interface FormDataType {
@@ -69,6 +74,8 @@ interface FormDataType {
     sexo: string;
     peso: string;
     estatura: string;
+    somenteLeitura?: boolean;
+
   };
   pacienteId: string;
   nomePaciente: string;
@@ -120,10 +127,11 @@ interface FormDataType {
   observacoes: string;
 }
 
-export default function AntropometriaForm({patientData, initialData} : AntropometriaProps) {
+export default function AntropometriaForm({patientData, initialData, somenteLeitura, attachments} : AntropometriaProps) {
   const [message, setMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState('formulario');
+  const [status, setStatus] = useState<"andamento" | "concluida">("andamento");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const patient = {
@@ -285,6 +293,8 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
       reatancia_xc_ohms_diagnostico: "",
       observacoes: initialData?.observacoes || "",
     });
+
+    setStatus(initialData.consulta_finalizada ? 'concluida' : 'andamento');
   }, [initialData, patientData]);
 
   useEffect(() => {
@@ -581,8 +591,14 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans p-6 text-gray-800">
-      <Card>
+      <div className={`max-w-4xl mx-auto w-full p-8 rounded-lg shadow-xl border-2 transition-colors duration-300 ${getStatusContainerClasses(status)}`}>
         <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">Avaliação Antropométrica</h1>
+        <StatusToggle 
+          value={status} 
+          onChange={setStatus} 
+          somenteLeitura={somenteLeitura} 
+        />
+        
         {showModal && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-8 rounded-lg text-center shadow-2xl">
@@ -606,7 +622,6 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
               }}
               onChange={handlePatientInfoChange} 
             />
-            {/* Medidas Antropométricas */}
             <section className="p-4 space-y-4 border-b border-gray-200">
               <h2 className="text-2xl font-bold text-blue-900">Medidas Antropométricas</h2>
               <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -619,6 +634,8 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
                     name="circunferencia_braco"
                     value={formData.circunferencia_braco}
                     onChange={handleChange}
+                    readOnly={somenteLeitura}
+
                   />
                 </div>
                 <div>
@@ -630,6 +647,7 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
                     name="circunferencia_cintura"
                     value={formData.circunferencia_cintura}
                     onChange={handleChange}
+                    readOnly={somenteLeitura}
                   />
                 </div>
                 <div>
@@ -641,6 +659,7 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
                     name="dobra_tricipal"
                     value={formData.dobra_tricipal}
                     onChange={handleChange}
+                    readOnly={somenteLeitura}
                   />
                 </div>
               </div>
@@ -665,21 +684,21 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
                   <TableBody>
                     <TableRow>
                       <TableCell>Circunferência da Cintura (cm)</TableCell>
-                      <TableCell><Input type="text" readOnly value={formData.circunferencia_cintura_tabela} /></TableCell>
-                      <TableCell><Input type="text" readOnly value={formData.circunferencia_cintura_escore_z} /></TableCell>
-                      <TableCell><Input type="text" readOnly value={formData.circunferencia_cintura_classificacao} /></TableCell>
+                      <TableCell><Input type="text" readOnly  value={formData.circunferencia_cintura_tabela} /></TableCell>
+                      <TableCell><Input type="text"  readOnly value={formData.circunferencia_cintura_escore_z}/></TableCell>
+                      <TableCell><Input type="text"  readOnly value={formData.circunferencia_cintura_classificacao}/></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Circunferência do Braço (cm)</TableCell>
-                      <TableCell><Input type="text" readOnly value={formData.circunferencia_braco_tabela} /></TableCell>
-                      <TableCell><Input type="text" readOnly value={formData.circunferencia_braco_escore_z} /></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.circunferencia_braco_tabela}/></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.circunferencia_braco_escore_z}/></TableCell>
                       <TableCell><Input type="text" readOnly value={formData.circunferencia_braco_classificacao} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Dobra Tricipital (mm)</TableCell>
-                      <TableCell><Input type="text" readOnly value={formData.dobra_tricipal_tabela} /></TableCell>
+                      <TableCell><Input type="text"  readOnly value={formData.dobra_tricipal_tabela} /></TableCell>
                       <TableCell><Input type="text" readOnly value={formData.dobra_tricipal_escore_z} /></TableCell>
-                      <TableCell><Input type="text" readOnly value={formData.dobra_tricipal_classificacao} /></TableCell>
+                      <TableCell><Input type="text" readOnly value={formData.dobra_tricipal_classificacao}/></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>IMC (kg/m²)</TableCell>
@@ -718,48 +737,48 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
                   <TableBody>
                     <TableRow>
                       <TableCell>% gordura corporal bioimpedância (%)</TableCell>
-                      <TableCell><Input type="text" name="gordura_corporal_bioimpedância_porcentagem_valor" value={formData.gordura_corporal_bioimpedância_porcentagem_valor} onChange={handleChange} /></TableCell>
-                      <TableCell><Input type="text" name="gordura_corporal_bioimpedância_porcentagem_diagnostico" readOnly value={formData.gordura_corporal_bioimpedância_porcentagem_diagnostico} onChange={handleChange} /></TableCell>
+                      <TableCell><Input type="text" name="gordura_corporal_bioimpedância_porcentagem_valor" value={formData.gordura_corporal_bioimpedância_porcentagem_valor} onChange={handleChange} readOnly={somenteLeitura} /></TableCell>
+                      <TableCell><Input type="text" name="gordura_corporal_bioimpedância_porcentagem_diagnostico" readOnly={somenteLeitura} onChange={handleChange} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Gordura corporal bioimpedância (kg)</TableCell>
-                      <TableCell><Input type="text" name="gordura_corporal_bioimpedância_kg_valor" value={formData.gordura_corporal_bioimpedância_kg_valor} onChange={handleChange} /></TableCell>
-                      <TableCell><Input type="text" name="gordura_corporal_bioimpedância_kg_diagnostico" readOnly value={formData.gordura_corporal_bioimpedância_kg_diagnostico} onChange={handleChange} /></TableCell>
+                      <TableCell><Input type="text" name="gordura_corporal_bioimpedância_kg_valor" value={formData.gordura_corporal_bioimpedância_kg_valor} onChange={handleChange}readOnly={somenteLeitura} /></TableCell>
+                      <TableCell><Input type="text" name="gordura_corporal_bioimpedância_kg_diagnostico" readOnly={somenteLeitura} onChange={handleChange} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Massa magra bioimpedância (kg)</TableCell>
-                      <TableCell><Input type="text" name="massa_magra_bioimpedância_kg_valor" value={formData.massa_magra_bioimpedância_kg_valor} onChange={handleChange} /></TableCell>
-                      <TableCell><Input type="text" name="massa_magra_bioimpedância_kg_diagnostico" readOnly value={formData.massa_magra_bioimpedância_kg_diagnostico} onChange={handleChange} /></TableCell>
+                      <TableCell><Input type="text" name="massa_magra_bioimpedância_kg_valor" value={formData.massa_magra_bioimpedância_kg_valor} onChange={handleChange} readOnly={somenteLeitura} /></TableCell>
+                      <TableCell><Input type="text" name="massa_magra_bioimpedância_kg_diagnostico" readOnly={somenteLeitura} onChange={handleChange} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>% massa magra bioimpedância (%)</TableCell>
-                      <TableCell><Input type="text" name="massa_magra_bioimpedância_porcentagem_valor" value={formData.massa_magra_bioimpedância_porcentagem_valor} onChange={handleChange} /></TableCell>
-                      <TableCell><Input type="text" name="massa_magra_bioimpedância_porcentagem_diagnostico" readOnly value={formData.massa_magra_bioimpedância_porcentagem_diagnostico} onChange={handleChange} /></TableCell>
+                      <TableCell><Input type="text" name="massa_magra_bioimpedância_porcentagem_valor" value={formData.massa_magra_bioimpedância_porcentagem_valor} onChange={handleChange} readOnly={somenteLeitura}/></TableCell>
+                      <TableCell><Input type="text" name="massa_magra_bioimpedância_porcentagem_diagnostico" readOnly={somenteLeitura} onChange={handleChange} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Água corporal bioimpedância (litros)</TableCell>
-                      <TableCell><Input type="text" name="agua_corporal_bioimpedância_litros_valor" value={formData.agua_corporal_bioimpedância_litros_valor} onChange={handleChange} /></TableCell>
-                      <TableCell><Input type="text" name="agua_corporal_bioimpedância_litros_diagnostico" readOnly value={formData.agua_corporal_bioimpedância_litros_diagnostico} onChange={handleChange} /></TableCell>
+                      <TableCell><Input type="text" name="agua_corporal_bioimpedância_litros_valor" value={formData.agua_corporal_bioimpedância_litros_valor} onChange={handleChange}readOnly={somenteLeitura} /></TableCell>
+                      <TableCell><Input type="text" name="agua_corporal_bioimpedância_litros_diagnostico" readOnly={somenteLeitura} onChange={handleChange} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>% água corporal bioimpedância (%)</TableCell>
-                      <TableCell><Input type="text" name="agua_corporal_bioimpedância_porcentagem_valor" value={formData.agua_corporal_bioimpedância_porcentagem_valor} onChange={handleChange} /></TableCell>
-                      <TableCell><Input type="text" name="agua_corporal_bioimpedância_porcentagem_diagnostico" readOnly value={formData.agua_corporal_bioimpedância_porcentagem_diagnostico} onChange={handleChange} /></TableCell>
+                      <TableCell><Input type="text" name="agua_corporal_bioimpedância_porcentagem_valor" value={formData.agua_corporal_bioimpedância_porcentagem_valor} onChange={handleChange}readOnly={somenteLeitura} /></TableCell>
+                      <TableCell><Input type="text" name="agua_corporal_bioimpedância_porcentagem_diagnostico" readOnly={somenteLeitura} onChange={handleChange} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>% água na massa magra (%)</TableCell>
-                      <TableCell><Input type="text" name="agua_na_massa_magra_porcentagem_valor" value={formData.agua_na_massa_magra_porcentagem_valor} onChange={handleChange} /></TableCell>
-                      <TableCell><Input type="text" name="agua_na_massa_magra_porcentagem_diagnostico" readOnly value={formData.agua_na_massa_magra_porcentagem_diagnostico} onChange={handleChange} /></TableCell>
+                      <TableCell><Input type="text" name="agua_na_massa_magra_porcentagem_valor" value={formData.agua_na_massa_magra_porcentagem_valor} onChange={handleChange} readOnly={somenteLeitura}/></TableCell>
+                      <TableCell><Input type="text" name="agua_na_massa_magra_porcentagem_diagnostico" readOnly={somenteLeitura} onChange={handleChange} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Resistência (R) (Ohms)</TableCell>
-                      <TableCell><Input type="text" name="resistencia_r_ohms_valor" value={formData.resistencia_r_ohms_valor} onChange={handleChange} /></TableCell>
-                      <TableCell><Input type="text" name="resistencia_r_ohms_diagnostico" readOnly value={formData.resistencia_r_ohms_diagnostico} onChange={handleChange} /></TableCell>
+                      <TableCell><Input type="text" name="resistencia_r_ohms_valor" value={formData.resistencia_r_ohms_valor} onChange={handleChange}readOnly={somenteLeitura} /></TableCell>
+                      <TableCell><Input type="text" name="resistencia_r_ohms_diagnostico" readOnly={somenteLeitura} onChange={handleChange} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Reatância (Xc) (Ohms)</TableCell>
-                      <TableCell><Input type="text" name="reatancia_xc_ohms_valor" value={formData.reatancia_xc_ohms_valor} onChange={handleChange} /></TableCell>
-                      <TableCell><Input type="text" name="reatancia_xc_ohms_diagnostico" readOnly value={formData.reatancia_xc_ohms_diagnostico} onChange={handleChange} /></TableCell>
+                      <TableCell><Input type="text" name="reatancia_xc_ohms_valor" value={formData.reatancia_xc_ohms_valor} onChange={handleChange} readOnly={somenteLeitura}/></TableCell>
+                      <TableCell><Input type="text" name="reatancia_xc_ohms_diagnostico" readOnly={somenteLeitura} onChange={handleChange} /></TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
@@ -776,25 +795,35 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
                   name="observacoes"
                   value={formData.observacoes}
                   onChange={handleChange}
+                  readOnly={somenteLeitura}
                 ></textarea>
               </div>
 
               <div className="p-4 mt-8">
                 <h2 className="text-2xl font-bold text-blue-900">Anexo de exames complementares</h2>
-                <FileInput
-                  ref={fileInputRef}
-                  name="anexar"
-                  multiple
-                />
+
+                {somenteLeitura ? (
+                  <ListaAnexos attachments={attachments} />
+                ) : (
+                  <FileInput
+                    ref={fileInputRef}
+                    name="anexar"
+                    multiple
+                  />
+                )}
               </div>
               
             </section>
 
-            <div className="flex justify-center mt-6">
-              <Button type="submit">
-                Salvar Avaliação Antropométrica
-              </Button>
-            </div>
+            {!somenteLeitura && (
+              <div className="flex justify-center">
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-10 py-4 bg-red-600 text-white font-bold rounded-md shadow-lg hover:bg-red-700 transition-colors transform hover:scale-105">
+                  Salvar Avaliação
+                </button>
+              </div>
+            )}
 
             <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
               <DialogContent>
@@ -805,15 +834,18 @@ export default function AntropometriaForm({patientData, initialData} : Antropome
                   <p className="text-sm text-gray-600 text-center">
                     As informações foram salvas com sucesso.
                   </p>
-                  <Button type="button" className="bg-blue-600 hover:bg-blue-700 mt-4" onClick={() => setShowSuccessDialog(false)}>
+                  <Button
+                    type="button"
+                    className="bg-blue-600 hover:bg-blue-700 mt-4"
+                    onClick={() => setShowSuccessDialog(false)}>
                     Fechar
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
-  );
+          </form> 
+        </CardContent> 
+      </div> 
+    </div> 
+  ); 
 }

@@ -1,28 +1,35 @@
 "use client";
 
+import Sidebar from "@/components/LayoutSidebar";
+import { Card, CardContent } from "@/components/ui/card";
+import { apiFetch } from "@/lib/api";
 import {
   Activity,
-  Brain,
-  Dumbbell,
   Apple,
-  Pill,
-  FlaskConical,
-  Calculator,
   ArrowLeft,
+  Brain,
+  Calculator,
   CalendarDays,
+  Dumbbell,
+  FlaskConical,
+  Pill,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
-import Sidebar from "@/components/LayoutSidebar";
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { apiFetch } from "@/lib/api";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import FarmaciaForm from "@/components/Forms/farmacia-forms";
-import EdFisicaForm from "@/components/Forms/edFisica-forms";
 import AntropometriaForm from "@/components/Forms/antropometria-forms";
+import EdFisicaForm from "@/components/Forms/edFisica-forms";
+import FarmaciaForm from "@/components/Forms/farmacia-forms";
 
-// 🔹 Formulários placeholders para as outras especialidades
+// 🔹 Interface para tipar o item do histórico
+interface HistoryItem {
+  id: number;
+  data: string;
+  especialidade: string;
+  consulta_finalizada: boolean; // Campo de status
+}
+
 const PlaceholderForm = ({ title }: { title: string }) => (
   <div className="p-6 border rounded-lg bg-gray-50 shadow-inner">
     <p className="text-gray-600 text-center">
@@ -31,19 +38,18 @@ const PlaceholderForm = ({ title }: { title: string }) => (
   </div>
 );
 
-
-
 export default function Consultas() {
   const [selectedForm, setSelectedForm] = useState<string | null>(null);
   const [selectedHistory, setSelectedHistory] = useState<string | null>(null);
-  const [selectedHistoryData, setSelectedHistoryData] = useState<any | null>(null);
-  const [histories, setHistories] = useState<any[]>([]);
+  const [selectedHistoryData, setSelectedHistoryData] = useState<any | null>(
+    null,
+  );
+  const [histories, setHistories] = useState<HistoryItem[]>([]); // Usa a interface
+  const [paciente, setPaciente] = useState<any>(null);
 
   const router = useRouter();
   const params = useParams();
   const id = params?.id;
-
-  const [paciente, setPaciente] = useState<any>(null);
 
   const fetchPaciente = async () => {
     const data = await apiFetch(`/api/pacientes/${id}/`, true);
@@ -55,13 +61,15 @@ export default function Consultas() {
     fetchPaciente();
   }, [id]);
 
-  const fetchConsultaDetalhes = async (especialidade: string, idConsulta: number) => {
+  const fetchConsultaDetalhes = async (
+    especialidade: string,
+    idConsulta: number,
+  ) => {
     try {
       const endpointMap: Record<string, string> = {
         consultacalculadora: "consulta-calculadora",
         consultaedfisica: "consulta-ed-fisica",
         consultafarmacia: "consulta-farmacia",
-
       };
 
       const endpoint = endpointMap[especialidade];
@@ -71,31 +79,40 @@ export default function Consultas() {
       }
 
       const data: any = await apiFetch(`/api/${endpoint}/${idConsulta}/`, true);
-      setSelectedHistoryData(data);
+
+      const anexos: any = await apiFetch(
+        `/api/anexos/?content_type=${especialidade}&object_id=${idConsulta}`,
+        true
+      );
+
+      setSelectedHistoryData({
+        ...data,
+        anexos,
+      });
     } catch (error) {
       console.error("Erro ao buscar detalhes:", error);
     }
   };
 
-
   const fetchHistories = async (especialidade: string) => {
-    const data: any = await apiFetch(`/api/pacientes/${id}/historico-consultas?tipo=${especialidade}`, true);
-    const cleanData: any = [];
+    const data: any = await apiFetch(
+      `/api/pacientes/${id}/historico-consultas?tipo=${especialidade}`,
+      true,
+    );
 
-    
-    data.map((consulta: any) => {
+    // Mapeia os dados da API para a interface HistoryItem
+    const cleanData: HistoryItem[] = data.map((consulta: any) => {
+      
       let dataConsulta = consulta.data_consulta || consulta.dataConsulta || undefined;
-      let cleanConsulta = {
+      return {
         id: consulta.id,
-        data: dataConsulta
+         data: dataConsulta
               ? new Date(dataConsulta).toLocaleDateString("pt-BR")
               : "N/A",
-        especialidade
+        especialidade,
+        consulta_finalizada: consulta.consulta_finalizada, // Salva o status
       };
-
-      cleanData.push(cleanConsulta);
     });
-
 
     setHistories(cleanData);
   };
@@ -111,11 +128,11 @@ export default function Consultas() {
   const renderForm = () => {
     if (
       (selectedForm === "consultafarmacia" ||
-      selectedForm === "consultaedfisica" ||
-      selectedForm === "consultacalculadora") &&
+        selectedForm === "consultaedfisica" ||
+        selectedForm === "consultacalculadora") &&
       !selectedHistoryData
     ) {
-      return;
+      return; // Aguarda os dados serem carregados
     }
     switch (selectedForm) {
       case "consultamedicina":
@@ -123,15 +140,15 @@ export default function Consultas() {
       case "consultapsicologia":
         return <PlaceholderForm title="Psicologia" />;
       case "consultaedfisica":
-        return <EdFisicaForm patientData={paciente} initialData={selectedHistoryData}/>;
+        return <EdFisicaForm patientData={paciente} initialData={selectedHistoryData} somenteLeitura={true} attachments={selectedHistoryData?.anexos || []}/>;
       case "consultanutricao":
         return <PlaceholderForm title="Nutrição" />;
       case "consultafarmacia":
-        return <FarmaciaForm patientData={paciente} initialData={selectedHistoryData}/>;
+        return <FarmaciaForm patientData={paciente} initialData={selectedHistoryData} somenteLeitura={true} attachments={selectedHistoryData?.anexos || []}/>;
       case "consultabioquimica":
         return <PlaceholderForm title="Bioquímica" />;
       case "consultacalculadora":
-        return <AntropometriaForm patientData={paciente} initialData={selectedHistoryData}/>;
+        return <AntropometriaForm patientData={paciente} initialData={selectedHistoryData} somenteLeitura={true} attachments={selectedHistoryData?.anexos || []}/>;
       default:
         return null;
     }
@@ -153,7 +170,6 @@ export default function Consultas() {
 
       <main className="flex-1 p-6">
         <div className="flex-1 container mx-auto py-8 relative">
-          {/* Cabeçalho */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <h1 className="text-3xl font-bold tracking-tight text-blue-900">
               Histórico de Consultas
@@ -167,7 +183,6 @@ export default function Consultas() {
             </button>
           </div>
 
-          {/* Card de especialidades */}
           <Card className="shadow-lg rounded-lg border border-blue-200 mb-6">
             <CardContent className="p-6">
               <h2 className="text-lg font-semibold text-blue-700 mb-4">
@@ -197,7 +212,6 @@ export default function Consultas() {
             </CardContent>
           </Card>
 
-          {/* Lista de históricos */}
           {selectedForm && !selectedHistory && (
             <Card className="shadow-md border border-blue-200 mb-6">
               <CardContent className="p-6">
@@ -208,14 +222,13 @@ export default function Consultas() {
 
                 {histories.length > 0 ? (
                   <div className="flex flex-col gap-3">
-                    {histories.map((h) => (
+                    {histories.map((h: HistoryItem) => (
                       <button
                         key={h.id}
                         onClick={() => {
                           setSelectedHistory(h.data);
                           fetchConsultaDetalhes(selectedForm!, h.id);
                         }}
-
                         className="group text-left flex items-center justify-between px-4 py-3 border rounded-md transition-all hover:bg-blue-50 hover:shadow-sm"
                       >
                         <div className="flex items-center gap-3">
@@ -223,6 +236,19 @@ export default function Consultas() {
                           <span className="text-blue-900 font-medium">
                             Consulta do dia {h.data}
                           </span>
+
+                          {/* --- BADGES DE STATUS --- */}
+                          {h.consulta_finalizada ? (
+                            <span className="px-2 py-0.5 text-xs font-semibold text-green-800 bg-green-200 rounded-full">
+                              Finalizada
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded-full">
+                              Em Andamento
+                            </span>
+                          )}
+                          {/* --- FIM DOS BADGES --- */}
+                          
                         </div>
                         <span className="text-sm text-blue-700 opacity-70 group-hover:opacity-100">
                           Ver formulário →
@@ -239,7 +265,6 @@ export default function Consultas() {
             </Card>
           )}
 
-          {/* Formulário do histórico selecionado */}
           {selectedHistory && (
             <div className="mt-6">
               <div className="flex items-center justify-between mb-4">
@@ -261,7 +286,6 @@ export default function Consultas() {
             </div>
           )}
 
-          {/* Logo fixa */}
           <div className="fixed bottom-4 right-4 z-50">
             <Image
               src="/logoCenid.png"

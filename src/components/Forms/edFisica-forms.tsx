@@ -3,6 +3,10 @@ import PatientBasicInfo, { PatientInfoData } from "./basicInfo/patientBasicInfo"
 import { apiFetch } from "@/lib/api";
 import FileInput from "../fileInput/fileInput";
 import uploadFiles from "@/lib/fileInputPost";
+import ListaAnexos from "../listaAnexos/listaAnexos";
+import StatusToggle, {getStatusContainerClasses} from "../checkConcluido/statusToggle";
+
+
 // Constantes para o formulário
 const diasSemana = [
   { key: "segunda", label: "2ª feira" },
@@ -14,7 +18,6 @@ const diasSemana = [
   { key: "domingo", label: "Domingo" },
 ];
 
-// ---- Tipos auxiliares ----
 type StrengthMeasures = {
   medida1: string;
   medida2: string;
@@ -96,12 +99,15 @@ interface FormData {
 interface AppProps {
   patientData?: PatientInfoData;
   initialData?: InitialData;
+  somenteLeitura?: boolean;
+  attachments?: any;
 }
 
-const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
+const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, attachments  }) => {
   const [message, setMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState('formulario');
+  const [status, setStatus] = useState<"andamento" | "concluida">("andamento");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   const patient: PatientInfoData = {
@@ -114,7 +120,6 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
     data_nascimento: patientData?.data_nascimento || ""
   };
 
-  // Estados do formulário
   const [formData, setFormData] = useState<FormData>({
     dataConsulta: "",
     nomeCompleto: "",
@@ -147,7 +152,6 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
 
     
 
-    // Montar cronograma de forma segura
     const cronograma: Cronograma = diasSemana.reduce((acc, dia, index) => {
       const relato = initialData.relatos?.find(r => r.dia_semana === index + 1);
       acc[dia.key] = {
@@ -192,6 +196,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
       sexo: patient.sexo,
       idade: patient.idade
     });
+    setStatus(initialData.consulta_finalizada ? 'concluida' : 'andamento');
   }, [initialData, patientData]);
 
   const handleChange = (key: keyof FormData, value: any, isNumeric: boolean = false) => {
@@ -359,7 +364,6 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
     }
 
     try {
-      // Montar payload apenas com campos que existem na API
       const payload: any = {
         patient: formData.patientInfo?.id,
         dataConsulta: formData.patientInfo?.dataAvaliacao,
@@ -415,7 +419,6 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
       setShowModal(true);
       setCurrentPage("consultas");
 
-      // Resetar formulário
       setFormData({
         dataConsulta: "",
         nomeCompleto: "",
@@ -449,14 +452,19 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
     }
   };
 
-  // Classes comuns para inputs
   const inputClass = "p-3.5 border border-gray-600 rounded-md shadow-sm focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-colors duration-200 w-full";
   const labelClass = "text-sm font-medium text-gray-700 mb-1 block";
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans p-6 text-gray-800">
-      <div className="max-w-4xl mx-auto w-full bg-white p-8 rounded-lg shadow-lg space-y-8">
+      <div className={`max-w-4xl mx-auto w-full p-8 rounded-lg shadow-xl border-2 transition-colors duration-300 ${getStatusContainerClasses(status)}`}>
         <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">Avaliação de Educação Física</h1>
+
+        <StatusToggle 
+          value={status} 
+          onChange={setStatus} 
+          somenteLeitura={somenteLeitura} 
+        />
 
         {showModal && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
@@ -487,6 +495,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
                       value={formData.atividadeLeve}
                       onChange={(e) => handleChange("atividadeLeve", e.target.value, true)}
                       className={inputClass}
+                      readOnly={somenteLeitura}
                     />
                   </div>
                   <div>
@@ -496,6 +505,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
                       value={formData.atividadeModerada}
                       onChange={(e) => handleChange("atividadeModerada", e.target.value, true)}
                       className={inputClass}
+                      readOnly={somenteLeitura}
                     />
                   </div>
                   <div>
@@ -505,6 +515,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
                       value={formData.atividadeVigorosa}
                       onChange={(e) => handleChange("atividadeVigorosa", e.target.value, true)}
                       className={inputClass}
+                      readOnly={somenteLeitura}
                     />
                   </div>
                 </div>
@@ -524,6 +535,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
                       value={formData.tempoSentado}
                       onChange={(e) => handleChange("tempoSentado", e.target.value, true)}
                       className={inputClass}
+                      readOnly={somenteLeitura}
                     />
                   </div>
                   <div>
@@ -533,6 +545,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
                       value={formData.tempoDormindo}
                       onChange={(e) => handleChange("tempoDormindo", e.target.value, true)}
                       className={inputClass}
+                      readOnly={somenteLeitura}
                     />
                   </div>
                 </div>
@@ -558,6 +571,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
                                 value={formData.cronograma[day.key].horario}
                                 onChange={(e) => handleCronogramaChange(day.key, "horario", e.target.value)}
                                 className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200"
+                                readOnly={somenteLeitura}
                               />
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -566,6 +580,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
                                 value={formData.cronograma[day.key].tipo}
                                 onChange={(e) => handleCronogramaChange(day.key, "tipo", e.target.value)}
                                 className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200"
+                                readOnly={somenteLeitura}
                               />
                             </td>
                           </tr>
@@ -582,6 +597,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
                     value={formData.mesesPraticando}
                     onChange={(e) => handleChange("mesesPraticando", e.target.value)}
                     className={inputClass}
+                    readOnly={somenteLeitura}
                   />
                 </div>
                 <div>
@@ -590,6 +606,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
                     value={formData.relatorioInterrupcoes}
                     onChange={(e) => handleChange("relatorioInterrupcoes", e.target.value)}
                     className={`${inputClass} min-h-[120px]`}
+                    readOnly={somenteLeitura}
                   ></textarea>
                 </div>
               </div>
@@ -612,25 +629,25 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     <tr>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Força da mão dominante (kg)</td>
-                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoDominante.medida1} onChange={(e) => handleStrengthChange("forcaMaoDominante", "medida1", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
-                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoDominante.medida2} onChange={(e) => handleStrengthChange("forcaMaoDominante", "medida2", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
-                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoDominante.medida3} onChange={(e) => handleStrengthChange("forcaMaoDominante", "medida3", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoDominante.medida1} onChange={(e) => handleStrengthChange("forcaMaoDominante", "medida1", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" readOnly={somenteLeitura}/></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoDominante.medida2} onChange={(e) => handleStrengthChange("forcaMaoDominante", "medida2", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" readOnly={somenteLeitura}/></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoDominante.medida3} onChange={(e) => handleStrengthChange("forcaMaoDominante", "medida3", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" readOnly={somenteLeitura}/></td>
                       <td className="px-6 py-4 font-semibold text-sm text-gray-900">{mediaDominante}</td>
                       <td className="px-6 py-4 font-semibold text-sm text-gray-900">{forcaRelativaDominante}</td>
                     </tr>
                     <tr>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Força da mão não dominante (kg)</td>
-                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoNaoDominante.medida1} onChange={(e) => handleStrengthChange("forcaMaoNaoDominante", "medida1", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
-                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoNaoDominante.medida2} onChange={(e) => handleStrengthChange("forcaMaoNaoDominante", "medida2", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
-                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoNaoDominante.medida3} onChange={(e) => handleStrengthChange("forcaMaoNaoDominante", "medida3", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoNaoDominante.medida1} onChange={(e) => handleStrengthChange("forcaMaoNaoDominante", "medida1", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" readOnly={somenteLeitura} /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoNaoDominante.medida2} onChange={(e) => handleStrengthChange("forcaMaoNaoDominante", "medida2", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" readOnly={somenteLeitura} /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaMaoNaoDominante.medida3} onChange={(e) => handleStrengthChange("forcaMaoNaoDominante", "medida3", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" readOnly={somenteLeitura} /></td>
                       <td className="px-6 py-4 font-semibold text-sm text-gray-900">{mediaNaoDominante}</td>
                       <td className="px-6 py-4 font-semibold text-sm text-gray-900">{forcaRelativaNaoDominante}</td>
                     </tr>
                     <tr>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Força Lombar (kg)</td>
-                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaLombar.medida1} onChange={(e) => handleStrengthChange("forcaLombar", "medida1", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
-                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaLombar.medida2} onChange={(e) => handleStrengthChange("forcaLombar", "medida2", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
-                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaLombar.medida3} onChange={(e) => handleStrengthChange("forcaLombar", "medida3", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaLombar.medida1} onChange={(e) => handleStrengthChange("forcaLombar", "medida1", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" readOnly={somenteLeitura}  /></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaLombar.medida2} onChange={(e) => handleStrengthChange("forcaLombar", "medida2", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" readOnly={somenteLeitura}/></td>
+                      <td className="px-6 py-4"><input type="text" step="0.1" value={formData.forcaLombar.medida3} onChange={(e) => handleStrengthChange("forcaLombar", "medida3", e.target.value)} className="w-full p-2 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-200" readOnly={somenteLeitura}/></td>
                       <td className="px-6 py-4 font-semibold text-sm text-gray-900">{mediaLombar}</td>
                       <td className="px-6 py-4 font-semibold text-sm text-gray-900">{forcaRelativaLombar}</td>
                     </tr>
@@ -647,27 +664,33 @@ const App: React.FC<AppProps> = ({ patientData, initialData  }) => {
                   value={formData.prescricaoExercicio}
                   onChange={(e) => handleChange("prescricaoExercicio", e.target.value)}
                   className={`${inputClass} min-h-[120px]`}
+                  readOnly={somenteLeitura}
                 ></textarea>
               </div>
             </div>
 
             <div className="p-4 mt-8">
                 <h2 className="text-2xl font-bold text-blue-900">Anexo de exames complementares</h2>
-                <FileInput
-                  ref={fileInputRef}
-                  name="anexar"
-                  multiple
-                />
+                {somenteLeitura ? (
+                <ListaAnexos attachments={attachments} />
+                  ) : (
+                    <FileInput
+                      ref={fileInputRef}
+                      name="anexar"
+                      multiple
+                    />
+                  )}
             </div>
-            
-            <div className="flex justify-center">
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-10 py-4 bg-red-600 text-white font-bold rounded-md shadow-lg hover:bg-red-700 transition-colors transform hover:scale-105"
-              >
-                Salvar Avaliação
-              </button>
-            </div>
+            {!somenteLeitura && (
+              <div className="flex justify-center">
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-10 py-4 bg-red-600 text-white font-bold rounded-md shadow-lg hover:bg-red-700 transition-colors transform hover:scale-105"
+                >
+                  Salvar Avaliação
+                </button>
+              </div>
+            )}
           </form>
         )}
 
