@@ -1,7 +1,6 @@
 import React, { useState, FormEvent, ChangeEvent } from "react";
 import { apiFetch } from "@/lib/api";
 
-// ================= TIPOS =================
 type HistoricoFamiliar = {
   dm1: boolean;
   dm2: boolean;
@@ -55,7 +54,6 @@ type FormData = {
   documento: File | null;
 };
 
-// ================= CONSTANTES =================
 const TIPO_ATENDIMENTO_OPTIONS = [
   { value: "0", label: "Sistema Único de Saúde (SUS)" },
   { value: "1", label: "Convênio/Plano de Saúde" },
@@ -139,7 +137,6 @@ const AUXILIOS_OPTIONS = [
   { value: "6", label: "Nenhum Auxílio" },
 ];
 
-// ================= COMPONENTE =================
 const App: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     nome: "",
@@ -187,7 +184,6 @@ const App: React.FC = () => {
   const [message, setMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  // Função genérica para atualizar campos simples
   const handleChange = <K extends keyof FormData>(
     key: K,
     value: FormData[K]
@@ -195,7 +191,6 @@ const App: React.FC = () => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Função para atualizar objetos aninhados
   const handleNestedChange = <
     P extends keyof FormData,
     K extends keyof FormData[P]
@@ -210,7 +205,6 @@ const App: React.FC = () => {
     }));
   };
 
-  // Envio do formulário
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 

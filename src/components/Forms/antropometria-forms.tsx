@@ -578,7 +578,6 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
               }}
               onChange={handlePatientInfoChange} 
             />
-            {/* Medidas Antropométricas */}
             <section className="p-4 space-y-4 border-b border-gray-200">
               <h2 className="text-2xl font-bold text-blue-900">Medidas Antropométricas</h2>
               <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">

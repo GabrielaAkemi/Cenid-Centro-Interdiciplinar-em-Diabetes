@@ -1,6 +1,5 @@
 "use client"
 
-// O 'useRef' é importado para criar referências a elementos DOM ou componentes.
 import React, { useState, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -8,11 +7,9 @@ import * as z from "zod"
 import { Plus, Trash2, ChevronDown } from "lucide-react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-// Mantenha seu import do FileInput
 import FileInput from "../fileInput/fileInput";
 
 
-// --- CLASSES DE ESTILO BASEADAS NO MODELO FARMÁCIA (TEMA AZUL) ---
 const inputClass = "p-3.5 border border-gray-400 rounded-md shadow-sm focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-colors duration-200 w-full bg-white text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed";
 const labelClass = "text-sm font-medium text-blue-900 mb-1 block";
 const sectionTitleClass = "text-2xl font-bold text-blue-900";
@@ -23,12 +20,9 @@ const secondaryButtonClass = "flex items-center text-blue-600 hover:text-blue-80
 const dangerButtonClass = "flex-shrink-0 bg-red-500 text-white hover:bg-red-600 p-2 rounded-md transition-colors";
 const errorClass = "text-sm text-red-500 mt-1";
 
-// Mock de componentes que viriam de outras libs (para tornar o código monolítico e executável)
 const FormMessage = ({ children }: { children: React.ReactNode }) => {
   return children ? <p className={errorClass}>{children as string}</p> : null
 }
-
-// --- SCHEMA E TIPOS (MANTIDOS E AJUSTADOS) ---
 
 const DoencaSchema = z.object({
   doenca: z.string().optional(),
@@ -43,7 +37,6 @@ const MedicinaSchema = z.object({
   estatura: z.string().min(1, "A estatura deve ser preenchida"),
   diagnostico: z.string().min(1, "O diagnóstico deve ser selecionado"),
   outrasDM: z.string().optional(),
-  // Simplificado para string no formato YYYY-MM-DD para usar input type="date"
   dataDiagnostico: z.string().min(1, "A data do diagnóstico deve ser selecionada"),
   tempoDiagnostico: z.string().min(1, "O tempo de diagnóstico deve ser preenchido"),
   classificacaoDiagnostico: z.string().min(1, "A classificação do diagnóstico deve ser selecionada"),
@@ -58,7 +51,6 @@ const MedicinaSchema = z.object({
   insulinaBasalDose1: z.string().optional(),
   insulinaBasalDose2: z.string().optional(),
   insulinaBolusNome: z.string().optional(),
-  // Corrigindo o erro de digitação do nome do campo
   insulinaBolusDose1: z.string().optional(),
   insulinaBolusDose2: z.string().optional(),
   fatorSensibilidadeValor: z.string().optional(),
@@ -72,34 +64,27 @@ const MedicinaSchema = z.object({
 
 type MedicinaFormValues = z.infer<typeof MedicinaSchema>
 
-// --- COMPONENTE PRINCIPAL REFATORADO ---
 
 export default function MedicinaFormRefatorado() {
-  // CORREÇÃO: Declarando fileInputRef com useRef
-  // Assumindo que o FileInput internamente é um input HTML (HTMLInputElement)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const form = useForm<MedicinaFormValues>({
     resolver: zodResolver(MedicinaSchema),
     defaultValues: {
       doencas: [{ doenca: "", medicamento: "", dose: "" }],
-      // Preenchendo campos de Dose Bolus que estavam com erro de digitação
       insulinaBolusDose1: "",
       insulinaBolusDose2: "",
     },
   })
 
-  // Renomeando campos para corrigir o erro de digitação no Schema original
   const insulinaBolusDose1 = form.watch("insulinaBolusDose1")
   const insulinaBolusDose2 = form.watch("insulinaBolusDose2")
 
   const onSubmit = (data: MedicinaFormValues) => {
     console.log("Dados do formulário de Medicina:", data)
-    // Exemplo de como acessar arquivos via ref
     if (fileInputRef.current?.files) {
         console.log("Arquivos anexados:", fileInputRef.current.files)
     }
-    // Aqui você integraria a chamada de API/Firebase no padrão do novo projeto.
   }
 
   const adicionarDoenca = () => {
@@ -117,7 +102,6 @@ export default function MedicinaFormRefatorado() {
     }
   }
 
-  // Helper para renderizar Radio Groups (simulando a estrutura Shadcn/ui com novo estilo)
   const RadioGroupField = ({ name, label, options, direction = "col" }: { name: keyof MedicinaFormValues, label: string, options: { value: string, label: string }[], direction?: 'col' | 'row' }) => {
     const field = form.control._fields[name]
     const error = form.formState.errors[name]
@@ -153,11 +137,9 @@ export default function MedicinaFormRefatorado() {
         <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">Avaliação Clínica - Endocrinologia</h1>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          {/* Dados do Paciente (Simplificado para input direto, alinhado visualmente) */}
           <div className={sectionContainerClass}>
             <h2 className={sectionTitleClass}>Dados do Paciente</h2>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Nome */}
               <div>
                 <label className={labelClass}>Nome do Paciente</label>
                 <input
@@ -169,7 +151,6 @@ export default function MedicinaFormRefatorado() {
                 <FormMessage>{form.formState.errors.nome?.message}</FormMessage>
               </div>
 
-              {/* Idade */}
               <div>
                 <label className={labelClass}>Idade</label>
                 <input
@@ -181,7 +162,6 @@ export default function MedicinaFormRefatorado() {
                 <FormMessage>{form.formState.errors.idade?.message}</FormMessage>
               </div>
 
-              {/* Peso */}
               <div>
                 <label className={labelClass}>Peso (kg)</label>
                 <input
@@ -194,7 +174,6 @@ export default function MedicinaFormRefatorado() {
                 <FormMessage>{form.formState.errors.peso?.message}</FormMessage>
               </div>
 
-              {/* Estatura */}
               <div>
                 <label className={labelClass}>Estatura (metros)</label>
                 <input
@@ -209,7 +188,6 @@ export default function MedicinaFormRefatorado() {
             </div>
           </div>
 
-          {/* Diagnóstico */}
           <div className={sectionContainerClass}>
             <h2 className={sectionTitleClass}>Diagnóstico</h2>
             <div className="mt-6 space-y-6">
@@ -239,7 +217,6 @@ export default function MedicinaFormRefatorado() {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Data do Diagnóstico (usando input type="date" para simplificar) */}
                 <div>
                   <label className={labelClass}>Data do Diagnóstico</label>
                   <input
@@ -250,7 +227,6 @@ export default function MedicinaFormRefatorado() {
                   <FormMessage>{form.formState.errors.dataDiagnostico?.message}</FormMessage>
                 </div>
 
-                {/* Tempo de Diagnóstico */}
                 <div>
                   <label className={labelClass}>Tempo de Diagnóstico em Meses</label>
                   <input
@@ -275,7 +251,6 @@ export default function MedicinaFormRefatorado() {
             </div>
           </div>
 
-          {/* Monitoramento e Controle */}
           <div className={sectionContainerClass}>
             <h2 className={sectionTitleClass}>Monitoramento e Controle</h2>
             <div className="mt-6 space-y-6">
@@ -329,7 +304,6 @@ export default function MedicinaFormRefatorado() {
             </div>
           </div>
 
-          {/* Outras morbidades */}
           <div className={sectionContainerClass}>
             <h2 className={sectionTitleClass}>Outras Morbidades (doenças)</h2>
             <p className="text-sm text-gray-600 mb-4">Registre quaisquer outras condições médicas e o tratamento associado.</p>
@@ -337,7 +311,6 @@ export default function MedicinaFormRefatorado() {
             <div className="space-y-4">
               {form.watch("doencas").map((_, index) => (
                 <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-blue-100 bg-blue-50 rounded-lg">
-                  {/* Doença */}
                   <div>
                     <label className={labelClass}>Doença</label>
                     <input
@@ -348,7 +321,6 @@ export default function MedicinaFormRefatorado() {
                     <FormMessage>{form.formState.errors.doencas?.[index]?.doenca?.message}</FormMessage>
                   </div>
 
-                  {/* Medicamento */}
                   <div>
                     <label className={labelClass}>Medicamento</label>
                     <input
@@ -359,7 +331,6 @@ export default function MedicinaFormRefatorado() {
                     <FormMessage>{form.formState.errors.doencas?.[index]?.medicamento?.message}</FormMessage>
                   </div>
 
-                  {/* Dose e Botão de Remover */}
                   <div className="md:col-span-2">
                     <label className={labelClass}>Dose</label>
                     <div className="flex items-start space-x-2">
@@ -390,11 +361,9 @@ export default function MedicinaFormRefatorado() {
             </button>
           </div>
 
-          {/* Sintomas e Estágio Maturacional */}
           <div className={sectionContainerClass}>
             <h2 className={sectionTitleClass}>Sintomas e Estágio Maturacional</h2>
             <div className="mt-6 space-y-6">
-              {/* Sintomas */}
               <div>
                 <label className={labelClass}>
                   Queixas do paciente em relação ao estado de saúde e controle do diabetes
@@ -407,7 +376,6 @@ export default function MedicinaFormRefatorado() {
                 <FormMessage>{form.formState.errors.sintomas?.message}</FormMessage>
               </div>
 
-              {/* Estágio maturacional */}
               <RadioGroupField
                 name="estagioMaturacional"
                 label="Estágio maturacional: Escala de TANNER"
@@ -421,11 +389,9 @@ export default function MedicinaFormRefatorado() {
             </div>
           </div>
 
-          {/* Administração de insulina atual */}
           <div className={sectionContainerClass}>
             <h2 className={sectionTitleClass}>Administração de Insulina Atual</h2>
             <div className="mt-6 space-y-6">
-              {/* Insulina Basal */}
               <h3 className={subTitleClass}>Insulina Basal</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-blue-100 bg-blue-50 rounded-lg">
                 <div>
@@ -453,7 +419,6 @@ export default function MedicinaFormRefatorado() {
                 </div>
               </div>
 
-              {/* Insulina Bolus */}
               <h3 className={subTitleClass}>Insulina Bolus</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-blue-100 bg-blue-50 rounded-lg">
                 <div>
@@ -482,7 +447,6 @@ export default function MedicinaFormRefatorado() {
             </div>
           </div>
 
-          {/* Fator de sensibilidade */}
           <div className={sectionContainerClass}>
             <h2 className={sectionTitleClass}>
               Fator de Sensibilidade à Insulina (FS) para BOLUS
@@ -508,7 +472,6 @@ export default function MedicinaFormRefatorado() {
             </div>
           </div>
 
-          {/* Razão de carboidrato */}
           <div className={sectionContainerClass}>
             <h2 className={sectionTitleClass}>Razão de Carboidrato-Insulina (rCHOi)</h2>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -532,7 +495,6 @@ export default function MedicinaFormRefatorado() {
             </div>
           </div>
 
-          {/* Outras prescrições */}
           <div className="p-6">
             <h2 className={sectionTitleClass}>Outras Prescrições Médicas e Conduta Clínica</h2>
             <div className="mt-6">
@@ -549,7 +511,7 @@ export default function MedicinaFormRefatorado() {
           <div className="p-4 mt-8">
             <h2 className="text-2xl font-bold text-blue-900">Anexo de exames complementares</h2>
             <FileInput
-              ref={fileInputRef} // Agora 'fileInputRef' está definido!
+              ref={fileInputRef} 
               name="anexar"
               multiple
             />

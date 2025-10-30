@@ -22,7 +22,6 @@ import FarmaciaForm from "@/components/Forms/farmacia-forms";
 import EdFisicaForm from "@/components/Forms/edFisica-forms";
 import AntropometriaForm from "@/components/Forms/antropometria-forms";
 
-// 🔹 Formulários placeholders para as outras especialidades
 const PlaceholderForm = ({ title }: { title: string }) => (
   <div className="p-6 border rounded-lg bg-gray-50 shadow-inner">
     <p className="text-gray-600 text-center">
@@ -150,7 +149,6 @@ export default function Consultas() {
 
       <main className="flex-1 p-6">
         <div className="flex-1 container mx-auto py-8 relative">
-          {/* Cabeçalho */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <h1 className="text-3xl font-bold tracking-tight text-blue-900">
               Histórico de Consultas
@@ -164,7 +162,6 @@ export default function Consultas() {
             </button>
           </div>
 
-          {/* Card de especialidades */}
           <Card className="shadow-lg rounded-lg border border-blue-200 mb-6">
             <CardContent className="p-6">
               <h2 className="text-lg font-semibold text-blue-700 mb-4">
@@ -194,7 +191,6 @@ export default function Consultas() {
             </CardContent>
           </Card>
 
-          {/* Lista de históricos */}
           {selectedForm && !selectedHistory && (
             <Card className="shadow-md border border-blue-200 mb-6">
               <CardContent className="p-6">
@@ -236,7 +232,6 @@ export default function Consultas() {
             </Card>
           )}
 
-          {/* Formulário do histórico selecionado */}
           {selectedHistory && (
             <div className="mt-6">
               <div className="flex items-center justify-between mb-4">
@@ -258,7 +253,6 @@ export default function Consultas() {
             </div>
           )}
 
-          {/* Logo fixa */}
           <div className="fixed bottom-4 right-4 z-50">
             <Image
               src="/logoCenid.png"

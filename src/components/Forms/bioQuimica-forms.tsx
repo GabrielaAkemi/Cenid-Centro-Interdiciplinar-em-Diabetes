@@ -7,7 +7,6 @@ import * as z from "zod"
 import { TestTube } from "lucide-react"
 import FileInput from "../fileInput/fileInput"
 
-// --- Schema ---
 const medidas = [
   { nome: "Glicemia", unidade: "mg/dL" },
   { nome: "HbA1c", unidade: "%" },
@@ -74,7 +73,6 @@ export default function BioquimicaFormRefatorado() {
         </h1>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 text-blue-900">
-          {/* Dados do paciente */}
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-blue-900 mb-4">Dados do Paciente</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
