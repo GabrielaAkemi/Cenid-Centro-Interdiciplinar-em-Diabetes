@@ -7,7 +7,7 @@ import { apiFetch } from "@/lib/api";
 import FileInput from "../fileInput/fileInput";
 import uploadFiles from "@/lib/fileInputPost";
 import ListaAnexos from "../listaAnexos/listaAnexos";
-
+import StatusToggle, {getStatusContainerClasses} from "../checkConcluido/statusToggle";
 
 const inputClass = "p-3.5 border border-gray-600 rounded-md shadow-sm focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-colors duration-200 w-full bg-white text-gray-800";
 const labelClass = "text-sm font-medium text-gray-700 mb-1 block";
@@ -635,7 +635,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
 	const [showModal, setShowModal] = useState(false);
 	const [currentPage, setCurrentPage] = useState('formulario');
 	const [formKey, setFormKey] = useState(0);
-    const [status, setStatus] = useState<'andamento' | 'concluida'>('andamento');
+    const [status, setStatus] = useState<"andamento" | "concluida">("andamento");
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   
@@ -732,7 +732,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
         otherMedications: otherMedications,
       }));
 
-      setStatus(initialData.status ? 'concluida' : 'andamento');
+      setStatus(initialData.consulta_finalizada ? 'concluida' : 'andamento');
     }
     else {
       setFormData(prev => ({
@@ -748,20 +748,6 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
     }
   }, [initialData, patientData]);
   
-    const handleStatusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setStatus(e.target.checked ? 'concluida' : 'andamento');
-    };
-
-    const getStatusContainerClasses = () => {
-        switch (status) {
-            case 'andamento':
-                return 'bg-yellow-50 border-yellow-400';
-            case 'concluida':
-                return 'bg-green-100 border-green-400';
-            default:
-                return 'bg-white border-gray-200';
-        }
-    };
     
 	const handleChange = (section: keyof FormData, data: any) => {
 		setFormData((prevData) => ({ ...prevData, [section]: data }))
@@ -822,8 +808,6 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
         metodo_insulina: formData.insulinAdherence.method,
         consulta_finalizada: status == 'concluida'
     };
-    console.log(status);
-
 
     if (formData.insulinAdherence.method === "SICI" && formData.insulinAdherence.questionnaire) {
 			const q = formData.insulinAdherence.questionnaire as BaasisCSIIData;
@@ -883,25 +867,15 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans p-6 text-gray-800">
-         <div className={`max-w-4xl mx-auto w-full p-8 rounded-lg shadow-xl border-2 transition-colors duration-300 ${getStatusContainerClasses()}`}>
+         <div className={`max-w-4xl mx-auto w-full p-8 rounded-lg shadow-xl border-2 transition-colors duration-300 ${getStatusContainerClasses(status)}`}>
             <h1 className="text-3xl font-bold text-center text-blue-900 mb-2">Avaliação Farmácia</h1>
 
 
-            <div className="flex justify-between items-center mb-6 border-b pb-4">
-                <h1 className="text-3xl font-bold text-blue-900">Avaliação Farmácia</h1>
-                <label className="flex items-center cursor-pointer">
-                    <span className="mr-3 text-md font-semibold text-gray-700">Consulta Finalizada</span>
-                    <div className="relative">
-                        <input 
-                            type="checkbox" 
-                            checked={status === 'concluida'} 
-                            onChange={handleStatusChange}
-                            className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-focus:ring-4 peer-focus:ring-green-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                    </div>
-                </label>
-            </div>
+            <StatusToggle 
+                value={status} 
+                onChange={setStatus} 
+                somenteLeitura={somenteLeitura} 
+            />
 
             {showModal && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
