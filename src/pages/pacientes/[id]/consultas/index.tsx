@@ -25,21 +25,28 @@ import MedicinaForm from "@/components/Forms/medicina-forms";
 import PsicologiaForm from "@/components/Forms/psicologia-forms";
 import NutricaoForm from "@/components/Forms/nutricao-forms";
 
-
 interface Consulta {
   id: number;
   tipo: string;
   data_consulta: string;
+  finalizado?: boolean;
 }
 
 export default function Consultas() {
   const [selectedForm, setSelectedForm] = useState<string | null>(null);
+  const [selectedConsulta, setSelectedConsulta] = useState<any>(null);
   const router = useRouter();
   const params = useParams();
   const id = params?.id;
 
   const [paciente, setPaciente] = useState<any>(null);
   const [consultas, setConsultas] = useState<Consulta[]>([]);
+
+  const endpointMap: Record<string, string> = {
+    consultacalculadora: "consulta-calculadora",
+    consultaedfisica: "consulta-ed-fisica",
+    consultafarmacia: "consulta-farmacia",
+  };
 
   const fetchPaciente = async () => {
     const data = await apiFetch(`/api/pacientes/${id}/`, true);
@@ -50,8 +57,14 @@ export default function Consultas() {
     if (!id) return;
 
     const [naoFinalizadas, finalizadas] = await Promise.all([
-      apiFetch(`/api/pacientes/${id}/historico-consultas/?finalizado=false`, true) as Promise<Consulta[]>,
-      apiFetch(`/api/pacientes/${id}/historico-consultas/?finalizado=true`, true) as Promise<Consulta[]>,
+      apiFetch(
+        `/api/pacientes/${id}/historico-consultas/?finalizado=false`,
+        true
+      ) as Promise<Consulta[]>,
+      apiFetch(
+        `/api/pacientes/${id}/historico-consultas/?finalizado=true`,
+        true
+      ) as Promise<Consulta[]>,
     ]);
 
     setConsultas([...naoFinalizadas, ...finalizadas]);
@@ -64,42 +77,68 @@ export default function Consultas() {
   }, [id]);
 
   const getBorderColor = (tipo: string) => {
-  const anoAtual = new Date().getFullYear();
+    const anoAtual = new Date().getFullYear();
 
-  const consulta = consultas.find(
-    c => c.tipo === tipo && new Date(c.data_consulta).getFullYear() === anoAtual
-  );
+    const consulta = consultas.find(
+      (c) =>
+        c.tipo === tipo && new Date(c.data_consulta).getFullYear() === anoAtual
+    );
 
-  if (!consulta) {
-    return "border-red-500 hover:border-red-700";
-  }
+    if (!consulta) {
+      return "border-red-500 hover:border-red-700";
+    }
 
-
-    return consultaFinalizada(consulta)
+    return consulta.finalizado
       ? "border-green-400 hover:border-green-600"
       : "border-yellow-400 hover:border-yellow-600";
   };
 
-  const consultaFinalizada = (consulta: Consulta) => {
-    return (consulta as any).finalizado === true;
+  // 🔹 Lógica de seleção com busca de consulta não finalizada
+  const handleSelectForm = async (tipoForm: string) => {
+    setSelectedForm(tipoForm);
+    setSelectedConsulta(null);
+
+    // procura consulta não finalizada desse tipo
+    const consulta = consultas.find(
+      (c) => c.tipo === tipoForm && c.finalizado === false
+    );
+
+    if (consulta && endpointMap[tipoForm]) {
+      try {
+        const endpoint = endpointMap[tipoForm];
+        const data = await apiFetch(`/api/${endpoint}/${consulta.id}/`, true);
+        setSelectedConsulta(data);
+      } catch (error) {
+        console.error("Erro ao buscar dados da consulta:", error);
+      }
+    }
   };
 
   const renderForm = () => {
     switch (selectedForm) {
-      case "farmacia":
-        return <FarmaciaForm patientData={paciente} />;
-      case "edFisica":
-        return <EdFisicaForm patientData={paciente} />;
-      case "calculadora":
-        return <AntropometriaForm patientData={paciente} />;
-      case "medicina":
-        return <MedicinaForm/>;
-      case "bioquimica":
-        return <BioquimicaForm/>;
-      case "psicologia":
-        return <PsicologiaForm/>;
-      case "nutricao":
-        return <NutricaoForm/>;
+      case "consultamedicina":
+        return <MedicinaForm />;
+      case "consultapsicologia":
+        return <PsicologiaForm />;
+      case "consultaedfisica":
+        return (
+          <EdFisicaForm patientData={paciente} initialData={selectedConsulta} />
+        );
+      case "consultanutricao":
+        return <NutricaoForm />;
+      case "consultafarmacia":
+        return (
+          <FarmaciaForm patientData={paciente} initialData={selectedConsulta} />
+        );
+      case "consultabioquimica":
+        return <BioquimicaForm />;
+      case "consultacalculadora":
+        return (
+          <AntropometriaForm
+            patientData={paciente}
+            initialData={selectedConsulta}
+          />
+        );
       default:
         return null;
     }
@@ -129,54 +168,71 @@ export default function Consultas() {
                 Selecione a Especialidade*
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <button 
-                  onClick={() => setSelectedForm("medicina")}
-                className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("medicina")} transition-all`}>
+                <button
+                  onClick={() => handleSelectForm("consultamedicina")}
+                  className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor(
+                    "consultamedicina"
+                  )} transition-all`}
+                >
                   <Activity className="h-8 w-8 mb-2 text-red-600" />
                   <span className="text-blue-900">Medicina</span>
                 </button>
 
-                <button 
-                  onClick={() => setSelectedForm("psicologia")}
-                className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("psicologia")} transition-all`}>
+                <button
+                  onClick={() => handleSelectForm("consultapsicologia")}
+                  className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor(
+                    "consultapsicologia"
+                  )} transition-all`}
+                >
                   <Brain className="h-8 w-8 mb-2 text-red-600" />
                   <span className="text-blue-900">Psicologia</span>
                 </button>
 
                 <button
-                  onClick={() => setSelectedForm("edFisica")}
-                  className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("consultaedfisica")} transition-all`}
+                  onClick={() => handleSelectForm("consultaedfisica")}
+                  className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor(
+                    "consultaedfisica"
+                  )} transition-all`}
                 >
                   <Dumbbell className="h-8 w-8 mb-2 text-red-600" />
                   <span className="text-blue-900">Educação Física</span>
                 </button>
 
-                <button 
-                   onClick={() => setSelectedForm("nutricao")}
-                  className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("nutricao")} transition-all`}>
+                <button
+                  onClick={() => handleSelectForm("consultanutricao")}
+                  className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor(
+                    "consultanutricao"
+                  )} transition-all`}
+                >
                   <Apple className="h-8 w-8 mb-2 text-red-600" />
                   <span className="text-blue-900">Nutrição</span>
                 </button>
 
                 <button
-                  onClick={() => setSelectedForm("farmacia")}
-                  className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("consultafarmacia")} transition-all`}
+                  onClick={() => handleSelectForm("consultafarmacia")}
+                  className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor(
+                    "consultafarmacia"
+                  )} transition-all`}
                 >
                   <Pill className="h-8 w-8 mb-2 text-red-600" />
                   <span className="text-blue-900">Farmácia</span>
                 </button>
 
                 <button
-                  onClick={() => setSelectedForm("bioquimica")}
-
-                className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("bioquimica")} transition-all`}>
+                  onClick={() => handleSelectForm("consultabioquimica")}
+                  className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor(
+                    "consultabioquimica"
+                  )} transition-all`}
+                >
                   <FlaskConical className="h-8 w-8 mb-2 text-red-600" />
                   <span className="text-blue-900">Bioquímica</span>
                 </button>
 
                 <button
-                  onClick={() => setSelectedForm("calculadora")}
-                  className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor("consultacalculadora")} transition-all`}
+                  onClick={() => handleSelectForm("consultacalculadora")}
+                  className={`flex flex-col items-center justify-center h-24 border rounded-md py-4 px-2 ${getBorderColor(
+                    "consultacalculadora"
+                  )} transition-all`}
                 >
                   <Calculator className="h-8 w-8 mb-2 text-red-600" />
                   <span className="text-blue-900">Calculadora</span>

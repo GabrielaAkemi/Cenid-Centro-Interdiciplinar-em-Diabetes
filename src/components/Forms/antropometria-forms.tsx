@@ -623,6 +623,7 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
                 ...formData.patientInfo,
                 id: Number(formData.patientInfo.id) || undefined,
               }}
+              initialData={initialData}
               onChange={handlePatientInfoChange} 
               somenteLeitura={somenteLeitura}
             />

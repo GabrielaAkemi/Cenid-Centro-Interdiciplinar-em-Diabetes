@@ -482,7 +482,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
 
         {currentPage === 'formulario' && (
           <form onSubmit={handleSubmit} className="space-y-10 text-blue-900">
-            <PatientBasicInfo patientData={formData.patientInfo} onChange={(data) => handleChange("patientInfo", data)} somenteLeitura={somenteLeitura} />
+            <PatientBasicInfo patientData={formData.patientInfo} initialData={initialData} onChange={(data) => handleChange("patientInfo", data)} somenteLeitura={somenteLeitura} />
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-2xl font-bold text-blue-900">Questionário de Nível de Atividade Física (NAF)</h2>
               <div className="mt-6 space-y-6">
