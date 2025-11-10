@@ -109,9 +109,9 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
   const [currentPage, setCurrentPage] = useState('formulario');
   const [status, setStatus] = useState<"andamento" | "concluida">("andamento");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  
+
   const patient: PatientInfoData = {
-    id: patientData?.id || initialData?.patient,
+    id: patientData?.id ?? initialData?.patient,
     nome: patientData?.nome || "",
     idade: patientData?.idade || "",
     sexo: patientData?.sexo || "",
@@ -357,7 +357,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.patientInfo?.dataAvaliacao) {
+    if (!formData.patientInfo?.dataAvaliacao && !initialData?.dataConsulta) {
       setMessage('A Data da Avaliação é obrigatória.');
       setShowModal(true);
       return;
@@ -365,8 +365,8 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
 
     try {
       const payload: any = {
-        patient: formData.patientInfo?.id,
-        dataConsulta: formData.patientInfo?.dataAvaliacao,
+        patient: patientData?.id,
+        dataConsulta: formData.patientInfo?.dataAvaliacao ?? initialData?.dataConsulta,
         peso: formData.patientInfo.peso?.replace(',', '.')|| null,
         estatura: formData.patientInfo.estatura?.replace(',', '.') || null,
         metodo_insulina: formData.metodoInsulina || null,
@@ -400,12 +400,21 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
           horario_atividade: formData.cronograma[dia.key].horario,
           descricao_atividade: formData.cronograma[dia.key].tipo,
         })),
-        meses_relato: formData.mesesPraticando,
-        relato_interrupcao: formData.relatorioInterrupcoes
+        meses_relato: formData.mesesPraticando
+          ? parseInt(formData.mesesPraticando, 10)
+          : null,
+        relato_interrupcao: formData.relatorioInterrupcoes,
+        consulta_finalizada: status == 'concluida'
       };
+      
+      const isEdit = !!initialData?.id;
+      const url = isEdit
+        ? `/api/consulta-ed-fisica/${initialData.id}/`
+        : `/api/consulta-ed-fisica/`;
+      const method = isEdit ? "PUT" : "POST";
 
-      let objCriado : any = await apiFetch("/api/consulta-ed-fisica/", true, {
-        method: "POST",
+      let objCriado : any = await apiFetch(url, true, {
+        method: method,
         body: JSON.stringify(payload),
       });
 

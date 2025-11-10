@@ -461,13 +461,22 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
       },
       data_consulta: formData.patientInfo.dataAvaliacao,
       observacoes: formData.observacoes || "",
+      consulta_finalizada: status == 'concluida'
     };
 
     try {
-      let objCriado: any = await apiFetch("/api/consulta-calculadora/", true, {
-              method: "POST",
+      const isEdit = !!initialData?.id;
+      const url = isEdit
+        ? `/api/consulta-calculadora/${initialData.id}/`
+        : `/api/consulta-calculadora/`;
+      const method = isEdit ? "PUT" : "POST";
+
+      let objCriado: any = await apiFetch(url, true, {
+              method: method,
               body: JSON.stringify(payload),
             });
+
+      console.log(objCriado);
 
       let input = fileInputRef.current;
       if(input && input.files) {

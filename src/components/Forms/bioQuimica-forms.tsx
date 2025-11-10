@@ -1,11 +1,13 @@
 "use client"
 
-import React from "react"
+import React, { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { TestTube } from "lucide-react"
 import FileInput from "../fileInput/fileInput"
+import PatientBasicInfo, {PatientInfoData} from "./basicInfo/patientBasicInfo";
+
 
 const medidas = [
   { nome: "Glicemia", unidade: "mg/dL" },
@@ -49,7 +51,49 @@ const BioquimicaSchema = z.object({
 
 type BioquimicaFormValues = z.infer<typeof BioquimicaSchema>
 
-export default function BioquimicaFormRefatorado() {
+export default function BioquimicaFormRefatorado({patientData} : { patientData: PatientInfoData }) {
+  const [formData, setFormData] = React.useState({
+    patientInfo: patientData,
+    bioquimica: {
+      nomeCompleto: patientData.nome || "",
+      idade: patientData.idade || "",
+      dataConsulta: patientData.dataAvaliacao || new Date().toISOString().split("T")[0],
+      datas: ["", "", "", "", ""],
+      valores: medidas.map((_, index) => ({
+        medidaId: index,
+        data1: "",
+        data2: "",
+        data3: "",
+        data4: "",
+        data5: "",
+      })),
+    } as BioquimicaFormValues,
+  });
+
+  useEffect(() => {
+    if (!patientData) return;
+
+    const patient: PatientInfoData = {
+      id: patientData.id || 0,
+      nome: patientData.nome || "",
+      idade: patientData.idade || "",
+      sexo: patientData.sexo || "",
+      peso: patientData.peso?.toString() || "",
+      estatura: patientData.estatura?.toString() || "",
+      data_nascimento: patientData.data_nascimento || "",
+      dataAvaliacao: patientData.dataAvaliacao || new Date().toISOString().split("T")[0],
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      patientInfo: patient,
+    }));
+  }, [patientData]);
+
+  const handleChange = (section: any, data: any) => {
+		setFormData((prevData) => ({ ...prevData, [section]: data }))
+	}
+  
   const form = useForm<BioquimicaFormValues>({
     resolver: zodResolver(BioquimicaSchema),
     defaultValues: {
@@ -73,23 +117,8 @@ export default function BioquimicaFormRefatorado() {
         </h1>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 text-blue-900">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-blue-900 mb-4">Dados do Paciente</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label className={labelClass}>Nome completo</label>
-                <input type="text" {...form.register("nomeCompleto")} placeholder="Digite o nome completo" className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>Idade (anos)</label>
-                <input type="number" {...form.register("idade")} placeholder="Digite a idade" className={inputClass} />
-              </div>
-            </div>
-            <div className="mt-4">
-              <label className={labelClass}>Data da consulta</label>
-              <input type="date" {...form.register("dataConsulta")} className={inputClass} />
-            </div>
-          </div>
+          <PatientBasicInfo patientData={formData.patientInfo} onChange={(data) => handleChange("patientInfo", data)}/>
+
 
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-blue-900 mb-4">Exames Laboratoriais</h2>

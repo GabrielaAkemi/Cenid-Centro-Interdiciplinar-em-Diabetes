@@ -119,7 +119,7 @@ export default function Consultas() {
       case "consultamedicina":
         return <MedicinaForm />;
       case "consultapsicologia":
-        return <PsicologiaForm />;
+        return <PsicologiaForm patientData={paciente}/>;
       case "consultaedfisica":
         return (
           <EdFisicaForm patientData={paciente} initialData={selectedConsulta} />
@@ -131,7 +131,7 @@ export default function Consultas() {
           <FarmaciaForm patientData={paciente} initialData={selectedConsulta} />
         );
       case "consultabioquimica":
-        return <BioquimicaForm />;
+        return <BioquimicaForm patientData={paciente}/>;
       case "consultacalculadora":
         return (
           <AntropometriaForm

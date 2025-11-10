@@ -828,10 +828,14 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
 					dias_sem_insulina: Number(q.p4),
 			}
 		}
+    const isEdit = !!initialData?.id;
+      const url = isEdit
+        ? `/api/consulta-farmacia/${initialData.id}/`
+        : `/api/consulta-farmacia/`;
+      const method = isEdit ? "PUT" : "POST";
 
-
-		let objCriado: any = await apiFetch("/api/consulta-farmacia/", true, {
-			method: "POST",
+		let objCriado: any = await apiFetch(url, true, {
+			method: method,
 			body: JSON.stringify(payload),
 		});
 

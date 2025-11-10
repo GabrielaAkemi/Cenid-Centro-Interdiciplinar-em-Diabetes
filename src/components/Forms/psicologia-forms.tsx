@@ -1,12 +1,13 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Activity, AlertCircle, Brain, CalendarIcon, HeartPulse, ClipboardList } from "lucide-react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import PatientBasicInfo, {PatientInfoData} from "./basicInfo/patientBasicInfo";
 
 const inputClass = "p-3.5 border border-gray-400 rounded-md shadow-sm focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-colors duration-200 w-full bg-white text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed";
 const labelClass = "text-sm font-medium text-blue-900 mb-1 block";
@@ -32,7 +33,7 @@ const PsicologiaSchema = z.object({
   condutaClinica: z.string().optional(),
 })
 
-type PsicologiaFormValues = z.infer<typeof PsicologiaSchema>
+type PsicologiaFormValues = z.infer<typeof PsicologiaSchema>;
 
 const StyledIcon: React.FC<{ icon: React.ReactNode }> = ({ icon }) => {
     const iconProps = { className: 'h-5 w-5 text-blue-600' };
@@ -43,9 +44,46 @@ const StyledIcon: React.FC<{ icon: React.ReactNode }> = ({ icon }) => {
     return <>{icon}</>;
 };
 
-export default function PsicologiaFormRefatorado() {
+export default function PsicologiaFormRefatorado({patientData} : { patientData: PatientInfoData }) {
+  const [formData, setFormData] = useState({
+    patientInfo: patientData,
+    psicologia: {
+      nome: patientData.nome || "",
+      dataAvaliacao: "",
+      respostasAnsiedade: Array(7).fill(""),
+      respostasDepressao: Array(9).fill(""),
+      respostasAutocuidado: Array(15).fill(""),
+      hipoteseDiagnostica: "",
+      condutaClinica: "",
+    } as PsicologiaFormValues,
+  });
+
+  useEffect(() => {
+    if (!patientData) return;
+
+    const patient: PatientInfoData = {
+      id: patientData.id || 0,
+      nome: patientData.nome || "",
+      idade: patientData.idade || "",
+      sexo: patientData.sexo || "",
+      peso: patientData.peso?.toString() || "",
+      estatura: patientData.estatura?.toString() || "",
+      data_nascimento: patientData.data_nascimento || "",
+      dataAvaliacao: patientData.dataAvaliacao || new Date().toISOString().split("T")[0],
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      patientInfo: patient,
+    }));
+  }, [patientData]);
+  
+  const handleChange = (section: any, data: any) => {
+		setFormData((prevData) => ({ ...prevData, [section]: data }))
+	}
+
   const form = useForm<PsicologiaFormValues>({
-    resolver: zodResolver(PsicologiaSchema),
+    resolver: zodResolver(PsicologiaSchema as any),
     defaultValues: {
       respostasAnsiedade: Array(7).fill(""),
       respostasDepressao: Array(9).fill(""),
@@ -210,35 +248,7 @@ export default function PsicologiaFormRefatorado() {
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
       
-          <div className={sectionContainerClass}>
-            <h2 className={sectionTitleClass}>Dados do Paciente</h2>
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-              <div>
-                <label className={labelClass}>Nome do Paciente</label>
-                <input
-                  type="text"
-                  placeholder="Digite o nome completo"
-                  {...form.register("nome")}
-                  className={inputClass}
-                />
-                <FormMessage>{form.formState.errors.nome?.message}</FormMessage>
-              </div>
-
-              <div>
-                <label className={labelClass}>Data da Avaliação</label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    {...form.register("dataAvaliacao")}
-                    className={inputClass}
-                  />
-                  <CalendarIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 pointer-events-none" />
-                </div>
-                <FormMessage>{form.formState.errors.dataAvaliacao?.message}</FormMessage>
-              </div>
-            </div>
-          </div>
+          <PatientBasicInfo patientData={formData.patientInfo} onChange={(data) => handleChange("patientInfo", data)}/>
           
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <div className="flex items-center text-blue-800">
