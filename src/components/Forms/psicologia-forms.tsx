@@ -8,6 +8,8 @@ import { Activity, AlertCircle, Brain, CalendarIcon, HeartPulse, ClipboardList }
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import PatientBasicInfo, {PatientInfoData} from "./basicInfo/patientBasicInfo";
+import { apiFetch } from "@/lib/api"
+import StatusToggle, { getStatusContainerClasses } from "../checkConcluido/statusToggle"
 
 const inputClass = "p-3.5 border border-gray-400 rounded-md shadow-sm focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-colors duration-200 w-full bg-white text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed";
 const labelClass = "text-sm font-medium text-blue-900 mb-1 block";
@@ -45,6 +47,14 @@ const StyledIcon: React.FC<{ icon: React.ReactNode }> = ({ icon }) => {
 };
 
 export default function PsicologiaFormRefatorado({patientData} : { patientData: PatientInfoData }) {
+  const [message, setMessage] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState('formulario');
+  const [formKey, setFormKey] = useState(0);
+  
+  const [status, setStatus] = useState<"andamento" | "concluida">("andamento");
+  
+  
   const [formData, setFormData] = useState({
     patientInfo: patientData,
     psicologia: {
@@ -85,14 +95,74 @@ export default function PsicologiaFormRefatorado({patientData} : { patientData: 
   const form = useForm<PsicologiaFormValues>({
     resolver: zodResolver(PsicologiaSchema as any),
     defaultValues: {
+      nome: patientData.nome || "", // Adicionar nome se for obrigatório
+      dataAvaliacao: format(new Date(), "yyyy-MM-dd"), // Adicione um valor inicial válido
       respostasAnsiedade: Array(7).fill(""),
       respostasDepressao: Array(9).fill(""),
       respostasAutocuidado: Array(15).fill(""),
+      hipoteseDiagnostica: "", // Adicionar os opcionais para evitar undefined
+      condutaClinica: "",
     },
   })
 
-  const onSubmit = (data: PsicologiaFormValues) => {
-    console.log("Dados do formulário de Psicologia:", data)
+  const handleSubmit =  async (data: PsicologiaFormValues) => {
+    const payload = {
+      patient: patientData.id,
+      hipoteste_diagnostica_geral: data.hipoteseDiagnostica || "",
+      conduta_clinica: data.condutaClinica || "",
+
+      // GAD-7 (ansiedade)
+      gad1: Number(data.respostasAnsiedade[0] || 0),
+      gad2: Number(data.respostasAnsiedade[1] || 0),
+      gad3: Number(data.respostasAnsiedade[2] || 0),
+      gad4: Number(data.respostasAnsiedade[3] || 0),
+      gad5: Number(data.respostasAnsiedade[4] || 0),
+      gad6: Number(data.respostasAnsiedade[5] || 0),
+      gad7: Number(data.respostasAnsiedade[6] || 0),
+
+      // PHQ-9 (depressão)
+      phq1: Number(data.respostasDepressao[0] || 0),
+      phq2: Number(data.respostasDepressao[1] || 0),
+      phq3: Number(data.respostasDepressao[2] || 0),
+      phq4: Number(data.respostasDepressao[3] || 0),
+      phq5: Number(data.respostasDepressao[4] || 0),
+      phq6: Number(data.respostasDepressao[5] || 0),
+      phq7: Number(data.respostasDepressao[6] || 0),
+      phq8: Number(data.respostasDepressao[7] || 0),
+      phq9: Number(data.respostasDepressao[8] || 0),
+
+      // SCI-R (autocuidado)
+      scir1: Number(data.respostasAutocuidado[0] || 0),
+      scir2: Number(data.respostasAutocuidado[1] || 0),
+      scir3: Number(data.respostasAutocuidado[2] || 0),
+      scir4: Number(data.respostasAutocuidado[3] || 0),
+      scir5: Number(data.respostasAutocuidado[4] || 0),
+      scir6: Number(data.respostasAutocuidado[5] || 0),
+      scir7: Number(data.respostasAutocuidado[6] || 0),
+      scir8: Number(data.respostasAutocuidado[7] || 0),
+      scir9: Number(data.respostasAutocuidado[8] || 0),
+      scir10: Number(data.respostasAutocuidado[9] || 0),
+      scir11: Number(data.respostasAutocuidado[10] || 0),
+      scir12: Number(data.respostasAutocuidado[11] || 0),
+      scir13: Number(data.respostasAutocuidado[12] || 0),
+      scir14: Number(data.respostasAutocuidado[13] || 0),
+      scir15: Number(data.respostasAutocuidado[14] || 0),
+
+      consulta_finalizada: status == "concluida",
+    };
+
+  
+    const objCriado: any = await apiFetch("/api/consulta-psicologia/", true, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+
+    setMessage("Formulário enviado com sucesso!");
+    setShowModal(true);
+    setCurrentPage("consultas");
+  
+		setFormKey(prev => prev + 1);
+
   }
 
   
@@ -243,11 +313,30 @@ export default function PsicologiaFormRefatorado({patientData} : { patientData: 
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans text-gray-800">
-      <div className="max-w-4xl mx-auto w-full bg-white p-8 rounded-lg shadow-lg space-y-8">
+      <div className={`max-w-4xl mx-auto w-full p-8 rounded-lg shadow-xl border-2 transition-colors duration-300 ${getStatusContainerClasses(status)}`}>
         <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">Avaliação de Saúde Mental - Psicologia</h1>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-      
+        <StatusToggle 
+          value={status} 
+          onChange={setStatus}
+        />
+          
+        {showModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-8 rounded-lg text-center shadow-2xl">
+                  <p className="text-xl font-bold text-blue-900">{message}</p>
+                  <button
+                      onClick={() => setShowModal(false)}
+                      className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                      Fechar
+                  </button>
+              </div>
+          </div>
+        )}
+
+        <form key={formKey} onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        
           <PatientBasicInfo patientData={formData.patientInfo} onChange={(data) => handleChange("patientInfo", data)}/>
           
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">

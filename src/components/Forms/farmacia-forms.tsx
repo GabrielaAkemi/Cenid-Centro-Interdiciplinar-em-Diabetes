@@ -635,8 +635,8 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
 	const [showModal, setShowModal] = useState(false);
 	const [currentPage, setCurrentPage] = useState('formulario');
 	const [formKey, setFormKey] = useState(0);
-    const [status, setStatus] = useState<"andamento" | "concluida">("andamento");
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [status, setStatus] = useState<"andamento" | "concluida">("andamento");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   
 	const [formData, setFormData] = useState<FormData>({
