@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import AntropometriaForm from "@/components/Forms/antropometria-forms";
 import EdFisicaForm from "@/components/Forms/edFisica-forms";
 import FarmaciaForm from "@/components/Forms/farmacia-forms";
+import PsicologiaFormRefatorado from "@/components/Forms/psicologia-forms";
 
 // 🔹 Interface para tipar o item do histórico
 interface HistoryItem {
@@ -70,6 +71,7 @@ export default function Consultas() {
         consultacalculadora: "consulta-calculadora",
         consultaedfisica: "consulta-ed-fisica",
         consultafarmacia: "consulta-farmacia",
+        consultapsicologia: "consulta-psicologia"
       };
 
       const endpoint = endpointMap[especialidade];
@@ -102,7 +104,7 @@ export default function Consultas() {
 
     // Mapeia os dados da API para a interface HistoryItem
     const cleanData: HistoryItem[] = data.map((consulta: any) => {
-      
+
       let dataConsulta = consulta.data_consulta || consulta.dataConsulta || undefined;
       return {
         id: consulta.id,
@@ -138,7 +140,7 @@ export default function Consultas() {
       case "consultamedicina":
         return <PlaceholderForm title="Medicina" />;
       case "consultapsicologia":
-        return <PlaceholderForm title="Psicologia" />;
+        return <PsicologiaFormRefatorado patientData={paciente} initialData={selectedHistoryData} somenteLeitura={true} attachments={selectedHistoryData?.anexos || []}/>;
       case "consultaedfisica":
         return <EdFisicaForm patientData={paciente} initialData={selectedHistoryData} somenteLeitura={true} attachments={selectedHistoryData?.anexos || []}/>;
       case "consultanutricao":
@@ -248,7 +250,7 @@ export default function Consultas() {
                             </span>
                           )}
                           {/* --- FIM DOS BADGES --- */}
-                          
+
                         </div>
                         <span className="text-sm text-blue-700 opacity-70 group-hover:opacity-100">
                           Ver formulário →
