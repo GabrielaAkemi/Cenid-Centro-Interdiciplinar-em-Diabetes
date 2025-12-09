@@ -150,7 +150,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
   useEffect(() => {
     if (!initialData) return;
 
-    
+
 
     const cronograma: Cronograma = diasSemana.reduce((acc, dia, index) => {
       const relato = initialData.relatos?.find(r => r.dia_semana === index + 1);
@@ -205,14 +205,14 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
       if (isNumeric) {
         let tempValue = String(value);
 
-        tempValue = tempValue.replace(/[^0-9]/g, ''); 
+        tempValue = tempValue.replace(/[^0-9]/g, '');
 
         if (tempValue.includes(',')) {
-          tempValue = tempValue.replace(/\./g, ''); 
+          tempValue = tempValue.replace(/\./g, '');
         } else {
           tempValue = tempValue.replace(/,/g, '');
       }
-      
+
       const separator = tempValue.includes(',') ? ',' : '.';
       const parts = tempValue.split(separator);
 
@@ -222,11 +222,11 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
           newValue = tempValue;
        }
 
-       
+
         if (newValue.startsWith('.') || newValue.startsWith(',')) {
           newValue = '0' + newValue;
         }
-    } 
+    }
 
     setFormData((prev) => ({ ...prev, [key]: newValue }));
   };
@@ -244,9 +244,9 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
 
     let tempValue = String(value);
 
-    tempValue = tempValue.replace(/[^0-9,.]/g, ''); 
+    tempValue = tempValue.replace(/[^0-9,.]/g, '');
 
-    
+
     if (tempValue.includes(',')) {
       tempValue = tempValue.replace(/\./g, '');
     } else {
@@ -262,7 +262,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
       newValue = tempValue;
     }
 
-    
+
     if (newValue.startsWith('.') || newValue.startsWith(',')) {
       newValue = '0' + newValue;
     }
@@ -272,7 +272,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
         const measuresWithNewValue: StrengthMeasures = {
             ...prev[measureName],
             [field]: newValue,
-            media: "", 
+            media: "",
             forcaRelativa: "",
         };
 
@@ -280,7 +280,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
 
         const calculatedResults = calculateStrength(measuresWithNewValue, peso);
 
-       
+
         return {
             ...prev,
             [measureName]: {
@@ -406,7 +406,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
         relato_interrupcao: formData.relatorioInterrupcoes,
         consulta_finalizada: status == 'concluida'
       };
-      
+
       const isEdit = !!initialData?.id;
       const url = isEdit
         ? `/api/consulta-ed-fisica/${initialData.id}/`
@@ -469,10 +469,11 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
       <div className={`max-w-4xl mx-auto w-full p-8 rounded-lg shadow-xl border-2 transition-colors duration-300 ${getStatusContainerClasses(status)}`}>
         <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">Avaliação de Educação Física</h1>
 
-        <StatusToggle 
-          value={status} 
-          onChange={setStatus} 
-          somenteLeitura={somenteLeitura} 
+        <StatusToggle
+          value={status}
+          onChange={setStatus}
+          somenteLeitura={somenteLeitura}
+          nomeAvaliacao="Educação Física"
         />
 
         {showModal && (
@@ -534,7 +535,7 @@ const App: React.FC<AppProps> = ({ patientData, initialData, somenteLeitura, att
                   <br />
                   <span className="text-sm text-gray-500">Total de Exercício Físico: {(Number(formData.atividadeLeve) || 0) + (Number(formData.atividadeModerada) || 0) + (Number(formData.atividadeVigorosa) || 0)} min/semana</span>
                 </div>
-                
+
                 <p className="text-sm italic text-gray-600">Parâmetros de comportamento sedentário (Horas/dia)</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>

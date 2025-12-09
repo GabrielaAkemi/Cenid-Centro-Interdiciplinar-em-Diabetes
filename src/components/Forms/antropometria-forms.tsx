@@ -219,8 +219,8 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
     };
 
     setFormData(prev => ({
-      ...prev,             
-      patientInfo: {      
+      ...prev,
+      patientInfo: {
         id: patient.id,
         nome: patient.nome,
         dataAvaliacao: patient.dataAvaliacao,
@@ -316,18 +316,18 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
     const { name, value } = e.target;
     let newValue = value;
 
-    
+
     if (name != "observacoes") {
         let tempValue = value;
 
-      tempValue = tempValue.replace(/[^0-9,.]/g, ''); 
+      tempValue = tempValue.replace(/[^0-9,.]/g, '');
 
       if (tempValue.includes(',')) {
           tempValue = tempValue.replace(/\./g, '');
       } else {
           tempValue = tempValue.replace(/,/g, '');
       }
-      
+
       const separator = tempValue.includes(',') ? ',' : '.';
       const parts = tempValue.split(separator);
 
@@ -420,7 +420,7 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
       alert("Erro ao calcular escore Z. Tente novamente.");
     }
   };
-  
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -435,7 +435,7 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
       await handleCalculate();
     }
 
-    
+
 
     const payload = {
       patient: formData.patientInfo.id,
@@ -482,7 +482,7 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
       if(input && input.files) {
         uploadFiles(Array.from(input.files), 'consultacalculadora', objCriado.id);
       }
-        
+
       setMessage("Formulário enviado com sucesso!");
       setShowModal(true);
       setCurrentPage("consultas");
@@ -553,7 +553,7 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
       alert("Erro ao salvar avaliação.");
     }
 
-    
+
   };
 
   useEffect(() => {
@@ -605,12 +605,13 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
     <div className="flex flex-col min-h-screen bg-white font-sans p-6 text-gray-800">
       <div className={`max-w-4xl mx-auto w-full p-8 rounded-lg shadow-xl border-2 transition-colors duration-300 ${getStatusContainerClasses(status)}`}>
         <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">Avaliação Antropométrica</h1>
-        <StatusToggle 
-          value={status} 
-          onChange={setStatus} 
-          somenteLeitura={somenteLeitura} 
+        <StatusToggle
+          value={status}
+          onChange={setStatus}
+          somenteLeitura={somenteLeitura}
+          nomeAvaliacao="Antropométrica"
         />
-        
+
         {showModal && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-8 rounded-lg text-center shadow-2xl">
@@ -627,13 +628,13 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
 
         <CardContent className="p-0">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <PatientBasicInfo 
+            <PatientBasicInfo
               patientData={{
                 ...formData.patientInfo,
                 id: Number(formData.patientInfo.id) || undefined,
               }}
               initialData={initialData}
-              onChange={handlePatientInfoChange} 
+              onChange={handlePatientInfoChange}
               somenteLeitura={somenteLeitura}
             />
             <section className="p-4 space-y-4 border-b border-gray-200">
@@ -826,7 +827,7 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
                   />
                 )}
               </div>
-              
+
             </section>
 
             {!somenteLeitura && (
@@ -857,9 +858,9 @@ export default function AntropometriaForm({patientData, initialData, somenteLeit
                 </div>
               </DialogContent>
             </Dialog>
-          </form> 
-        </CardContent> 
-      </div> 
-    </div> 
-  ); 
+          </form>
+        </CardContent>
+      </div>
+    </div>
+  );
 }

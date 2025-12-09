@@ -125,7 +125,7 @@ export default function Consultas() {
           <EdFisicaForm patientData={paciente} initialData={selectedConsulta} />
         );
       case "consultanutricao":
-        return <NutricaoForm />;
+        return <NutricaoForm patientData={paciente}/>;
       case "consultafarmacia":
         return (
           <FarmaciaForm patientData={paciente} initialData={selectedConsulta} />

@@ -1,12 +1,13 @@
 "use client"
 
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { TestTube } from "lucide-react"
 import FileInput from "../fileInput/fileInput"
 import PatientBasicInfo, {PatientInfoData} from "./basicInfo/patientBasicInfo";
+import StatusToggle, { getStatusContainerClasses } from "../checkConcluido/statusToggle"
 
 
 const medidas = [
@@ -52,6 +53,8 @@ const BioquimicaSchema = z.object({
 type BioquimicaFormValues = z.infer<typeof BioquimicaSchema>
 
 export default function BioquimicaFormRefatorado({patientData} : { patientData: PatientInfoData }) {
+  const [status, setStatus] = useState<"andamento" | "concluida">("andamento");
+
   const [formData, setFormData] = React.useState({
     patientInfo: patientData,
     bioquimica: {
@@ -93,7 +96,7 @@ export default function BioquimicaFormRefatorado({patientData} : { patientData: 
   const handleChange = (section: any, data: any) => {
 		setFormData((prevData) => ({ ...prevData, [section]: data }))
 	}
-  
+
   const form = useForm<BioquimicaFormValues>({
     resolver: zodResolver(BioquimicaSchema),
     defaultValues: {
@@ -111,10 +114,16 @@ export default function BioquimicaFormRefatorado({patientData} : { patientData: 
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans p-6 text-gray-800">
-      <div className="max-w-4xl mx-auto w-full bg-white p-8 rounded-lg shadow-lg space-y-8">
+      <div className={`max-w-4xl mx-auto w-full p-8 rounded-lg shadow-xl border-2 transition-colors duration-300 ${getStatusContainerClasses(status)}`}>
         <h1 className="text-3xl font-bold text-center text-blue-900 flex items-center justify-center gap-3">
            Avaliação Bioquímica
         </h1>
+
+        <StatusToggle
+            value={status}
+            onChange={setStatus}
+            nomeAvaliacao="Bioquímica"
+        />
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 text-blue-900">
           <PatientBasicInfo patientData={formData.patientInfo} onChange={(data) => handleChange("patientInfo", data)}/>

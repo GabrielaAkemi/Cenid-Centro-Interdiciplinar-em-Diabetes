@@ -4,6 +4,7 @@ interface StatusToggleProps {
     value: "andamento" | "concluida";
     onChange?: (newStatus: "andamento" | "concluida") => void;
     somenteLeitura?: boolean;
+    nomeAvaliacao?: string;
 }
 export const getStatusContainerClasses = (status: string | undefined) => {
     switch (status) {
@@ -19,7 +20,8 @@ export const getStatusContainerClasses = (status: string | undefined) => {
 const StatusToggle: React.FC<StatusToggleProps> = ({
     value,
     onChange,
-    somenteLeitura = false
+    somenteLeitura = false,
+    nomeAvaliacao = "Farmácia"
 }) => {
     const handleStatusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (somenteLeitura) return;
@@ -29,7 +31,7 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
 
     return (
         <div className="flex justify-between items-center mb-6 border-b pb-4">
-            <h1 className="text-3xl font-bold text-blue-900">Avaliação Farmácia</h1>
+            <h1 className="text-3xl font-bold text-blue-900">Avaliação {nomeAvaliacao}</h1>
 
             <label className={`flex items-center ${somenteLeitura ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}>
                 <span className="mr-3 text-md font-semibold text-gray-700">

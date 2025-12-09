@@ -5,6 +5,8 @@ import { useForm, Controller, useWatch, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Upload, Check, Plus, Minus } from 'lucide-react';
+import PatientBasicInfo, {PatientInfoData} from "./basicInfo/patientBasicInfo";
+import StatusToggle, { getStatusContainerClasses } from "../checkConcluido/statusToggle"
 
 const Card = ({ className, children }: any) => (
     <div className={`max-w-5xl mx-auto w-full bg-white p-8 space-y-8 rounded-xl shadow-2xl border border-gray-100 ${className}`}>
@@ -167,7 +169,7 @@ const NutricaoSchema = z
 
         idadeAnos: z.string().optional(),
         idadeMeses: z.string().optional(),
-        
+
         // rCHOi e FS
         rCHOi: z.array(RatioTimeSchema).min(1, 'Razão de CHO é obrigatória'),
         fs: z.array(RatioTimeSchema).min(1, 'Fator de Sensibilidade é obrigatório'),
@@ -181,10 +183,10 @@ const NutricaoSchema = z
         naf: z.enum(['inativo', 'pouco ativo', 'ativo', 'muito ativo']),
         gestante: z.enum(['sim', 'nao']),
         lactante: z.enum(['sim', 'nao']),
-        
+
         // Qualidade Alimentar - Usual (24 perguntas A/B/C/D)
         qualidadeUsual: z.record(z.string(), RespostaQualidadeAlimentarSchema),
-        
+
         // Frequência Alimentar (5 perguntas de 7 dias)
         freqFrutas: RespostaFrequencia7DiasSchema,
         freqSucoNatural: RespostaFrequencia7DiasSchema,
@@ -293,9 +295,14 @@ const refeicoesOpcoes = ['CafeDaManha', 'LancheDaManha', 'Almoco', 'LancheDaTard
 
 // --- Componente Principal ---
 
-export default function App() {
+export default function App({
+    patientData
+}: {
+    patientData: PatientInfoData
+}) {
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-    
+    const [status, setStatus] = useState<"andamento" | "concluida">("andamento");
+
     // Simulação de estados externos necessários para a lógica de anexo
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [somenteLeitura, setSomenteLeitura] = useState(false); // Simulação de modo leitura (Pode ser true/false para testar a renderização condicional)
@@ -364,7 +371,7 @@ export default function App() {
     });
 
     const { control, handleSubmit, setValue, getValues, formState: { errors } } = form;
-    
+
     // Watchers
     const metodoContagemWatch = useWatch({ control, name: 'metodoContagem' });
     const adesaoAplicativoWatch = useWatch({ control, name: 'adesaoAplicativo' });
@@ -384,13 +391,17 @@ export default function App() {
         }
     };
 
+    const handleChangePatientInfo = (section: any, data: any) => {
+      setFormData((prevData) => ({ ...prevData, [section]: data }))
+    }
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         // Esta função está agora ligada ao ref dentro do FileInput para fins de simulação
         const file = e.target.files ? e.target.files[0] : null;
         if (file) {
             console.log('Arquivo selecionado (via ref simulado):', file.name);
         }
-        // Nota: Em um formulário com react-hook-form, você geralmente usaria setValue aqui, 
+        // Nota: Em um formulário com react-hook-form, você geralmente usaria setValue aqui,
         // mas estamos usando o ref para simular o componente externo FileInput.
     };
 
@@ -399,7 +410,7 @@ export default function App() {
         let pontuacao = 0;
         perguntasQualidadeUsual.forEach(({ id }, index) => {
             const resposta = data.qualidadeUsual[id];
-            
+
             // Regra de pontuação consistente (A=3, B=2, C=1, D=0) para todas as 24 questões conforme o documento
             if (resposta === 'A') pontuacao += 3;
             else if (resposta === 'B') pontuacao += 2;
@@ -411,7 +422,7 @@ export default function App() {
 
     // Simulação do cálculo de pontuação para o usuário ver
     const totalPontuacao = useWatch({ control, name: 'qualidadeUsual' }) ? calcularPontuacaoQualidadeUsual(getValues()) : 0;
-    
+
     // Função para renderizar o resultado da pontuação
     const renderResultadoPontuacao = (score: number) => {
         if (score > 41) {
@@ -490,92 +501,26 @@ export default function App() {
 
 
     return (
-        <div className="flex flex-col min-h-screen bg-white font-sans p-6 md:p-10 text-gray-800">
-            <Card>
+        <div className={`flex flex-col min-h-screen bg-white font-sans p-6 md:p-10 text-gray-800`}>
+            <div className={`max-w-4xl mx-auto w-full p-8 rounded-lg shadow-xl border-2 transition-colors duration-300 ${getStatusContainerClasses(status)}`}>
+
             <h1 className="text-3xl font-bold text-center text-blue-900 mb-2">Avaliação Nutrição</h1>
+                <StatusToggle
+                value={status}
+                onChange={setStatus}
+                somenteLeitura={somenteLeitura}
+                nomeAvaliacao="Nutrição"
+                />
                 <CardContent>
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
-                        
+
                         {/* --- Seção de Dados do Paciente (Pré-preenchidos) --- */}
-                        <section className="p-4 space-y-6 bg-gray-50 rounded-lg border border-gray-200">
-                            <h3 className="text-xl font-bold text-blue-900">Dados da Consulta e Paciente (Pré-preenchidos)</h3>
-                            <Separator />
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                    <label htmlFor="dataConsulta" className="text-sm font-medium text-gray-700 mb-1 block">DATA DA CONSULTA *</label>
-                                    <Controller
-                                        name="dataConsulta"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Input id="dataConsulta" type="date" {...field} />
-                                        )}
-                                    />
-                                    {errors.dataConsulta && <p className="text-red-500 text-xs mt-1">{errors.dataConsulta.message}</p>}
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label htmlFor="nome" className="text-sm font-medium text-gray-700 mb-1 block">Nome do Paciente</label>
-                                    <Input id="nome" type="text" placeholder="Nome preenchido automaticamente" value={getValues('nome')} readOnly className="bg-gray-200 cursor-not-allowed border-gray-300" />
-                                </div>
-                                <div>
-                                    <label htmlFor="sexo" className="text-sm font-medium text-gray-700 mb-1 block">Sexo</label>
-                                    <Input id="sexo" type="text" placeholder="Preenchido automaticamente" value={getValues('sexo')} readOnly className="bg-gray-200 cursor-not-allowed border-gray-300" />
-                                </div>
-                                <div>
-                                    <label htmlFor="idadeAnos" className="text-sm font-medium text-gray-700 mb-1 block">Idade (ANOS)</label>
-                                    <Input id="idadeAnos" type="text" placeholder="Calculado" value={getValues('idadeAnos')} readOnly className="bg-gray-200 cursor-not-allowed border-gray-300" />
-                                </div>
-                                <div>
-                                    <label htmlFor="idadeMeses" className="text-sm font-medium text-gray-700 mb-1 block">Idade (MESES)</label>
-                                    <Input id="idadeMeses" type="text" placeholder="Calculado" value={getValues('idadeMeses')} readOnly className="bg-gray-200 cursor-not-allowed border-gray-300" />
-                                </div>
-                                <div>
-                                    <label htmlFor="peso" className="text-sm font-medium text-gray-700 mb-1 block">PESO (KG)</label>
-                                    <Input id="peso" type="text" placeholder="Preenchido automaticamente" value={getValues('peso')} readOnly className="bg-gray-200 cursor-not-allowed border-gray-300" />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label htmlFor="estatura" className="text-sm font-medium text-gray-700 mb-1 block">ESTATURA (METROS)</label>
-                                    <Input id="estatura" type="text" placeholder="Preenchido automaticamente" value={getValues('estatura')} readOnly className="bg-gray-200 cursor-not-allowed border-gray-300" />
-                                </div>
-                            </div>
-                            
-                            {/* Comorbidades */}
-                            <div className="space-y-4 pt-4">
-                                <h4 className="text-lg font-bold text-blue-900">Comorbidades (Opcional)</h4>
-                                <div className="space-y-3">
-                                    {comorbidadeFields.map((field, index) => (
-                                        <div key={field.id} className="flex space-x-3 items-center">
-                                            <Controller
-                                                name={`comorbidades.${index}.nome`}
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <Input
-                                                        placeholder="Ex: Diabetes Mellitus Tipo 1"
-                                                        {...field}
-                                                        className="flex-grow"
-                                                    />
-                                                )}
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="icon"
-                                                onClick={() => removeComorbidade(index)}
-                                                className="bg-red-500 hover:bg-red-600 w-10 h-10 shadow-md"
-                                            >
-                                                <Minus className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    ))}
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => appendComorbidade({ nome: '' })}
-                                        className="w-full text-blue-900 border-blue-400 hover:bg-blue-50"
-                                    >
-                                        <Plus className="h-4 w-4 mr-2" /> Adicionar Comorbidade
-                                    </Button>
-                                </div>
-                            </div>
-                        </section>
+                        <PatientBasicInfo
+                            patientData={patientData}
+                            onChange={(data) => handleChangePatientInfo("patientInfo", data)}
+                            somenteLeitura={somenteLeitura}
+                        />
+
 
                         {/* --- Seção de Razão de CHO e Fator de Sensibilidade --- */}
                         <section className="p-4 space-y-6">
@@ -643,7 +588,7 @@ export default function App() {
                         <section className="p-4 space-y-6">
                             <h3 className="text-xl font-bold text-blue-900">Método De Contagem De Carboidrato</h3>
                             <Separator />
-                            
+
                             <Controller
                                 name="metodoContagem"
                                 control={control}
@@ -670,7 +615,7 @@ export default function App() {
                                 )}
                             />
                             {errors.metodoContagem && <p className="text-red-500 text-xs mt-1">{errors.metodoContagem.message}</p>}
-                            
+
                             {(metodoContagemWatch === 'aplicativos') && (
                                 <div className="mt-4 max-w-lg space-y-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
                                     <Controller
@@ -688,7 +633,7 @@ export default function App() {
                                             </div>
                                         )}
                                     />
-                                    
+
                                     <Controller
                                         name="adesaoAplicativo"
                                         control={control}
@@ -792,7 +737,7 @@ export default function App() {
                                     />
                                 </div>
                             </div>
-                            
+
                             {/* Campo de NED (simulado) */}
                             <div className="max-w-md pt-4">
                                 <label className="text-sm font-medium text-gray-700 mb-1 block">NED Calculada (Kcal/dia)</label>
@@ -840,7 +785,7 @@ export default function App() {
                                     />
                                 ))}
                             </div>
-                            
+
                             <div className="mt-8 p-4 border-4 border-double border-red-300 bg-red-50 rounded-lg">
                                 <h4 className="text-lg font-bold text-red-800 mb-2">RESULTADO DA PONTUAÇÃO: {totalPontuacao} pontos</h4>
                                 {renderResultadoPontuacao(totalPontuacao)}
@@ -889,7 +834,7 @@ export default function App() {
 
                             {/* 4.2 Comeu Ontem */}
                             <h4 className="text-lg font-bold text-gray-800 pt-6">4.2 - Você comeu algum desses alimentos ONTEM?</h4>
-                            
+
                             {/* Quadro A (Protetor) */}
                             <div className="space-y-1 p-4 border border-green-300 rounded-lg bg-green-50">
                                 <h5 className="font-bold text-green-800 mb-2">Quadro A (Alimentos Protetores)</h5>
@@ -993,7 +938,7 @@ export default function App() {
                                 />
                                 {errors.hipoteseDiagnostica && <p className="text-red-500 text-xs mt-1">{errors.hipoteseDiagnostica.message}</p>}
                             </div>
-                            
+
                             {/* Conduta Nutricional */}
                             <div>
                                 <label htmlFor="condutaNutricional" className="text-sm font-medium text-gray-700 mb-1 block">CONDUTA NUTRICIONAL *</label>
@@ -1030,10 +975,9 @@ export default function App() {
                                 <CheckIcon className="h-5 w-5 mr-2" /> Salvar Avaliação
                             </Button>
                         </div>
-                        
+
                     </form>
                 </CardContent>
-            </Card>
 
             <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
                 <DialogContent>
@@ -1044,9 +988,9 @@ export default function App() {
                         <p className="text-xl font-bold text-blue-900 text-center mb-4">
                             Avaliação salva com sucesso!
                         </p>
-                        <Button 
-                            type="button" 
-                            className="bg-blue-900 hover:bg-blue-800" 
+                        <Button
+                            type="button"
+                            className="bg-blue-900 hover:bg-blue-800"
                             onClick={() => setShowSuccessDialog(false)}
                         >
                             Fechar
@@ -1054,6 +998,7 @@ export default function App() {
                     </div>
                 </DialogContent>
             </Dialog>
+            </div>
         </div>
     );
 }

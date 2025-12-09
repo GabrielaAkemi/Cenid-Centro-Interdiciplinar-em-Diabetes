@@ -446,6 +446,7 @@ export default function PsicologiaFormRefatorado({
           value={status}
           onChange={setStatus}
           somenteLeitura={somenteLeitura}
+          nomeAvaliacao="Psicologia"
         />
 
         {showModal && (
